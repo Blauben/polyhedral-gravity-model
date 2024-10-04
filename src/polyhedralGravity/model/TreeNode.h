@@ -3,7 +3,7 @@
 #include <array>
 #include <memory>
 
-using Plane = std::array<double,2>; //TODO find suitable format
+#include "KdDefinitions.h"
 
 class TreeNode {
     Plane plane;
