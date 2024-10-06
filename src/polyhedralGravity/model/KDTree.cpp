@@ -1,117 +1,121 @@
-#include <optional>
 #include <algorithm>
-#include <limits>
 #include <array>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <utility>
 
 #include "KDTree.h"
 #include "KdDefinitions.h"
 
-void KDTree::buildKDTree(const Polyhedron polyhedron) {
+void KDTree::buildKDTree(const Polyhedron &polyhedron) {
     std::vector<size_t> boundFaces(polyhedron.getFaces().size());
-    int index{1};
-    std::generate(boundFaces.begin(), boundFaces.end(), [&index]() {return index++;});
+    int index{0};
+    std::generate(boundFaces.begin(), boundFaces.end(), [&index]() { return index++; });
     const Box boundingBox{getBoundingBox(polyhedron.getVertices())};
     const SplitParam param{
             .vertices = polyhedron.getVertices(),
             .faces = polyhedron.getFaces(),
             .indexBoundFaces = boundFaces,
             .boundingBox = boundingBox,
-            .splitDirection = Direction::X
-    };
-    KDTree::_rootNode = std::optional<std::unique_ptr<TreeNode>>(buildRectangle(param));
+            .splitDirection = Direction::X};
+    this->rootNode = std::optional<std::unique_ptr<TreeNode>>(buildRectangle(param));
 }
 
-std::unique_ptr<TreeNode> KDTree::buildRectangle(const SplitParam& param) const {
-    Plane plane = findPlane(param);
-    return std::unique_ptr<TreeNode>{};
+std::unique_ptr<TreeNode> KDTree::buildRectangle(const SplitParam &param) const {
+    auto [plane, triangleIndexList] = findPlane(param);
+    return std::make_unique<TreeNode>(plane);//TODO: build children
 }
 
-const Plane KDTree::findPlane(const SplitParam& param) const { // O(N^2) implementation
+std::pair<Plane, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) const {// O(N^2) implementation
     double cost = std::numeric_limits<double>::infinity();
-    Plane optPlane{std::array<double, 3>{0, 0, 0}, param.splitDirection};
-    std::for_each(param.faces.cbegin(), param.faces.cend(), [&param, &optPlane, &cost, this](IndexArray3 face) {
-        for(const auto& index : face) {
+    Plane optPlane{param.vertices[0], param.splitDirection};
+    TriangleIndexLists optTriangleIndexLists{};
+    std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &optPlane, &cost, &optTriangleIndexLists, this](const size_t faceIndex) {
+        const auto &face = param.faces[faceIndex];
+        for (const auto &index: face) {
             Plane candidatePlane{param.vertices[index], param.splitDirection};
-            const double candiateCost{costForPlane(param, candidatePlane)}; //TODO
-            if(candiateCost < cost) {
-                cost = candiateCost;
+            auto [candidateCost, triangleIndexLists] = costForPlane(param, candidatePlane);
+            if (candidateCost < cost) {
+                cost = candidateCost;
                 optPlane = candidatePlane;
+                optTriangleIndexLists = std::move(triangleIndexLists);
             }
         }
     });
-    return optPlane;
+    return std::make_pair(std::move(optPlane), std::move(optTriangleIndexLists));
 }
 
-const Box KDTree::getBoundingBox(const std::vector<Array3>& vertices) const {
-    assert(vertices.size() != 0);
+Box KDTree::getBoundingBox(const std::vector<Array3> &vertices) {
+    assert(!vertices.empty());
     Array3 min = vertices[0];
     Array3 max = vertices[0];
-    std::for_each(vertices.cbegin(), vertices.cend(), [&min, &max](Array3 vertex) {
-        for(int i = 0; i < vertex.size(); i++) {
+    std::for_each(vertices.cbegin(), vertices.cend(), [&min, &max](const Array3 &vertex) {
+        for (int i = 0; i < vertex.size(); i++) {
             min[i] = std::min(min[i], vertex[i]);
             max[i] = std::max(max[i], vertex[i]);
         }
     });
-    return Box(min, max);
+    return {min, max};
 }
 
-const std::pair<Box,Box> KDTree::splitBox(const Box& box, const Plane& plane) const {
+std::pair<Box, Box> KDTree::splitBox(const Box &box, const Plane &plane) {
     Box box1{box};
     Box box2{box};
-    const Direction& axis{plane.second};
+    const Direction &axis{plane.second};
     box1.second[axis] = plane.first[axis];
     box2.first[axis] = plane.first[axis];
     return std::make_pair(box1, box2);
 }
 
-const double KDTree::costForPlane(const SplitParam& param, const Plane& plane) const {
+std::pair<const double, TriangleIndexLists> KDTree::costForPlane(const SplitParam &param, const Plane &plane) {
     auto [lessT, greaterT, equalT] = containedTriangles(param, plane);
-	auto [box1, box2] = splitBox(param.boundingBox, plane);
-    double volumeBounding = volumeOfBox(param.boundingBox);
-    double volume1 = volumeOfBox(box1);
-    double volume2 = volumeOfBox(box2);
-    //TODO: continue here
+    auto [box1, box2] = splitBox(param.boundingBox, plane);
+    const double surfaceAreaBounding = surfaceAreaOfBox(param.boundingBox);
+    const double surfaceArea1 = surfaceAreaOfBox(box1);
+    const double surfaceArea2 = surfaceAreaOfBox(box2);
+    const double costLesser = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * (lessT->size() + equalT->size()) + (surfaceArea2 / surfaceAreaBounding) * greaterT->size());
+    const double costUpper = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * lessT->size() + (surfaceArea2 / surfaceAreaBounding) * (greaterT->size() + equalT->size()));
+    const double minCost = std::min(costLesser, costUpper);
+    return std::make_pair(minCost, TriangleIndexLists{std::move(lessT), std::move(greaterT), std::move(equalT)});
 }
 
-const double KDTree::surfaceAreaHeuristic(const double boundingVolume, const double fragmentVolume) const {
-    return fragmentVolume / boundingVolume;
+double KDTree::surfaceAreaOfBox(const Box &box) {
+    const double width = std::abs(box.second[0] - box.first[0]);
+    const double length = std::abs(box.second[1] - box.first[1]);
+    const double height = std::abs(box.second[2] - box.first[2]);
+    return 2 * (width * length + width * height + length * height);
 }
 
-const double KDTree::volumeOfBox(const Box& box) const {
-    double volume{1};
-    for(int i{0}; i < box.size(); i++) {
-        volume *= box.second[i] - box.first[i];
-	}
-    return volume;
-}
-
-const std::array<std::vector<size_t>, 3> KDTree::containedTriangles(const SplitParam& param, const Plane& split) const {
-	std::vector<size_t> index_less{};
-    std::vector<size_t> index_greater{};
-    std::vector<size_t> index_equal{};
+TriangleIndexLists KDTree::containedTriangles(const SplitParam &param, const Plane &split) {
+    std::unique_ptr index_less = std::make_unique<std::vector<size_t>>();
+    std::unique_ptr index_greater = std::make_unique<std::vector<size_t>>();
+    std::unique_ptr index_equal = std::make_unique<std::vector<size_t>>();
 
     std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &split, &index_equal, &index_greater, &index_less](const size_t faceIndex) {
-        const IndexArray3& face{param.faces[index]};
-       bool less{false}, greater{false}, equal{false};
-       std::array<Array3,3> vertices{};
-       std::transform(face.cbegin(), face.cend(), vertices.begin(), [&param](const size_t vertexIndex) {return param.vertices[vertexIndex];});
-       for(const Array3 vertex :  vertices) {
-           if(vertex[split.second] < split.first[split.second]) {
-               less |= true;
-           } else if(vertex[split.second] > split.first[split.second]) {
-               greater |= true;
-           } else if(vertex[split.second] == split.first[split.second]) {
-               equal |= true;
-           }
-       }
+        const IndexArray3 &face{param.faces[faceIndex]};
+        bool less{false}, greater{false}, equal{false};
+        std::array<Array3, 3> vertices{};
+        std::transform(face.cbegin(), face.cend(), vertices.begin(), [&param](const size_t vertexIndex) { return param.vertices[vertexIndex]; });
+        for (const Array3 vertex: vertices) {
+            if (vertex[split.second] < split.first[split.second]) {
+                less = true;
+            } else if (vertex[split.second] > split.first[split.second]) {
+                greater = true;
+            } else if (vertex[split.second] == split.first[split.second]) {
+                equal = true;
+            }
+        }
 
-       if((less && greater) || equal) {
-           index_equal.push_back(faceIndex);
-           } else if(greater) {
-               index_greater.push_back(faceIndex);
-           } else if(less) {
-               index_less.push_back(faceIndex);
-           }
+        if ((less && greater) || equal) {
+            index_equal->push_back(faceIndex);
+        }
+        if (greater) {
+            index_greater->push_back(faceIndex);
+        }
+        if (less) {
+            index_less->push_back(faceIndex);
+        }
     });
-    return std::array{index_less, index_greater, index_equal};
+    return std::array{std::move(index_less), std::move(index_greater), std::move(index_equal)};
 }
