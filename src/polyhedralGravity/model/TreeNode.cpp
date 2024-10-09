@@ -1,3 +1,3 @@
 #include "TreeNode.h"
 
-TreeNode::TreeNode(Plane plane) : plane{plane} {}
+TreeNode::TreeNode(SplitParam splitParam) : splitParam(std::make_unique<SplitParam>(splitParam)) {}

@@ -15,6 +15,11 @@ enum Direction {
 };
 
 /**
+ * Number of dimensions for the polyhedron. Also corresponds to the number of elements of the {@link Direction} enum.
+ */
+constexpr int DIMENSIONS = 3;
+
+/**
  * Defines a plane that is parallel to one of the coordinate planes, by taking a point that lies on the plane and the coordinate that is fixed for every \
  * point on the plane.
  *
@@ -26,6 +31,13 @@ using Plane = std::pair<std::array<double, 3>, Direction>;
  * Defines a rectangular box by taking two opposite corner points
  */
 using Box = std::pair<std::array<double, 3>, std::array<double, 3>>;
+
+/**
+* Three triangle sets contained in an array. Those being the set of triangles with non-zero area in the bounding box closer to the origin with respect to the split plane,
+     * the set of triangles with non-zero area in the bounding box further away from the origin with respect to the split plane
+     * and the set of triangles that overlap with the split plane itself.
+ */
+using TriangleIndexLists = std::array<std::unique_ptr<std::vector<size_t>>, 3>;
 
 /**
  * Helper struct to bundle important parameters required for splitting a Polyhedron for better readability
@@ -42,14 +54,24 @@ struct SplitParam {
     /**
      * An index list of faces that are included in the current bounding box of the KDTree. Important when building deeper levels of a KDTree.
      */
-    const std::vector<size_t> indexBoundFaces;
+    std::vector<size_t> indexBoundFaces;
     /**
      * The current bounding box that should be divided further by the KDTree.
      */
-    const Box boundingBox;
+    Box boundingBox;
     /**
      * The direction in which the current bounding box should be divided by further.
-     * @see Refer to Plane on how to interpret the Direction.
+     * Refer to {@link Plane} on how to interpret the Direction.
      */
-    const Direction splitDirection;
+    Direction splitDirection;
+
+    /**
+     * Constructor that initializes all fields. Intended for the use with std::make_unique. See {@link SplitParam} fields for further information.
+     *
+     */
+    SplitParam(const std::vector<polyhedralGravity::Array3> &vertices, const std::vector<polyhedralGravity::IndexArray3> &faces, std::vector<size_t> &indexBoundFaces, Box boundingBox, Direction splitDirection)
+        : vertices{vertices}, faces{faces}, indexBoundFaces{indexBoundFaces}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
+    }
+    SplitParam(SplitParam &) = default;
+    SplitParam(SplitParam &&) = delete;
 };

@@ -7,25 +7,19 @@
 #include "KDTree.h"
 #include "KdDefinitions.h"
 
-KDTree KDTree::buildKDTree(const Polyhedron &polyhedron) {
-    KDTree tree{};
+KDTree::KDTree(const polyhedralGravity::Polyhedron &polyhedron) {
     std::vector<size_t> boundFaces(polyhedron.getFaces().size());
     int index{0};
     std::generate(boundFaces.begin(), boundFaces.end(), [&index]() { return index++; });
     const Box boundingBox{getBoundingBox(polyhedron.getVertices())};
-    const SplitParam param{
-            .vertices = polyhedron.getVertices(),
-            .faces = polyhedron.getFaces(),
-            .indexBoundFaces = boundFaces,
-            .boundingBox = boundingBox,
-            .splitDirection = Direction::X};
-    tree.rootNode = buildRectangle(param);
-    return tree;
+    this->param = std::make_unique<SplitParam>(polyhedron.getVertices(), polyhedron.getFaces(), boundFaces, boundingBox, X);
 }
 
-std::unique_ptr<TreeNode> KDTree::buildRectangle(const SplitParam &param) {
-    auto [plane, triangleIndexList] = findPlane(param);
-    return std::make_unique<TreeNode>(plane);//TODO: build children
+TreeNode &KDTree::getRootNode() {
+    if (!this->rootNode) {
+        this->rootNode = TreeNode::treeNodeFactory(*std::move(this->param));
+    }
+    return *this->rootNode;
 }
 
 std::pair<Plane, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
@@ -46,7 +40,8 @@ std::pair<Plane, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) 
     return std::make_pair(std::move(optPlane), std::move(optTriangleIndexLists));
 }
 
-Box KDTree::getBoundingBox(const std::vector<Array3> &vertices) {
+Box KDTree::getBoundingBox(const std::vector<polyhedralGravity::Array3> &vertices) {
+    using namespace polyhedralGravity;
     assert(!vertices.empty());
     Array3 min = vertices[0];
     Array3 max = vertices[0];
@@ -88,9 +83,10 @@ double KDTree::surfaceAreaOfBox(const Box &box) {
 }
 
 TriangleIndexLists KDTree::containedTriangles(const SplitParam &param, const Plane &split) {
-    std::unique_ptr index_less = std::make_unique<std::vector<size_t>>();
-    std::unique_ptr index_greater = std::make_unique<std::vector<size_t>>();
-    std::unique_ptr index_equal = std::make_unique<std::vector<size_t>>();
+    using namespace polyhedralGravity;
+    auto index_less = std::make_unique<std::vector<size_t>>();
+    auto index_greater = std::make_unique<std::vector<size_t>>();
+    auto index_equal = std::make_unique<std::vector<size_t>>();
 
     std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &split, &index_equal, &index_greater, &index_less](const size_t faceIndex) {
         const IndexArray3 &face{param.faces[faceIndex]};
