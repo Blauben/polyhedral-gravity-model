@@ -1,10 +1,9 @@
 #pragma once
 
 #include "TreeNode.h"
-#include <vector>
 
-class LeafNode : TreeNode {
-    std::vector<size_t> indexBoundFaces;
+class LeafNode final : public TreeNode {
     public:
+        explicit LeafNode(SplitParam splitParam);
         double intersect() override;
 };

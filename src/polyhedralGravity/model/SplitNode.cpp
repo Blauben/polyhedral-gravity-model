@@ -2,35 +2,43 @@
 
 #include "KDTree.h"
 
-SplitNode::SplitNode(SplitParam splitParam)
-    : TreeNode(std::make_unique<SplitParam>(splitParam)) {
+SplitNode::SplitNode(SplitParam splitParam, Plane& plane, TriangleIndexLists& triangleIndexLists)
+    : TreeNode(splitParam), _plane{std::make_unique<Plane>(plane)}, _triangleIndexLists{std::make_unique<TriangleIndexLists>(std::move(triangleIndexLists))} {
 }
 
-TreeNode &SplitNode::getLesserNode() {
+TreeNode* SplitNode::getLesserNode() {
     if (!this->_lesser) {
-        computeChildren();
+        SplitParam childParam{*this->splitParam};
+        childParam.boundingBox = KDTree::splitBox(this->splitParam->boundingBox, *(this->_plane)).first; //first is the lesser box
+        childParam.indexBoundFaces = *(*_triangleIndexLists)[0];
+        childParam.indexBoundFaces.insert(childParam.indexBoundFaces.cend(), (*_triangleIndexLists)[2]->cbegin(), (*_triangleIndexLists)[2]->cend());
+        childParam.splitDirection = static_cast<Direction>((this->splitParam->splitDirection + 1) % DIMENSIONS);
+        _lesser = treeNodeFactory(childParam);
+        maybeFreeParam();
     }
     return *(this->_lesser);
 }
 
-TreeNode &SplitNode::getGreaterNode() {
+TreeNode* SplitNode::getGreaterNode() {
     if (!this->_greater) {
-        computeChildren();
+        SplitParam childParam{*this->splitParam};
+        childParam.boundingBox = KDTree::splitBox(this->splitParam->boundingBox, *(this->_plane)).second; //second is the greater box
+        childParam.indexBoundFaces = *(*_triangleIndexLists)[1];
+        childParam.indexBoundFaces.insert(childParam.indexBoundFaces.cend(), (*_triangleIndexLists)[2]->cbegin(), (*_triangleIndexLists)[2]->cend());
+        childParam.splitDirection = static_cast<Direction>((this->splitParam->splitDirection + 1) % DIMENSIONS);
+        _greater = treeNodeFactory(childParam);
+        maybeFreeParam();
     }
     return *(this->_greater);
 }
 
-void SplitNode::computeChildren() {
-    auto [plane, triangleIndexLists] = KDTree::findPlane(*splitParam);
-    this->_plane = std::make_unique<Plane>(plane);
-    auto [lesserBox, greaterBox] = KDTree::splitBox(splitParam->boundingBox, *_plane);
-    splitParam->splitDirection = static_cast<Direction>((splitParam->splitDirection + 1) % DIMENSIONS);
-    splitParam->indexBoundFaces = *triangleIndexLists[0];//TODO: optimization maybe use std::list
-    splitParam->indexBoundFaces.insert(splitParam->indexBoundFaces.cend(), triangleIndexLists[2]->cbegin(), triangleIndexLists[2]->cend());
-    splitParam->boundingBox = lesserBox;
-    _lesser = treeNodeFactory(*splitParam);
-    splitParam->indexBoundFaces = *triangleIndexLists[1];//TODO: optimization maybe use std::list
-    splitParam->indexBoundFaces.insert(splitParam->indexBoundFaces.cend(), triangleIndexLists[2]->cbegin(), triangleIndexLists[2]->cend());
-    splitParam->boundingBox = greaterBox;
-    _greater = treeNodeFactory(*std::move(splitParam));
+void SplitNode::maybeFreeParam() {
+    if(_lesser && _greater) {
+        this->splitParam.reset();
+    }
 }
+
+double SplitNode::intersect() {
+    return 1.0;
+}
+

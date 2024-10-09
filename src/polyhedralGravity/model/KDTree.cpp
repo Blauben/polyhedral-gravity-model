@@ -15,14 +15,14 @@ KDTree::KDTree(const polyhedralGravity::Polyhedron &polyhedron) {
     this->param = std::make_unique<SplitParam>(polyhedron.getVertices(), polyhedron.getFaces(), boundFaces, boundingBox, X);
 }
 
-TreeNode &KDTree::getRootNode() {
+TreeNode* KDTree::getRootNode() {
     if (!this->rootNode) {
-        this->rootNode = TreeNode::treeNodeFactory(*std::move(this->param));
+        this->rootNode = TreeNode::treeNodeFactory(*(this->param.release()));
     }
     return *this->rootNode;
 }
 
-std::pair<Plane, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
+std::tuple<Plane, double, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
     double cost = std::numeric_limits<double>::infinity();
     Plane optPlane{param.vertices[0], param.splitDirection};
     TriangleIndexLists optTriangleIndexLists{};
@@ -37,7 +37,7 @@ std::pair<Plane, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) 
             }
         }
     });
-    return std::make_pair(std::move(optPlane), std::move(optTriangleIndexLists));
+    return std::make_tuple(std::move(optPlane), cost, std::move(optTriangleIndexLists));
 }
 
 Box KDTree::getBoundingBox(const std::vector<polyhedralGravity::Array3> &vertices) {

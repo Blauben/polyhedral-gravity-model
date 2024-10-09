@@ -7,15 +7,6 @@
 #include "TreeNode.h"
 
 class KDTree {
-    /**
-     * Constant that describes the cost of traversing the KDTree by one step.
-     */
-    constexpr static const double traverseStepCost{1.0};
-    /**
-     * Constant that describes the cost of intersecting a ray and a single object.
-     */
-    constexpr static const double triangleIntersectionCost{1.0};
-
 public:
     /**
      * Call to build a KDTree to speed up intersections of rays with a polyhedron's faces.
@@ -27,9 +18,9 @@ public:
     /**
      * Finds the optimal split plane to split a provided rectangle section optimally.
      * @param param specifies the polyhedron section to be split @link SplitParam.
-     * @return Pair of the optimal plane to split the specified bounding box and a list of triangle sets with respective positions to the found plane. Refer to {@link TriangleIndexLists} for more information.
+     * @return Tuple of the optimal plane to split the specified bounding box, its cost as double and a list of triangle sets with respective positions to the found plane. Refer to {@link TriangleIndexLists} for more information.
      */
-    static std::pair<Plane, TriangleIndexLists> findPlane(const SplitParam &param);// O(N^2) implementation
+    static std::tuple<Plane, double, TriangleIndexLists> findPlane(const SplitParam &param);// O(N^2) implementation
 
     /**
      * Splits a box into two new boxes.
@@ -39,23 +30,32 @@ public:
      */
     static std::pair<Box, Box> splitBox(const Box &box, const Plane &plane);
 
-
-private:
     /**
-     * The entry node of the KDTree. Only access using getter.
+     * Constant that describes the cost of traversing the KDTree by one step.
      */
-    std::unique_ptr<TreeNode> rootNode;
-
+    constexpr static const double traverseStepCost{1.0};
     /**
-     * Parameters for lazily building the root node @link SplitParam
+     * Constant that describes the cost of intersecting a ray and a single object.
      */
-    std::unique_ptr<SplitParam> param;
+    constexpr static const double triangleIntersectionCost{1.0};
 
     /**
      * Creates the root tree node if not initialized and returns it.
      * @return the root tree Node.
      */
-    TreeNode & getRootNode();
+    TreeNode* getRootNode();
+
+
+private:
+    /**
+     * The entry node of the KDTree. Only access using getter.
+     */
+    std::unique_ptr<TreeNode*> rootNode;
+
+    /**
+     * Parameters for lazily building the root node @link SplitParam
+     */
+    std::unique_ptr<SplitParam> param;
 
     /**
      * Finds the minimal bounding box for a set of vertices.

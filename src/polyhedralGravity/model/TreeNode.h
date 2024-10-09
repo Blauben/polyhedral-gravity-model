@@ -7,14 +7,16 @@
 */
 class TreeNode {
 public:
-    virtual ~TreeNode();
+    virtual ~TreeNode() = default;
+    TreeNode(TreeNode&) = delete;
+    TreeNode(TreeNode&&) = delete;
     /**
     * Used to compute intersections with the KDTree nodes and propagate to the correct childNodes if necessary.
     * @param TODO
     * @return TODO
     */
     virtual double intersect() = 0;//TODO: find correct return and param types
-    static std::unique_ptr<TreeNode> treeNodeFactory(SplitParam splitParam);
+    static std::unique_ptr<TreeNode*> treeNodeFactory(SplitParam splitParam);
 
 protected:
     /**
