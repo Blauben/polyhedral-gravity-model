@@ -2,13 +2,13 @@
 #include <array>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <utility>
 
 #include "KDTree.h"
 #include "KdDefinitions.h"
 
-void KDTree::buildKDTree(const Polyhedron &polyhedron) {
+KDTree KDTree::buildKDTree(const Polyhedron &polyhedron) {
+    KDTree tree{};
     std::vector<size_t> boundFaces(polyhedron.getFaces().size());
     int index{0};
     std::generate(boundFaces.begin(), boundFaces.end(), [&index]() { return index++; });
@@ -19,24 +19,24 @@ void KDTree::buildKDTree(const Polyhedron &polyhedron) {
             .indexBoundFaces = boundFaces,
             .boundingBox = boundingBox,
             .splitDirection = Direction::X};
-    this->rootNode = std::optional<std::unique_ptr<TreeNode>>(buildRectangle(param));
+    tree.rootNode = buildRectangle(param);
+    return tree;
 }
 
-std::unique_ptr<TreeNode> KDTree::buildRectangle(const SplitParam &param) const {
+std::unique_ptr<TreeNode> KDTree::buildRectangle(const SplitParam &param) {
     auto [plane, triangleIndexList] = findPlane(param);
     return std::make_unique<TreeNode>(plane);//TODO: build children
 }
 
-std::pair<Plane, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) const {// O(N^2) implementation
+std::pair<Plane, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
     double cost = std::numeric_limits<double>::infinity();
     Plane optPlane{param.vertices[0], param.splitDirection};
     TriangleIndexLists optTriangleIndexLists{};
-    std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &optPlane, &cost, &optTriangleIndexLists, this](const size_t faceIndex) {
+    std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &optPlane, &cost, &optTriangleIndexLists](const size_t faceIndex) {
         const auto &face = param.faces[faceIndex];
         for (const auto &index: face) {
             Plane candidatePlane{param.vertices[index], param.splitDirection};
-            auto [candidateCost, triangleIndexLists] = costForPlane(param, candidatePlane);
-            if (candidateCost < cost) {
+            if (auto [candidateCost, triangleIndexLists] = costForPlane(param, candidatePlane); candidateCost < cost) {
                 cost = candidateCost;
                 optPlane = candidatePlane;
                 optTriangleIndexLists = std::move(triangleIndexLists);
