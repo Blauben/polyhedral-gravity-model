@@ -15,15 +15,15 @@ KDTree::KDTree(const polyhedralGravity::Polyhedron &polyhedron) {
     this->param = std::make_unique<SplitParam>(polyhedron.getVertices(), polyhedron.getFaces(), boundFaces, boundingBox, X);
 }
 
-TreeNode* KDTree::getRootNode() {
+TreeNode& KDTree::getRootNode() {
     if (!this->rootNode) {
-        this->rootNode = TreeNode::treeNodeFactory(*(this->param.release()));
+        this->rootNode = TreeNode::treeNodeFactory(*this->param.release());
     }
     return *this->rootNode;
 }
 
 unsigned long KDTree::countIntersections(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray) {
-    return this->getRootNode()->countIntersections(origin, ray);
+    return this->getRootNode().countIntersections(origin, ray);
 }
 
 std::tuple<Plane, double, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
@@ -68,8 +68,12 @@ std::pair<Box, Box> KDTree::splitBox(const Box &box, const Plane &plane) {
 }
 
 std::pair<const double, TriangleIndexLists> KDTree::costForPlane(const SplitParam &param, const Plane &plane) {
-    auto [lessT, greaterT, equalT] = containedTriangles(param, plane);
+    //Checks if the split plane is one of the faces of the bounding box, if so the split is useless
+    if(plane.first[plane.second] == param.boundingBox.first[plane.second] || plane.first[plane.second] == param.boundingBox.second[plane.second]) {
+        return std::make_pair(std::numeric_limits<double>::infinity(), TriangleIndexLists{});
+    }
     auto [box1, box2] = splitBox(param.boundingBox, plane);
+    auto [lessT, greaterT, equalT] = containedTriangles(param, plane);
     const double surfaceAreaBounding = surfaceAreaOfBox(param.boundingBox);
     const double surfaceArea1 = surfaceAreaOfBox(box1);
     const double surfaceArea2 = surfaceAreaOfBox(box2);

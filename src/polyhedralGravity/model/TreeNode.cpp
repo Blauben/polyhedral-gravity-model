@@ -7,12 +7,10 @@ TreeNode::TreeNode(const SplitParam& splitParam)
     : splitParam(std::make_unique<SplitParam>(splitParam)) {
 }
 
-std::unique_ptr<TreeNode*> TreeNode::treeNodeFactory(const SplitParam &param) {
-auto [plane, planeCost, triangleIndexLists] = KDTree::findPlane(param);
-if(planeCost > static_cast<double>(param.indexBoundFaces.size()) * KDTree::triangleIntersectionCost) {
-    LeafNode leaf{param};
-    return std::make_unique<TreeNode*>(dynamic_cast<TreeNode*>(&leaf));
+std::unique_ptr<TreeNode> TreeNode::treeNodeFactory(const SplitParam &splitParam) {
+auto [plane, planeCost, triangleIndexLists] = KDTree::findPlane(splitParam);
+if(planeCost > static_cast<double>(splitParam.indexBoundFaces.size()) * KDTree::triangleIntersectionCost) {
+    return std::make_unique<LeafNode>(splitParam);
 }
-    SplitNode splitNode{param, plane, triangleIndexLists};
-    return std::make_unique<TreeNode*>(dynamic_cast<TreeNode*>(&splitNode));
+    return std::make_unique<SplitNode>(splitParam, plane, triangleIndexLists);
 }

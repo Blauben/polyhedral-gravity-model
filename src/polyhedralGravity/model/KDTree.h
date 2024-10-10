@@ -43,7 +43,7 @@ public:
      * Creates the root tree node if not initialized and returns it.
      * @return the root tree Node.
      */
-    TreeNode* getRootNode();
+    TreeNode& getRootNode();
 
     /**
      * Used to count the number of intersections of a ray and the polyhedron's faces.
@@ -58,7 +58,7 @@ private:
     /**
      * The entry node of the KDTree. Only access using getter.
      */
-    std::unique_ptr<TreeNode*> rootNode;
+    std::unique_ptr<TreeNode> rootNode;
 
     /**
      * Parameters for lazily building the root node @link SplitParam
