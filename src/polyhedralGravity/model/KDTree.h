@@ -45,6 +45,14 @@ public:
      */
     TreeNode* getRootNode();
 
+    /**
+     * Used to count the number of intersections of a ray and the polyhedron's faces.
+     * @param origin The point where the ray originates from.
+     * @param ray Specifies the ray direction.
+     * @return The number of intersections with the polyhedron.
+     */
+    unsigned long countIntersections(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray);
+
 
 private:
     /**

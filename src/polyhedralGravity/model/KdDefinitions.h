@@ -1,7 +1,9 @@
 #pragma once
 
-#include "Polyhedron.h"
+#include "GravityModelData.h"
 #include <array>
+#include <memory>
+#include <vector>
 
 /**
  * Assigns an integer index to the coordinate axes
@@ -72,6 +74,6 @@ struct SplitParam {
     SplitParam(const std::vector<polyhedralGravity::Array3> &vertices, const std::vector<polyhedralGravity::IndexArray3> &faces, std::vector<size_t> &indexBoundFaces, Box boundingBox, Direction splitDirection)
         : vertices{vertices}, faces{faces}, indexBoundFaces{indexBoundFaces}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
     }
-    SplitParam(SplitParam &) = default;
+    SplitParam(const SplitParam &) = default;
     SplitParam(SplitParam &&) = delete;
 };

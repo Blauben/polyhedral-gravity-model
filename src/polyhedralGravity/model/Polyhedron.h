@@ -1,28 +1,31 @@
 #pragma once
 
-#include <utility>
-#include <vector>
-#include <array>
-#include <set>
-#include <algorithm>
-#include <exception>
-#include <stdexcept>
-#include <tuple>
-#include <variant>
-#include <string>
-#include <sstream>
-#include <memory>
+#include "LeafNode.h"
+
+
+#include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/output/Logging.h"
+#include "polyhedralGravity/util/UtilityConstants.h"
+#include "polyhedralGravity/util/UtilityContainer.h"
+#include "polyhedralGravity/util/UtilityFloatArithmetic.h"
 #include "thrust/copy.h"
 #include "thrust/device_vector.h"
-#include "polyhedralGravity/output/Logging.h"
-#include "thrust/transform_reduce.h"
 #include "thrust/execution_policy.h"
 #include "thrust/iterator/counting_iterator.h"
-#include "polyhedralGravity/model/GravityModelData.h"
 #include "thrust/iterator/transform_iterator.h"
-#include "polyhedralGravity/util/UtilityContainer.h"
-#include "polyhedralGravity/util/UtilityConstants.h"
-#include "polyhedralGravity/util/UtilityFloatArithmetic.h"
+#include "thrust/transform_reduce.h"
+#include <algorithm>
+#include <array>
+#include <exception>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace polyhedralGravity {
 
@@ -361,6 +364,8 @@ namespace polyhedralGravity {
          */
         [[nodiscard]] size_t countRayPolyhedronIntersections(const Array3Triplet &face) const;
 
+        //TODO: consider moving to KDTree
+        friend class LeafNode;
         /**
          * Calculates how often a vector starting at a specific origin intersects a triangular face.
          * Uses the Möller–Trumbore intersection algorithm.

@@ -25,7 +25,7 @@ class SplitNode : public TreeNode {
     std::unique_ptr<TriangleIndexLists> _triangleIndexLists;
 
 public:
-    SplitNode(SplitParam splitParam, Plane& plane, TriangleIndexLists& triangleIndexLists);
+    SplitNode(const SplitParam& splitParam, Plane& plane, TriangleIndexLists& triangleIndexLists);
     SplitNode(const SplitNode &other) = delete;
     SplitNode(SplitNode &&other) = delete;
     /**
@@ -38,8 +38,25 @@ public:
      * @return the SplitNode that is farther away of the origin with respect to the split plane of this node.
      */
     TreeNode* getGreaterNode();
-    double intersect() override;
+    unsigned long countIntersections(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray) override;
 
 private:
+    /**
+     * Frees splitParam after both child nodes have been built.
+     */
     void maybeFreeParam();
+    /**
+     * Calculates ray intersections with the bounding box using the concepts of slabs.
+     * @param origin The point where the ray originates from.
+     * @param ray Specifies the ray direction.
+     * @return Returns the entry and exit points of the ray with the box as a pair.
+     */
+    std::pair<polyhedralGravity::Array3 , polyhedralGravity::Array3> rayBoxIntersection(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray);
+    /**
+     * Intersects a ray with the splitPlane.
+     * @param origin The point where the ray originates from.
+     * @param ray Specifies the ray direction.
+     * @return The point where both intersect.
+     */
+    polyhedralGravity::Array3 rayPlaneIntersection(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray);
 };

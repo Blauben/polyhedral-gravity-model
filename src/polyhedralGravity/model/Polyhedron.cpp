@@ -216,6 +216,7 @@ namespace polyhedralGravity {
         return intersections.size();
     }
 
+    //TODO: moved to LeafNode.cpp, consider removing here
     std::unique_ptr<Array3> Polyhedron::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle) {
         // Adapted Möller–Trumbore intersection algorithm
         // see https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm

@@ -22,9 +22,13 @@ TreeNode* KDTree::getRootNode() {
     return *this->rootNode;
 }
 
+unsigned long KDTree::countIntersections(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray) {
+    return this->getRootNode()->countIntersections(origin, ray);
+}
+
 std::tuple<Plane, double, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
     double cost = std::numeric_limits<double>::infinity();
-    Plane optPlane{param.vertices[0], param.splitDirection};
+    Plane optPlane{{0.0,0.0,0.0}, param.splitDirection};
     TriangleIndexLists optTriangleIndexLists{};
     std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &optPlane, &cost, &optTriangleIndexLists](const size_t faceIndex) {
         const auto &face = param.faces[faceIndex];
@@ -69,9 +73,9 @@ std::pair<const double, TriangleIndexLists> KDTree::costForPlane(const SplitPara
     const double surfaceAreaBounding = surfaceAreaOfBox(param.boundingBox);
     const double surfaceArea1 = surfaceAreaOfBox(box1);
     const double surfaceArea2 = surfaceAreaOfBox(box2);
-    const double costLesser = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * (lessT->size() + equalT->size()) + (surfaceArea2 / surfaceAreaBounding) * greaterT->size());
-    const double costUpper = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * lessT->size() + (surfaceArea2 / surfaceAreaBounding) * (greaterT->size() + equalT->size()));
-    const double minCost = std::min(costLesser, costUpper);
+    const double costLesser = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * (static_cast<double>(lessT->size() + equalT->size())) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>(greaterT->size()));
+    const double costUpper = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * static_cast<double>(lessT->size()) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>((greaterT->size() + equalT->size())));
+    const double minCost = std::min(costLesser, costUpper) * (lessT->empty() || greaterT->empty() ? 0.8 : 1);
     return std::make_pair(minCost, TriangleIndexLists{std::move(lessT), std::move(greaterT), std::move(equalT)});
 }
 
