@@ -1,10 +1,11 @@
 #pragma once
 
-#include <utility>
-
 #include "KdDefinitions.h"
 #include "Polyhedron.h"
 #include "TreeNode.h"
+
+//forward declaration
+class Polyhedron;
 
 class KDTree {
 public:
@@ -13,7 +14,7 @@ public:
      * @param polyhedron The polyhedron for which to build the KDTree.
      * @return the lazily built KDTree.
      */
-    explicit KDTree(const polyhedralGravity::Polyhedron &polyhedron);
+    explicit KDTree(const polyhedralGravity::Polyhedron *polyhedron);
 
     /**
      * Finds the optimal split plane to split a provided rectangle section optimally.
@@ -43,7 +44,7 @@ public:
      * Creates the root tree node if not initialized and returns it.
      * @return the root tree Node.
      */
-    TreeNode& getRootNode();
+    TreeNode &getRootNode();
 
     /**
      * Used to count the number of intersections of a ray and the polyhedron's faces.
@@ -51,7 +52,9 @@ public:
      * @param ray Specifies the ray direction.
      * @return The number of intersections with the polyhedron.
      */
-    unsigned long countIntersections(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray);
+    unsigned long countIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray);
+
+    void getFaceIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray, std::vector<size_t> &intersectedFaceIndices);
 
 
 private:

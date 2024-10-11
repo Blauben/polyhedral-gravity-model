@@ -5,35 +5,39 @@
 #include <utility>
 
 #include "KDTree.h"
-#include "KdDefinitions.h"
 
-KDTree::KDTree(const polyhedralGravity::Polyhedron &polyhedron) {
-    std::vector<size_t> boundFaces(polyhedron.getFaces().size());
+KDTree::KDTree(const polyhedralGravity::Polyhedron *polyhedron) {
+    std::vector<size_t> boundFaces(polyhedron->getFaces().size());
     int index{0};
     std::generate(boundFaces.begin(), boundFaces.end(), [&index]() { return index++; });
-    const Box boundingBox{getBoundingBox(polyhedron.getVertices())};
-    this->param = std::make_unique<SplitParam>(polyhedron.getVertices(), polyhedron.getFaces(), boundFaces, boundingBox, X);
+    const Box boundingBox{getBoundingBox(polyhedron->getVertices())};
+    this->param = std::make_unique<SplitParam>(polyhedron->getVertices(), polyhedron->getFaces(), boundFaces, boundingBox, X);
 }
 
-TreeNode& KDTree::getRootNode() {
+TreeNode &KDTree::getRootNode() {
     if (!this->rootNode) {
         this->rootNode = TreeNode::treeNodeFactory(*this->param.release());
     }
     return *this->rootNode;
 }
 
-unsigned long KDTree::countIntersections(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray) {
+unsigned long KDTree::countIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) {
     return this->getRootNode().countIntersections(origin, ray);
 }
 
+void KDTree::getFaceIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray, std::vector<size_t> &intersectedFaceIndices) {
+    this->getRootNode().getFaceIntersections(origin, ray, intersectedFaceIndices);
+}
+
+
 std::tuple<Plane, double, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
     double cost = std::numeric_limits<double>::infinity();
-    Plane optPlane{{0.0,0.0,0.0}, param.splitDirection};
+    Plane optPlane{0, param.splitDirection};
     TriangleIndexLists optTriangleIndexLists{};
     std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &optPlane, &cost, &optTriangleIndexLists](const size_t faceIndex) {
         const auto &face = param.faces[faceIndex];
         for (const auto &index: face) {
-            Plane candidatePlane{param.vertices[index], param.splitDirection};
+            Plane candidatePlane{param.vertices[index][param.splitDirection], param.splitDirection};
             if (auto [candidateCost, triangleIndexLists] = costForPlane(param, candidatePlane); candidateCost < cost) {
                 cost = candidateCost;
                 optPlane = candidatePlane;
@@ -62,14 +66,14 @@ std::pair<Box, Box> KDTree::splitBox(const Box &box, const Plane &plane) {
     Box box1{box};
     Box box2{box};
     const Direction &axis{plane.second};
-    box1.second[axis] = plane.first[axis];
-    box2.first[axis] = plane.first[axis];
+    box1.second[axis] = plane.first;
+    box2.first[axis] = plane.first;
     return std::make_pair(box1, box2);
 }
 
 std::pair<const double, TriangleIndexLists> KDTree::costForPlane(const SplitParam &param, const Plane &plane) {
     //Checks if the split plane is one of the faces of the bounding box, if so the split is useless
-    if(plane.first[plane.second] == param.boundingBox.first[plane.second] || plane.first[plane.second] == param.boundingBox.second[plane.second]) {
+    if (plane.first == param.boundingBox.first[plane.second] || plane.first == param.boundingBox.second[plane.second]) {
         return std::make_pair(std::numeric_limits<double>::infinity(), TriangleIndexLists{});
     }
     auto [box1, box2] = splitBox(param.boundingBox, plane);
@@ -102,11 +106,11 @@ TriangleIndexLists KDTree::containedTriangles(const SplitParam &param, const Pla
         std::array<Array3, 3> vertices{};
         std::transform(face.cbegin(), face.cend(), vertices.begin(), [&param](const size_t vertexIndex) { return param.vertices[vertexIndex]; });
         for (const Array3 vertex: vertices) {
-            if (vertex[split.second] < split.first[split.second]) {
+            if (vertex[split.second] < split.first) {
                 less = true;
-            } else if (vertex[split.second] > split.first[split.second]) {
+            } else if (vertex[split.second] > split.first) {
                 greater = true;
-            } else if (vertex[split.second] == split.first[split.second]) {
+            } else if (vertex[split.second] == split.first) {
                 equal = true;
             }
         }

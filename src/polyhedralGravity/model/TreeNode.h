@@ -19,6 +19,8 @@ public:
      * @return The number of intersections with the polyhedron portion contained in this node's bounding box.
      */
     virtual unsigned long countIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) = 0;
+    virtual void getFaceIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray, std::vector<size_t> &intersectedFaceIndices) = 0;
+
     static std::unique_ptr<TreeNode> treeNodeFactory(const SplitParam &splitParam);
 
 protected:

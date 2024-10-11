@@ -22,12 +22,12 @@ enum Direction {
 constexpr int DIMENSIONS = 3;
 
 /**
- * Defines a plane that is parallel to one of the coordinate planes, by taking a point that lies on the plane and the coordinate that is fixed for every \
+ * Defines a plane that is parallel to one of the coordinate planes, by taking the fixed axis coordinate value for the plane and the coordinate index ({@link Direction}) that is fixed for every \
  * point on the plane.
  *
- * E.g. Specifying [0.0,0.0,0.0] and Direction::X would describe the YZ plane that goes through the origin.
+ * E.g. Specifying 0.0 and Direction::X would describe the YZ plane that goes through the origin.
  */
-using Plane = std::pair<std::array<double, 3>, Direction>;
+using Plane = std::pair<double, Direction>;
 
 /**
  * Defines a rectangular box by taking two opposite corner points

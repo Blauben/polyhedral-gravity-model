@@ -25,22 +25,30 @@ class SplitNode final : public TreeNode {
     std::unique_ptr<TriangleIndexLists> _triangleIndexLists;
 
 public:
-    SplitNode(const SplitParam& splitParam, Plane& plane, TriangleIndexLists& triangleIndexLists);
+    SplitNode(const SplitParam &splitParam, Plane &plane, TriangleIndexLists &triangleIndexLists);
     SplitNode(const SplitNode &other) = delete;
     SplitNode(SplitNode &&other) = delete;
-    SplitNode& operator=(const SplitNode &other) = delete;
-    SplitNode& operator=(SplitNode &&other) = delete;
+    SplitNode &operator=(const SplitNode &other) = delete;
+    SplitNode &operator=(SplitNode &&other) = delete;
     /**
      * Computes the lesser child node if not present already and returns it to the caller.
      * @return the SplitNode that is closer to the origin with respect to the split plane of this node.
      */
-    TreeNode& getLesserNode();
+    TreeNode &getLesserNode();
     /**
      * Computes the greater child node if not present already and returns it to the caller.
      * @return the SplitNode that is farther away of the origin with respect to the split plane of this node.
      */
-    TreeNode& getGreaterNode();
-    unsigned long countIntersections(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray) override;
+    TreeNode &getGreaterNode();
+    /**
+     * Used to count the number of intersections of a ray and the polyhedron's faces.
+     * @param origin The point where the ray originates from.
+     * @param ray Specifies the ray direction.
+     * @return The number of intersections with the polyhedron.
+     */
+    unsigned long countIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) override;
+    void getFaceIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray, std::vector<size_t> &intersectedFaceIndices) override;
+
 
 private:
     /**
@@ -53,12 +61,19 @@ private:
      * @param ray Specifies the ray direction.
      * @return Returns the t parameter for the entry and exit points of the ray with the box as a pair, with t being from the equation $intersection_point = orig + t * ray$.
      */
-    [[nodiscard]] std::pair<double, double> rayBoxIntersection(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray) const;
+    [[nodiscard]] std::pair<double, double> rayBoxIntersection(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) const;
     /**
      * Intersects a ray with the splitPlane.
      * @param origin The point where the ray originates from.
      * @param ray Specifies the ray direction.
      * @return Returns the t parameter for the intersection point, with t being from the equation $intersection_point = orig + t * ray$.
      */
-    double rayPlaneIntersection(const polyhedralGravity::Array3& origin, const polyhedralGravity::Array3& ray);
+    [[nodiscard]] double rayPlaneIntersection(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) const;
+    /**
+     * Gets the children of this node whose bounding boxes are hit by the ray.
+     * @param origin The point where the ray originates from.
+     * @param ray Specifies the ray direction.
+     * @return the child nodes that intersect with the ray
+     */
+    [[nodiscard]] std::unique_ptr<std::vector<TreeNode *>> getChildrenForIntersection(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) const;
 };
