@@ -20,12 +20,16 @@ class SplitNode final : public TreeNode {
      */
     std::unique_ptr<Plane> _plane;
     /**
-     * Contains the triangle lists for the lesser, greater bounding boxes and the triangles which overlap with the split plane. {@link TriangleIndexLists}
+     * the bounding box for all triangles contained in this node.
      */
-    std::unique_ptr<TriangleIndexLists> _triangleIndexLists;
+    Box _boundingBox;
+    /**
+     * Contains the triangle lists for the lesser and greater bounding boxes. {@link TriangleIndexLists}
+     */
+    std::unique_ptr<TriangleIndexLists<2>> _triangleIndexLists;
 
 public:
-    SplitNode(const SplitParam &splitParam, Plane &plane, TriangleIndexLists &triangleIndexLists);
+    SplitNode(const SplitParam &splitParam, Plane &plane, TriangleIndexLists<2> &triangleIndexLists);
     SplitNode(const SplitNode &other) = delete;
     SplitNode(SplitNode &&other) = delete;
     SplitNode &operator=(const SplitNode &other) = delete;
@@ -75,5 +79,5 @@ private:
      * @param ray Specifies the ray direction.
      * @return the child nodes that intersect with the ray
      */
-    [[nodiscard]] std::unique_ptr<std::vector<TreeNode *>> getChildrenForIntersection(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) const;
+    [[nodiscard]] std::vector<TreeNode *> getChildrenForIntersection(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray);
 };

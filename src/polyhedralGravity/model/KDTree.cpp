@@ -7,9 +7,8 @@
 #include "KDTree.h"
 
 KDTree::KDTree(const std::vector<polyhedralGravity::Array3>& vertices, const std::vector<polyhedralGravity::IndexArray3>& faces) {
-    std::vector<size_t> boundFaces(faces.size());
-    int index{0};
-    std::generate(boundFaces.begin(), boundFaces.end(), [&index]() { return index++; });
+    TriangleIndexList boundFaces(faces.size());
+    std::iota(boundFaces.begin(), boundFaces.end(), 0);
     const Box boundingBox{getBoundingBox(vertices)};
     this->param = std::make_unique<SplitParam>(vertices, faces, boundFaces, boundingBox, X);
 }
@@ -52,10 +51,10 @@ void KDTree::getFaceIntersections(const polyhedralGravity::Array3 &origin, const
 }
 
 
-std::tuple<Plane, double, TriangleIndexLists> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
+std::tuple<Plane, double, TriangleIndexLists<2>> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
     double cost = std::numeric_limits<double>::infinity();
     Plane optPlane{0, param.splitDirection};
-    TriangleIndexLists optTriangleIndexLists{};
+    TriangleIndexLists<2> optTriangleIndexLists{};
     std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &optPlane, &cost, &optTriangleIndexLists](const size_t faceIndex) {
         const auto &face = param.faces[faceIndex];
         for (const auto &index: face) {
@@ -95,20 +94,26 @@ std::pair<Box, Box> KDTree::splitBox(const Box &box, const Plane &plane) {
     return std::make_pair(box1, box2);
 }
 
-std::pair<const double, TriangleIndexLists> KDTree::costForPlane(const SplitParam &param, const Plane &plane) {
+std::pair<const double, TriangleIndexLists<2>> KDTree::costForPlane(const SplitParam &param, const Plane &plane) {
     //Checks if the split plane is one of the faces of the bounding box, if so the split is useless
     if (plane.first == param.boundingBox.first[plane.second] || plane.first == param.boundingBox.second[plane.second]) {
-        return std::make_pair(std::numeric_limits<double>::infinity(), TriangleIndexLists{});
+        return std::make_pair(std::numeric_limits<double>::infinity(), TriangleIndexLists<2>{});
     }
     auto [box1, box2] = splitBox(param.boundingBox, plane);
     auto [lessT, greaterT, equalT] = containedTriangles(param, plane);
     const double surfaceAreaBounding = surfaceAreaOfBox(param.boundingBox);
     const double surfaceArea1 = surfaceAreaOfBox(box1);
     const double surfaceArea2 = surfaceAreaOfBox(box2);
-    const double costLesser = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * (static_cast<double>(lessT->size() + equalT->size())) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>(greaterT->size()));
-    const double costUpper = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * static_cast<double>(lessT->size()) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>((greaterT->size() + equalT->size())));
-    const double minCost = std::min(costLesser, costUpper) * (lessT->empty() || greaterT->empty() ? 0.8 : 1);
-    return std::make_pair(minCost, TriangleIndexLists{std::move(lessT), std::move(greaterT), std::move(equalT)});
+    double costLesser = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * (static_cast<double>(lessT->size() + equalT->size())) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>(greaterT->size()));
+    costLesser *= lessT->size() + equalT->size() == 0 || greaterT->empty() ? 0.8 : 1;
+    double costUpper = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * static_cast<double>(lessT->size()) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>((greaterT->size() + equalT->size())));
+    costUpper *= greaterT->size() + equalT->size() == 0 || lessT->empty() ? 0.8 : 1;
+    if (costLesser <= costUpper) {
+        lessT->insert(lessT->cend(), equalT->cbegin(), equalT->cend());
+        return std::make_pair(costLesser, std::array{std::move(lessT), std::move(greaterT)});
+    }
+    greaterT->insert(greaterT->cend(), equalT->cbegin(), equalT->cend());
+    return {costUpper, std::array{(std::move(lessT)), (std::move(greaterT))}};
 }
 
 double KDTree::surfaceAreaOfBox(const Box &box) {
@@ -118,13 +123,13 @@ double KDTree::surfaceAreaOfBox(const Box &box) {
     return 2 * (width * length + width * height + length * height);
 }
 
-TriangleIndexLists KDTree::containedTriangles(const SplitParam &param, const Plane &split) {
+TriangleIndexLists<3> KDTree::containedTriangles(const SplitParam &param, const Plane &split) {
     using namespace polyhedralGravity;
-    auto index_less = std::make_unique<std::vector<size_t>>();
-    auto index_greater = std::make_unique<std::vector<size_t>>();
-    auto index_equal = std::make_unique<std::vector<size_t>>();
+    auto index_less = std::make_unique<TriangleIndexList>();
+    auto index_greater = std::make_unique<TriangleIndexList>();
+    auto index_equal = std::make_unique<TriangleIndexList>();
 
-    std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &split, &index_equal, &index_greater, &index_less](const size_t faceIndex) {
+    std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &split, &index_greater, &index_less, &index_equal](const size_t faceIndex) {
         const IndexArray3 &face{param.faces[faceIndex]};
         bool less{false}, greater{false}, equal{false};
         std::array<Array3, 3> vertices{};
@@ -139,8 +144,9 @@ TriangleIndexLists KDTree::containedTriangles(const SplitParam &param, const Pla
             }
         }
 
-        if ((less && greater) || equal) {
+        if (!less && !greater && equal) {
             index_equal->push_back(faceIndex);
+            return;
         }
         if (greater) {
             index_greater->push_back(faceIndex);

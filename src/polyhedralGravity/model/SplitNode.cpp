@@ -4,16 +4,15 @@
 #include "KdDefinitions.h"
 #include <algorithm>
 
-SplitNode::SplitNode(const SplitParam &splitParam, Plane &plane, TriangleIndexLists &triangleIndexLists)
-    : TreeNode(splitParam), _plane{std::make_unique<Plane>(plane)}, _triangleIndexLists{std::make_unique<TriangleIndexLists>(std::move(triangleIndexLists))} {
+SplitNode::SplitNode(const SplitParam &splitParam, Plane &plane, TriangleIndexLists<2> &triangleIndexLists)
+    : TreeNode(splitParam), _plane{std::make_unique<Plane>(plane)}, _boundingBox{splitParam.boundingBox}, _triangleIndexLists{std::make_unique<TriangleIndexLists<2>>(std::move(triangleIndexLists))} {
 }
 
 TreeNode &SplitNode::getLesserNode() {
     if (!this->_lesser) {
         SplitParam childParam{*this->splitParam};
-        childParam.boundingBox = (KDTree::splitBox(this->splitParam->boundingBox, *(this->_plane))).first;//first is the lesser box;
+        childParam.boundingBox = (KDTree::splitBox(this->_boundingBox, *(this->_plane))).first;//first is the lesser box;
         childParam.indexBoundFaces = *(*_triangleIndexLists)[0];
-        childParam.indexBoundFaces.insert(childParam.indexBoundFaces.cend(), (*_triangleIndexLists)[2]->cbegin(), (*_triangleIndexLists)[2]->cend());
         childParam.splitDirection = static_cast<Direction>((this->splitParam->splitDirection + 1) % DIMENSIONS);
         _lesser = treeNodeFactory(childParam);
         maybeFreeParam();
@@ -24,9 +23,8 @@ TreeNode &SplitNode::getLesserNode() {
 TreeNode &SplitNode::getGreaterNode() {
     if (!this->_greater) {
         SplitParam childParam{*this->splitParam};
-        childParam.boundingBox = KDTree::splitBox(this->splitParam->boundingBox, *(this->_plane)).second;//second is the greater box
+        childParam.boundingBox = KDTree::splitBox(this->_boundingBox, *(this->_plane)).second;//second is the greater box
         childParam.indexBoundFaces = *(*_triangleIndexLists)[1];
-        childParam.indexBoundFaces.insert(childParam.indexBoundFaces.cend(), (*_triangleIndexLists)[2]->cbegin(), (*_triangleIndexLists)[2]->cend());
         childParam.splitDirection = static_cast<Direction>((this->splitParam->splitDirection + 1) % DIMENSIONS);
         _greater = treeNodeFactory(childParam);
         maybeFreeParam();
@@ -43,7 +41,7 @@ void SplitNode::maybeFreeParam() {
 unsigned long SplitNode::countIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) {
     const auto delegates = getChildrenForIntersection(origin, ray);
     int intersectionCount{0};
-    std::for_each(delegates->cbegin(), delegates->cend(), [&intersectionCount, &origin, &ray](const auto &child) {
+    std::for_each(delegates.cbegin(), delegates.cend(), [&intersectionCount, &origin, &ray](const auto &child) {
         intersectionCount += child->countIntersections(origin, ray);
     });
     return intersectionCount;
@@ -51,36 +49,37 @@ unsigned long SplitNode::countIntersections(const polyhedralGravity::Array3 &ori
 
 void SplitNode::getFaceIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray, std::vector<size_t> &intersectedFaceIndices) {
     const auto delegates = getChildrenForIntersection(origin, ray);
-    std::for_each(delegates->cbegin(), delegates->cend(), [&origin, &ray, &intersectedFaceIndices](const auto &child) {
+    std::for_each(delegates.cbegin(), delegates.cend(), [&origin, &ray, &intersectedFaceIndices](const auto &child) {
         child->getFaceIntersections(origin, ray, intersectedFaceIndices);
     });
 }
 
-std::unique_ptr<std::vector<TreeNode *>> SplitNode::getChildrenForIntersection(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) const {
+std::vector<TreeNode *> SplitNode::getChildrenForIntersection(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) {
     using namespace polyhedralGravity::util;
-    auto delegates{std::make_unique<std::vector<TreeNode *>>(2)};
+    std::vector<TreeNode*> delegates{};
+    delegates.reserve(2);
     auto [t_enter, t_exit] = this->rayBoxIntersection(origin, ray);
-    if (t_exit < t_enter) {// bounding box was not hit
+    if (t_exit < t_enter) {// bounding box was not hit, TODO: consider moving to root node because only called there
         return delegates;
     }
-    if (double t_split{rayPlaneIntersection(origin, ray)}; t_enter < t_split && t_exit > t_split) {
-        delegates->push_back(_lesser.get());
-        delegates->push_back(_greater.get());
-    } else if (const polyhedralGravity::Array3 intersectionPoint{(ray * t_enter + origin)[_plane->second]}; intersectionPoint[_plane->second] < _plane->first) {
-        delegates->push_back(_lesser.get());
+    if (double t_split{rayPlaneIntersection(origin, ray)}; t_enter < t_split && t_exit > t_split) { //TODO: consider optimizing: t_param stay the same in sub boxes
+        delegates.push_back(&getLesserNode());
+        delegates.push_back(&getGreaterNode());
+    } else if (const double intersectionCoord{ray[_plane->second] * t_enter + origin[_plane->second]}; intersectionCoord < _plane->first) {
+        delegates.push_back(&getLesserNode());
     } else {
-        delegates->push_back(_greater.get());
+        delegates.push_back(&getGreaterNode());
     }
     return delegates;
 }
 
 std::pair<double, double> SplitNode::rayBoxIntersection(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) const {
-    const double tx_min{(this->splitParam->boundingBox.first[0] - origin[0]) / ray[0]};
-    const double ty_min{(this->splitParam->boundingBox.first[1] - origin[1]) / ray[1]};
-    const double tz_min{(this->splitParam->boundingBox.first[2] - origin[2]) / ray[2]};
-    const double tx_max{(this->splitParam->boundingBox.second[0] - origin[0]) / ray[0]};
-    const double ty_max{(this->splitParam->boundingBox.second[1] - origin[1]) / ray[1]};
-    const double tz_max{(this->splitParam->boundingBox.second[2] - origin[2]) / ray[2]};
+    const double tx_min{(this->_boundingBox.first[0] - origin[0]) / ray[0]};
+    const double ty_min{(this->_boundingBox.first[1] - origin[1]) / ray[1]};
+    const double tz_min{(this->_boundingBox.first[2] - origin[2]) / ray[2]};
+    const double tx_max{(this->_boundingBox.second[0] - origin[0]) / ray[0]};
+    const double ty_max{(this->_boundingBox.second[1] - origin[1]) / ray[1]};
+    const double tz_max{(this->_boundingBox.second[2] - origin[2]) / ray[2]};
 
     const double tx_enter{std::min(tx_min, tx_max)};
     const double tx_exit{std::max(tx_min, tx_max)};

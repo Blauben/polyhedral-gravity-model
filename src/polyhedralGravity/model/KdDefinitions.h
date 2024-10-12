@@ -3,7 +3,9 @@
 #include "GravityModelData.h"
 #include <array>
 #include <memory>
+#include <utility>
 #include <vector>
+#include <unordered_set>
 
 /**
  * Assigns an integer index to the coordinate axes
@@ -35,11 +37,17 @@ using Plane = std::pair<double, Direction>;
 using Box = std::pair<std::array<double, 3>, std::array<double, 3>>;
 
 /**
+ * a set that stores indices of the faces vector in the KDTree. This effectively corresponds to a set of triangles
+ */
+using TriangleIndexList = std::vector<size_t>;
+
+/**
 * Three triangle sets contained in an array. Those being the set of triangles with non-zero area in the bounding box closer to the origin with respect to the split plane,
      * the set of triangles with non-zero area in the bounding box further away from the origin with respect to the split plane
      * and the set of triangles that overlap with the split plane itself.
  */
-using TriangleIndexLists = std::array<std::unique_ptr<std::vector<size_t>>, 3>;
+template<int num>
+using TriangleIndexLists = std::array<std::unique_ptr<TriangleIndexList>, num>;
 
 /**
  * Helper struct to bundle important parameters required for splitting a Polyhedron for better readability
@@ -56,7 +64,7 @@ struct SplitParam {
     /**
      * An index list of faces that are included in the current bounding box of the KDTree. Important when building deeper levels of a KDTree.
      */
-    std::vector<size_t> indexBoundFaces;
+    TriangleIndexList indexBoundFaces;
     /**
      * The current bounding box that should be divided further by the KDTree.
      */
@@ -71,8 +79,8 @@ struct SplitParam {
      * Constructor that initializes all fields. Intended for the use with std::make_unique. See {@link SplitParam} fields for further information.
      *
      */
-    SplitParam(const std::vector<polyhedralGravity::Array3> &vertices, const std::vector<polyhedralGravity::IndexArray3> &faces, std::vector<size_t> &indexBoundFaces, Box boundingBox, Direction splitDirection)
-        : vertices{vertices}, faces{faces}, indexBoundFaces{indexBoundFaces}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
+    SplitParam(const std::vector<polyhedralGravity::Array3> &vertices, const std::vector<polyhedralGravity::IndexArray3> &faces, TriangleIndexList indexBoundFaces, Box boundingBox, Direction splitDirection)
+        : vertices{vertices}, faces{faces}, indexBoundFaces{std::move(indexBoundFaces)}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
     }
     SplitParam(const SplitParam &) = default;
     SplitParam(SplitParam &&) = delete;
