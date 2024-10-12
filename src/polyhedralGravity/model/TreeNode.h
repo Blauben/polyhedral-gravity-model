@@ -2,6 +2,8 @@
 
 #include "KdDefinitions.h"
 
+namespace polyhedralGravity {
+
 /**
 * Abstract super class for nodes in the {@link KDTree}.
 */
@@ -18,10 +20,8 @@ public:
      * @param ray Specifies the ray direction.
      * @return The number of intersections with the polyhedron portion contained in this node's bounding box.
      */
-    virtual unsigned long countIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) = 0;
-    virtual void getFaceIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray, std::vector<size_t> &intersectedFaceIndices) = 0;
-
-    static std::unique_ptr<TreeNode> treeNodeFactory(const SplitParam &splitParam);
+    virtual unsigned long countIntersections(const Array3 &origin, const Array3 &ray) = 0;
+    virtual void getFaceIntersections(const Array3 &origin, const Array3 &ray, std::vector<size_t> &intersectedFaceIndices) = 0;
 
 protected:
     /**
@@ -29,7 +29,9 @@ protected:
 */
     explicit TreeNode(const SplitParam &splitParam);
     /**
-    * Stores parameters required for building child nodes lazily. Gets freed after children are built.
+    * Stores parameters required for building child nodes lazily. Gets freed after children are built if the Node is an inner node.
     */
     std::unique_ptr<const SplitParam> splitParam;
 };
+
+}

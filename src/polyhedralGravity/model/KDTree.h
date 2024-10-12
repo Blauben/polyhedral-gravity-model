@@ -3,6 +3,9 @@
 #include "KdDefinitions.h"
 #include "TreeNode.h"
 
+#include <optional>
+
+namespace polyhedralGravity {
 
 class KDTree {
 public:
@@ -12,17 +15,17 @@ public:
      * @param faces The faces of the polyhedron with a face being a triplet of vertex indices
      * @return the lazily built KDTree.
      */
-    KDTree(const std::vector<polyhedralGravity::Array3>& vertices, const std::vector<polyhedralGravity::IndexArray3>& faces);
+    KDTree(const std::vector<Array3>& vertices, const std::vector<IndexArray3>& faces);
 
-    KDTree(KDTree&& other) noexcept ;
+    //KDTree(KDTree&& other) = default; TODO
 
     KDTree(const KDTree&) = delete;
 
     KDTree& operator=(KDTree& other) = delete;
 
-    KDTree& operator=(KDTree&& other) noexcept ;
+    //KDTree& operator=(KDTree&& other) noexcept ; TODO
 
-    bool operator==(const KDTree & other) const;
+    //bool operator==(const KDTree & other) const; TODO
 
     /**
      * Finds the optimal split plane to split a provided rectangle section optimally.
@@ -60,9 +63,9 @@ public:
      * @param ray Specifies the ray direction.
      * @return The number of intersections with the polyhedron.
      */
-    unsigned long countIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray);
+    unsigned long countIntersections(const Array3 &origin, const Array3 &ray);
 
-    void getFaceIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray, std::vector<size_t> &intersectedFaceIndices);
+    void getFaceIntersections(const Array3 &origin, const Array3 &ray, std::vector<size_t> &intersectedFaceIndices);
 
 
 private:
@@ -81,7 +84,7 @@ private:
      * @param vertices the set of vertex coordinates for which to find the box
      * @return the bounding box @link Box
      */
-    static Box getBoundingBox(const std::vector<polyhedralGravity::Array3> &vertices);
+    static Box getBoundingBox(const std::vector<Array3> &vertices);
     /**
      * Evaluates the cost function should the specified bounding box and it's faces be divided by the specified plane. Used to evaluate possible split planes.
      * @param param specifies the polyhedron section to be split @link SplitParam.
@@ -105,3 +108,5 @@ private:
      */
     static TriangleIndexLists<3> containedTriangles(const SplitParam &param, const Plane &split);
 };
+
+}

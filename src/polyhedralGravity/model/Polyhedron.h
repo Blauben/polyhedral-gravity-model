@@ -16,6 +16,7 @@
 #include <array>
 #include <exception>
 #include <memory>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -376,7 +377,7 @@ namespace polyhedralGravity {
          *
          * @related Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
          */
-        static std::unique_ptr<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
+        static std::optional<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
     };
 
 }

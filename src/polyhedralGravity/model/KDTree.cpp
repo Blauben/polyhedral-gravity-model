@@ -5,48 +5,30 @@
 #include <utility>
 
 #include "KDTree.h"
+#include "TreeNodeFactory.h"
 
-KDTree::KDTree(const std::vector<polyhedralGravity::Array3>& vertices, const std::vector<polyhedralGravity::IndexArray3>& faces) {
+namespace polyhedralGravity {
+
+    KDTree::KDTree(const std::vector<Array3>& vertices, const std::vector<IndexArray3>& faces) {
     TriangleIndexList boundFaces(faces.size());
     std::iota(boundFaces.begin(), boundFaces.end(), 0);
     const Box boundingBox{getBoundingBox(vertices)};
-    this->param = std::make_unique<SplitParam>(vertices, faces, boundFaces, boundingBox, X);
-}
-
-KDTree::KDTree(KDTree&& other) noexcept {
-    this->rootNode = std::move(other.rootNode);
-    if(!this->rootNode) {
-        this->param = std::move(other.param);
-    }
-}
-
-KDTree& KDTree::operator=(KDTree&& other) noexcept {
-    if(*this == other) {
-        return *this;
-    }
-    this->rootNode = std::move(other.rootNode);
-    if(!this->rootNode) {
-        this->param = std::move(other.param);
-    }
-    return *this;
-}
-
-bool KDTree::operator==(const KDTree & other) const {
-    return this->rootNode == other.rootNode;
+    this->param = std::make_unique<SplitParam>(vertices, faces, boundFaces, boundingBox, Direction::X);
 }
 
 TreeNode &KDTree::getRootNode() {
     if (!this->rootNode) {
-        this->rootNode = TreeNode::treeNodeFactory(*this->param.release());
+        this->rootNode = TreeNodeFactory::treeNodeFactory(*this->param);
+        this->param.reset();
     }
     return *this->rootNode;
 }
 
-unsigned long KDTree::countIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray) {
+unsigned long KDTree::countIntersections(const Array3 &origin, const Array3 &ray) {
     return this->getRootNode().countIntersections(origin, ray);
 }
 
-void KDTree::getFaceIntersections(const polyhedralGravity::Array3 &origin, const polyhedralGravity::Array3 &ray, std::vector<size_t> &intersectedFaceIndices) {
+void KDTree::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::vector<size_t> &intersectedFaceIndices) {
     this->getRootNode().getFaceIntersections(origin, ray, intersectedFaceIndices);
 }
 
@@ -58,7 +40,7 @@ std::tuple<Plane, double, TriangleIndexLists<2>> KDTree::findPlane(const SplitPa
     std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &optPlane, &cost, &optTriangleIndexLists](const size_t faceIndex) {
         const auto &face = param.faces[faceIndex];
         for (const auto &index: face) {
-            Plane candidatePlane{param.vertices[index][param.splitDirection], param.splitDirection};
+            Plane candidatePlane{param.vertices[index][static_cast<int>(param.splitDirection)], param.splitDirection};
             if (auto [candidateCost, triangleIndexLists] = costForPlane(param, candidatePlane); candidateCost < cost) {
                 cost = candidateCost;
                 optPlane = candidatePlane;
@@ -69,7 +51,7 @@ std::tuple<Plane, double, TriangleIndexLists<2>> KDTree::findPlane(const SplitPa
     return std::make_tuple(std::move(optPlane), cost, std::move(optTriangleIndexLists));
 }
 
-Box KDTree::getBoundingBox(const std::vector<polyhedralGravity::Array3> &vertices) {
+Box KDTree::getBoundingBox(const std::vector<Array3> &vertices) {
     using namespace polyhedralGravity;
     if(vertices.empty()) {
         return {{0, 0, 0}, {0, 0, 0}};
@@ -89,14 +71,14 @@ std::pair<Box, Box> KDTree::splitBox(const Box &box, const Plane &plane) {
     Box box1{box};
     Box box2{box};
     const Direction &axis{plane.second};
-    box1.second[axis] = plane.first;
-    box2.first[axis] = plane.first;
+    box1.second[static_cast<int>(axis)] = plane.first;
+    box2.first[static_cast<int>(axis)] = plane.first;
     return std::make_pair(box1, box2);
 }
 
 std::pair<const double, TriangleIndexLists<2>> KDTree::costForPlane(const SplitParam &param, const Plane &plane) {
     //Checks if the split plane is one of the faces of the bounding box, if so the split is useless
-    if (plane.first == param.boundingBox.first[plane.second] || plane.first == param.boundingBox.second[plane.second]) {
+    if (plane.first == param.boundingBox.first[static_cast<int>(plane.second)] || plane.first == param.boundingBox.second[static_cast<int>(plane.second)]) {
         return std::make_pair(std::numeric_limits<double>::infinity(), TriangleIndexLists<2>{});
     }
     auto [box1, box2] = splitBox(param.boundingBox, plane);
@@ -135,11 +117,11 @@ TriangleIndexLists<3> KDTree::containedTriangles(const SplitParam &param, const 
         std::array<Array3, 3> vertices{};
         std::transform(face.cbegin(), face.cend(), vertices.begin(), [&param](const size_t vertexIndex) { return param.vertices[vertexIndex]; });
         for (const Array3 vertex: vertices) {
-            if (vertex[split.second] < split.first) {
+            if (vertex[static_cast<int>(split.second)] < split.first) {
                 less = true;
-            } else if (vertex[split.second] > split.first) {
+            } else if (vertex[static_cast<int>(split.second)] > split.first) {
                 greater = true;
-            } else if (vertex[split.second] == split.first) {
+            } else if (vertex[static_cast<int>(split.second)] == split.first) {
                 equal = true;
             }
         }
@@ -155,5 +137,7 @@ TriangleIndexLists<3> KDTree::containedTriangles(const SplitParam &param, const 
             index_less->push_back(faceIndex);
         }
     });
-    return std::array{std::move(index_less), std::move(index_greater), std::move(index_equal)};
+    return std::array{(std::move(index_less)), (std::move(index_greater)), (std::move(index_equal))};
+}
+
 }
