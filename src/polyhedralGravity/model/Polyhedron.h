@@ -144,7 +144,7 @@ namespace polyhedralGravity {
         /**
          * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
          */
-        KDTree _tree;
+        std::shared_ptr<KDTree> _tree;
 
     public:
         /**
@@ -330,7 +330,7 @@ namespace polyhedralGravity {
          * @return a pair consisting of majority ordering (OUTWARDS or INWARDS pointing normals)
          *  and a set of face indices which violate the constraint
          */
-        [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation() const;
+        [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation();
 
     private:
         /**
@@ -363,7 +363,7 @@ namespace polyhedralGravity {
          * @param face the vector describing the ray
          * @return true if the ray intersects the triangle
          */
-        [[nodiscard]] size_t countRayPolyhedronIntersections(const Array3Triplet &face);
+        [[nodiscard]] size_t countRayPolyhedronIntersections(const Array3Triplet &face) const;
 
         //TODO: consider moving to KDTree
         /**

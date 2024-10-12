@@ -11,7 +11,7 @@ namespace polyhedralGravity {
           _faces{faces},
           _density{density},
           _orientation{orientation},
-          _tree{*this} {
+        _tree{std::make_shared<KDTree>(vertices, faces)} {
         //Checks that the node with index zero is actually used
         if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](auto &face) {
                 return face[0] == 0 || face[1] == 0 || face[2] == 0;
@@ -91,7 +91,7 @@ namespace polyhedralGravity {
         return std::make_tuple(_vertices, _faces, _density, _orientation);
     }
 
-    std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
+    std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() {
         // 1. Step: Find all indices of normals which violate the constraint outwards pointing
         const auto &[polyBegin, polyEnd] = this->transformIterator();
         const size_t n = this->countFaces();
@@ -195,7 +195,7 @@ namespace polyhedralGravity {
         });
     }
 
-    size_t Polyhedron::countRayPolyhedronIntersections(const Array3Triplet &face) {
+    size_t Polyhedron::countRayPolyhedronIntersections(const Array3Triplet &face) const {
         using namespace util;
         // The centroid of the triangular face
         const Array3 centroid = (face[0] + face[1] + face[2]) / 3.0;
@@ -210,7 +210,7 @@ namespace polyhedralGravity {
         const Array3 rayOrigin = centroid + (rayVector * EPSILON_ZERO_OFFSET);
 
         // Count every triangular face which is intersected by the ray
-        return this->_tree.countIntersections(rayOrigin, rayVector);
+        return this->_tree->countIntersections(rayOrigin, rayVector);
     }
 
     //TODO: moved to LeafNode.cpp, consider removing here

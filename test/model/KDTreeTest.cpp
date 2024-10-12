@@ -54,7 +54,7 @@ protected:
 TEST_F(KDTreeTest, VertexOnPlane) {
     using namespace polyhedralGravity;
     using namespace testing;
-    KDTree tree{Polyhedron(_rectVertices, _facesOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL)};
+    KDTree tree{_rectVertices, _facesOutwards};
     //EXPECT_EQ(rootNode->plane.first[0], 1); TODO
 }
 
@@ -64,6 +64,7 @@ TEST_F(KDTreeTest, VertexOnPlane) {
 TEST_F(KDTreeTest, SplitCube) {
     using namespace polyhedralGravity;
     using namespace testing;
-    KDTree tree{constructPolyhedron("resources/CubeXDivided.ply")};
+    auto poly{constructPolyhedron("resources/CubeXDivided.ply")};
+    KDTree tree{poly.getVertices(), poly.getFaces()};
     //EXPECT_NE(tree.getRootNode().plane.first[0], 0); TODO
 }

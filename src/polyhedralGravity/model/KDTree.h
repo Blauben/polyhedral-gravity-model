@@ -1,20 +1,28 @@
 #pragma once
 
 #include "KdDefinitions.h"
-#include "Polyhedron.h"
 #include "TreeNode.h"
 
-//forward declaration
-class Polyhedron;
 
 class KDTree {
 public:
     /**
      * Call to build a KDTree to speed up intersections of rays with a polyhedron's faces.
-     * @param polyhedron The polyhedron for which to build the KDTree.
+     * @param vertices The vertice coordinates of the polyhedron
+     * @param faces The faces of the polyhedron with a face being a triplet of vertex indices
      * @return the lazily built KDTree.
      */
-    explicit KDTree(const polyhedralGravity::Polyhedron *polyhedron);
+    KDTree(const std::vector<polyhedralGravity::Array3>& vertices, const std::vector<polyhedralGravity::IndexArray3>& faces);
+
+    KDTree(KDTree&& other) noexcept ;
+
+    KDTree(const KDTree&) = delete;
+
+    KDTree& operator=(KDTree& other) = delete;
+
+    KDTree& operator=(KDTree&& other) noexcept ;
+
+    bool operator==(const KDTree & other) const;
 
     /**
      * Finds the optimal split plane to split a provided rectangle section optimally.

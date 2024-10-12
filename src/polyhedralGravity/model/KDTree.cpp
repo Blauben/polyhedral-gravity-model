@@ -6,12 +6,34 @@
 
 #include "KDTree.h"
 
-KDTree::KDTree(const polyhedralGravity::Polyhedron *polyhedron) {
-    std::vector<size_t> boundFaces(polyhedron->getFaces().size());
+KDTree::KDTree(const std::vector<polyhedralGravity::Array3>& vertices, const std::vector<polyhedralGravity::IndexArray3>& faces) {
+    std::vector<size_t> boundFaces(faces.size());
     int index{0};
     std::generate(boundFaces.begin(), boundFaces.end(), [&index]() { return index++; });
-    const Box boundingBox{getBoundingBox(polyhedron->getVertices())};
-    this->param = std::make_unique<SplitParam>(polyhedron->getVertices(), polyhedron->getFaces(), boundFaces, boundingBox, X);
+    const Box boundingBox{getBoundingBox(vertices)};
+    this->param = std::make_unique<SplitParam>(vertices, faces, boundFaces, boundingBox, X);
+}
+
+KDTree::KDTree(KDTree&& other) noexcept {
+    this->rootNode = std::move(other.rootNode);
+    if(!this->rootNode) {
+        this->param = std::move(other.param);
+    }
+}
+
+KDTree& KDTree::operator=(KDTree&& other) noexcept {
+    if(*this == other) {
+        return *this;
+    }
+    this->rootNode = std::move(other.rootNode);
+    if(!this->rootNode) {
+        this->param = std::move(other.param);
+    }
+    return *this;
+}
+
+bool KDTree::operator==(const KDTree & other) const {
+    return this->rootNode == other.rootNode;
 }
 
 TreeNode &KDTree::getRootNode() {
@@ -50,7 +72,9 @@ std::tuple<Plane, double, TriangleIndexLists> KDTree::findPlane(const SplitParam
 
 Box KDTree::getBoundingBox(const std::vector<polyhedralGravity::Array3> &vertices) {
     using namespace polyhedralGravity;
-    assert(!vertices.empty());
+    if(vertices.empty()) {
+        return {{0, 0, 0}, {0, 0, 0}};
+    }
     Array3 min = vertices[0];
     Array3 max = vertices[0];
     std::for_each(vertices.cbegin(), vertices.cend(), [&min, &max](const Array3 &vertex) {
