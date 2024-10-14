@@ -9,19 +9,19 @@
 
 namespace polyhedralGravity {
 
-    KDTree::KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces) {
+    KDTree::KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces)
+        : _vertices{vertices}, _faces{faces} {
         TriangleIndexList boundFaces(faces.size());
         std::iota(boundFaces.begin(), boundFaces.end(), 0);
         const Box boundingBox{getBoundingBox(vertices)};
-        this->param = std::make_unique<SplitParam>(vertices, faces, boundFaces, boundingBox, Direction::X);
+        this->_splitParam = std::make_unique<SplitParam>(_vertices, _faces, boundFaces, boundingBox, Direction::X);
     }
 
     TreeNode &KDTree::getRootNode() {
-        if (!this->rootNode) {
-            this->rootNode = TreeNodeFactory::treeNodeFactory(*this->param);
-            this->param.reset();
+        if (!this->_rootNode) {
+            this->_rootNode = TreeNodeFactory::treeNodeFactory(*std::move(this->_splitParam));
         }
-        return *this->rootNode;
+        return *this->_rootNode;
     }
 
     size_t KDTree::countIntersections(const Array3 &origin, const Array3 &ray) {

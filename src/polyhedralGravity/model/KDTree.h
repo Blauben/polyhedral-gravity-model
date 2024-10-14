@@ -70,12 +70,16 @@ namespace polyhedralGravity {
         /**
      * The entry node of the KDTree. Only access using getter.
      */
-        std::unique_ptr<TreeNode> rootNode;
+        std::unique_ptr<TreeNode> _rootNode;
+
+        const std::vector<Array3> _vertices;
+        const std::vector<IndexArray3> _faces;
+
 
         /**
      * Parameters for lazily building the root node @link SplitParam
      */
-        std::unique_ptr<SplitParam> param;
+        std::unique_ptr<SplitParam> _splitParam;
 
         /**
      * Finds the minimal bounding box for a set of vertices.

@@ -43,8 +43,8 @@ namespace polyhedralGravity {
             return result;
         }
 
-        static bool isEqual(const Array3 &c1, const Array3 &c2) {
-            if constexpr (c1.size() != c2.size()) return false;
+        static bool isEqual(Array3 c1, Array3 c2) {
+            if (c1.size() != c2.size()) return false;
             for (size_t i = 0; i < c1.size(); i++) {
                 if (std::abs(c1[i] - c2[i]) > 1e-09) {
                     return false;
