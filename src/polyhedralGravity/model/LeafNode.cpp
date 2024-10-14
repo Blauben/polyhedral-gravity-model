@@ -2,68 +2,58 @@
 
 namespace polyhedralGravity {
 
-LeafNode::LeafNode(const SplitParam &splitParam)
-    : TreeNode(splitParam) {
-}
+    LeafNode::LeafNode(const SplitParam &splitParam)
+        : TreeNode(splitParam) {
+    }
 
-unsigned long LeafNode::countIntersections(const Array3 &origin, const Array3 &ray) {
-    return std::count_if(this->splitParam->indexBoundFaces.cbegin(), this->splitParam->indexBoundFaces.cend(), [this, ray, origin](const size_t faceIndex) {
+    void LeafNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) {
+        std::for_each(this->splitParam->indexBoundFaces.cbegin(), this->splitParam->indexBoundFaces.cend(), [this, &ray, &origin, &intersections](const size_t faceIndex) {
+            if (const std::optional<Array3> intersection = rayIntersectsTriangle(origin, ray, this->splitParam->faces[faceIndex]); intersection.has_value()) {
+                intersections.insert(intersection.value());
+            }
+        });
+    }
+
+    std::optional<Array3> LeafNode::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const IndexArray3 &triangleVertexIndex) const {
         Array3Triplet edgeVertices{};
-        std::transform(this->splitParam->faces[faceIndex].cbegin(), this->splitParam->faces[faceIndex].cend(), edgeVertices.begin(), [this](const size_t vertexIndex) {
+        std::transform(triangleVertexIndex.cbegin(), triangleVertexIndex.cend(), edgeVertices.begin(), [this](const size_t vertexIndex) {
             return this->splitParam->vertices[vertexIndex];
         });
-        return rayIntersectsTriangle(origin, ray, edgeVertices).has_value();
-    });
-}
+        return rayIntersectsTriangle(rayOrigin, rayVector, edgeVertices);
+    }
 
-void LeafNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::vector<size_t> &intersectedFaceIndices) {
-    std::for_each(this->splitParam->indexBoundFaces.cbegin(), this->splitParam->indexBoundFaces.cend(), [this, &ray, &origin, &intersectedFaceIndices](const size_t faceIndex) {
-        if (rayIntersectsTriangle(origin, ray, this->splitParam->faces[faceIndex]).has_value()) {
-            intersectedFaceIndices.push_back(faceIndex);
+    std::optional<Array3> LeafNode::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangleVertices) {
+        // Adapted Möller–Trumbore intersection algorithm
+        // see https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
+        using namespace polyhedralGravity;
+        using namespace util;
+        const Array3 edge1 = triangleVertices[1] - triangleVertices[0];
+        const Array3 edge2 = triangleVertices[2] - triangleVertices[0];
+        const Array3 h = cross(rayVector, edge2);
+        const double a = util::dot(edge1, h);
+        if (a > -EPSILON_ZERO_OFFSET && a < EPSILON_ZERO_OFFSET) {
+            return {};
         }
-    });
-}
 
-std::optional<Array3> LeafNode::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const IndexArray3 &triangleVertexIndex) const {
-    Array3Triplet edgeVertices{};
-    std::transform(triangleVertexIndex.cbegin(), triangleVertexIndex.cend(), edgeVertices.begin(), [this](const size_t vertexIndex) {
-        return this->splitParam->vertices[vertexIndex];
-    });
-    return rayIntersectsTriangle(rayOrigin, rayVector, edgeVertices);
-}
+        const double f = 1.0 / a;
+        const Array3 s = rayOrigin - triangleVertices[0];
+        const double u = f * dot(s, h);
+        if (u < 0.0 || u > 1.0) {
+            return {};
+        }
 
-std::optional<Array3> LeafNode::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangleVertices) {
-    // Adapted Möller–Trumbore intersection algorithm
-    // see https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
-    using namespace polyhedralGravity;
-    using namespace util;
-    const Array3 edge1 = triangleVertices[1] - triangleVertices[0];
-    const Array3 edge2 = triangleVertices[2] - triangleVertices[0];
-    const Array3 h = cross(rayVector, edge2);
-    const double a = util::dot(edge1, h);
-    if (a > -EPSILON_ZERO_OFFSET && a < EPSILON_ZERO_OFFSET) {
-        return {};
-    }
+        const Array3 q = cross(s, edge1);
+        const double v = f * dot(rayVector, q);
+        if (v < 0.0 || u + v > 1.0) {
+            return {};
+        }
 
-    const double f = 1.0 / a;
-    const Array3 s = rayOrigin - triangleVertices[0];
-    const double u = f * dot(s, h);
-    if (u < 0.0 || u > 1.0) {
-        return {};
-    }
-
-    const Array3 q = cross(s, edge1);
-    const double v = f * dot(rayVector, q);
-    if (v < 0.0 || u + v > 1.0) {
-        return {};
-    }
-
-    const double t = f * dot(edge2, q);
-    if (t > EPSILON_ZERO_OFFSET) {
-        return rayOrigin + rayVector * t;
-    } else {
-        return {};
-    }
+        const double t = f * dot(edge2, q);
+        if (t > EPSILON_ZERO_OFFSET) {
+            return rayOrigin + rayVector * t;
+        } else {
+            return {};
+        }
 }
 
 }

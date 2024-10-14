@@ -1,17 +1,16 @@
 #pragma once
 
-#include <array>
-#include <set>
-#include <numeric>
-#include <utility>
 #include <algorithm>
-#include <functional>
+#include <array>
 #include <cmath>
-#include <string>
+#include <functional>
 #include <iostream>
+#include <numeric>
+#include <set>
+#include <string>
+#include <utility>
 
 namespace polyhedralGravity::util {
-
     /**
      * Alias for two-dimensional array with size M and N.
      * M is the major size.
@@ -276,7 +275,8 @@ namespace polyhedralGravity::util {
      */
     template<typename T>
     int sgn(T val, double cutoffEpsilon) {
-        return val < -cutoffEpsilon ? -1 : val > cutoffEpsilon ? 1 : 0;
+        return val < -cutoffEpsilon ? -1 : val > cutoffEpsilon ? 1
+                                                               : 0;
     }
 
     /**
@@ -372,7 +372,7 @@ namespace polyhedralGravity::util {
             return std::make_tuple(std::get<Is>(t1) + std::get<Is>(t2)...);
         }
 
-    }
+    }// namespace detail
 
     /**
      * Adds the contents of two tuples of the same size and types with the operator +.
@@ -398,7 +398,7 @@ namespace polyhedralGravity::util {
     std::ostream &operator<<(std::ostream &os, const std::array<T, N> &array) {
         os.operator<<('[');
         os.operator<<(' ');
-        std::for_each(array.cbegin(), array.cend(), [&os](const auto& arg) {
+        std::for_each(array.cbegin(), array.cend(), [&os](const auto &arg) {
             os << arg << ' ';
         });
         os.operator<<(']');
@@ -416,7 +416,7 @@ namespace polyhedralGravity::util {
     std::ostream &operator<<(std::ostream &os, const std::set<T> &set) {
         os.operator<<('[');
         os.operator<<(' ');
-        std::for_each(set.cbegin(), set.cend(), [&os](const auto& arg) {
+        std::for_each(set.cbegin(), set.cend(), [&os](const auto &arg) {
             os << arg << ' ';
         });
         os.operator<<(']');
@@ -430,5 +430,4 @@ namespace polyhedralGravity::util {
     template<typename T, std::size_t N>
     struct is_stdarray<std::array<T, N>> : std::true_type {
     };
-
-}
+}// namespace polyhedralGravity::util
