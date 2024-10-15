@@ -64,6 +64,13 @@ namespace polyhedralGravity {
          */
         size_t countIntersections(const Array3 &origin, const Array3 &ray);
 
+        /**
+    *    Finds the minimal bounding box for a set of vertices.
+        * @param vertices the set of vertex coordinates for which to find the box
+        * @return the bounding box {@link Box}
+        */
+        static Box getBoundingBox(const std::vector<Array3> &vertices);
+
 
     private:
         /**
@@ -86,12 +93,6 @@ namespace polyhedralGravity {
      */
         std::unique_ptr<SplitParam> _splitParam;
 
-        /**
-     * Finds the minimal bounding box for a set of vertices.
-     * @param vertices the set of vertex coordinates for which to find the box
-     * @return the bounding box {@link Box}
-     */
-        static Box getBoundingBox(const std::vector<Array3> &vertices);
         /**
      * Evaluates the cost function should the specified bounding box and it's faces be divided by the specified plane. Used to evaluate possible split planes.
      * @param param specifies the polyhedron section to be split {@link SplitParam}.

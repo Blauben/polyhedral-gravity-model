@@ -5,11 +5,19 @@
 #include "TreeNodeFactory.h"
 
 #include <algorithm>
+#include <oneapi/tbb/detail/_range_common.h>
 
 namespace polyhedralGravity {
 
     SplitNode::SplitNode(const SplitParam &splitParam, Plane &plane, TriangleIndexLists<2> &triangleIndexLists)
-        : TreeNode(splitParam), _plane{plane}, _boundingBox{splitParam.boundingBox}, _triangleIndexLists{std::move(triangleIndexLists)} {
+        : TreeNode(splitParam), _plane{plane}, _triangleIndexLists{std::move(triangleIndexLists)} {
+        std::vector<Array3> boundVertices{};
+        std::for_each(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), [&boundVertices, &splitParam](const size_t faceIndex) {
+            for (const auto &vertexIndex: splitParam.faces[faceIndex]) {
+                boundVertices.push_back(splitParam.vertices[vertexIndex]);
+            }
+        });
+        _boundingBox = KDTree::getBoundingBox(boundVertices);
     }
 
     std::shared_ptr<TreeNode> SplitNode::getLesserNode() {
@@ -71,7 +79,7 @@ namespace polyhedralGravity {
         return delegates;
     }
 
-    std::pair<double, double> SplitNode::rayBoxIntersection(const Array3 &origin, const Array3 &ray) const { //refer to https://en.wikipedia.org/wiki/Slab_method
+    std::pair<double, double> SplitNode::rayBoxIntersection(const Array3 &origin, const Array3 &ray) const {//refer to https://en.wikipedia.org/wiki/Slab_method
         const double tx_min{(this->_boundingBox.first[0] - origin[0]) / ray[0]};
         const double ty_min{(this->_boundingBox.first[1] - origin[1]) / ray[1]};
         const double tz_min{(this->_boundingBox.first[2] - origin[2]) / ray[2]};
