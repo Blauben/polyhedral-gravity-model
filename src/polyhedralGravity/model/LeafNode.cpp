@@ -16,7 +16,7 @@ namespace polyhedralGravity {
 
     std::optional<Array3> LeafNode::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const IndexArray3 &triangleVertexIndex) const {
         Array3Triplet edgeVertices{};
-        std::transform(triangleVertexIndex.cbegin(), triangleVertexIndex.cend(), edgeVertices.begin(), [this](const size_t vertexIndex) {
+        std::transform(triangleVertexIndex.cbegin(), triangleVertexIndex.cend(), edgeVertices.begin(), [this](const size_t vertexIndex) {//transforms a face to its vertices
             return this->splitParam->vertices[vertexIndex];
         });
         return rayIntersectsTriangle(rayOrigin, rayVector, edgeVertices);

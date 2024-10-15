@@ -32,33 +32,31 @@ namespace polyhedralGravity {
     using Plane = std::pair<double, Direction>;
 
     /**
-     * Defines a rectangular box by taking two opposite corner points
+     * Defines a rectangular box by taking two opposite corner points. First is the point closest to the origin and second is the point farthest away.
      */
     using Box = std::pair<Array3, Array3>;
 
     /**
-     * a set that stores indices of the faces vector in the KDTree. This effectively corresponds to a set of triangles
+     * A set that stores indices of the faces vector in the KDTree. This effectively corresponds to a set of triangles. For performance purposes a std::vector is used instead of a std::set.
      */
     using TriangleIndexList = std::vector<size_t>;
 
     /**
-    * Three triangle sets contained in an array. Those being the set of triangles with non-zero area in the bounding box closer to the origin with respect to the split plane,
-         * the set of triangles with non-zero area in the bounding box further away from the origin with respect to the split plane
-         * and the set of triangles that overlap with the split plane itself.
+    * Triangle sets contained in an array. Used by the KDTree to divide a bounding boxes included triangles into smaller subsets. For the semantic purpose of the contained sets please refer to the comments in the usage context.
      */
     template<int num>
     using TriangleIndexLists = std::array<std::unique_ptr<TriangleIndexList>, num>;
 
     /**
-     * Helper struct to bundle important parameters required for splitting a Polyhedron for better readability
+     * Helper struct to bundle important parameters required for splitting a Polyhedron for better readability.
      */
     struct SplitParam {
         /**
-         * The vertices that compose the Polyhedron
+         * The vertices that compose the Polyhedron.
          */
         const std::vector<Array3> &vertices;
         /**
-         * The faces that connect the vertices to render the Polyhedron
+         * The faces that connect the vertices to render the Polyhedron.
          */
         const std::vector<IndexArray3> &faces;
         /**
@@ -82,7 +80,5 @@ namespace polyhedralGravity {
         SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, TriangleIndexList indexBoundFaces, Box boundingBox, Direction splitDirection)
             : vertices{vertices}, faces{faces}, indexBoundFaces{std::move(indexBoundFaces)}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
         }
-        SplitParam(const SplitParam &) = default;
-        SplitParam(SplitParam &&) = delete;
     };
-}
+}// namespace polyhedralGravity

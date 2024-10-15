@@ -7,24 +7,41 @@
 
 namespace polyhedralGravity {
 
+    /**
+     * A TreeNode contained in a KDTree that doesn't split the spatial hierarchy any further. Intersection tests are directly performed on the contained triangles here.
+     */
     class LeafNode final : public TreeNode {
     public:
+        /**
+         * Takes parameters from the parent node and stores them for later intersection tests.
+         * @param splitParam Parameters produced during the split that resulted in the creation of this node.
+         */
         explicit LeafNode(const SplitParam &splitParam);
-        LeafNode(const LeafNode &other) = delete;
-        LeafNode(const LeafNode &&other) = delete;
-        LeafNode &operator=(const LeafNode &other) = delete;
-        LeafNode &operator=(const LeafNode &&other) = delete;
         /**
     * Used to calculated intersections of a ray and the polyhedron's faces contained in this node.
     * @param origin The point where the ray originates from.
     * @param ray Specifies the ray direction.
-    * @param intersections The set intersections are added to.
+    * @param intersections The set intersection points are added to.
     */
         void getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) override;
 
 
     private:
+        /**
+         * Möller-Trumbore Algorithm for Ray-Face intersection.
+         * @param rayOrigin The point where the ray originates from.
+         * @param rayVector Specifies the ray direction.
+         * @param triangleVertexIndex the face to test against, described by the vertices that comprise it (passed by index reference).
+         * @return
+         */
         [[nodiscard]] std::optional<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const IndexArray3 &triangleVertexIndex) const;
+        /**
+         * Möller-Trumbore Algorithm for Ray-Face intersection.
+         * @param rayOrigin The point where the ray originates from.
+         * @param rayVector Specifies the ray direction.
+         * @param triangleVertices the face to test against, described by the vertices that comprise it (passed by value).
+         * @return
+         */
         static std::optional<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangleVertices);
     };
 
