@@ -41,13 +41,17 @@ namespace polyhedralGravity {
         std::unordered_set<double> testedPlaneCoordinates{};
         std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates](const size_t faceIndex) {
             const auto &face = param.faces[faceIndex];
-            for (const size_t &vertexIndex: face) {
-                Plane candidatePlane{param.vertices[vertexIndex][static_cast<int>(param.splitDirection)], param.splitDirection};//constructs the plane that goes through the vertex at index vertexIndex and spans in a specified direction.
-                if (testedPlaneCoordinates.find(candidatePlane.first) != testedPlaneCoordinates.cend()) {                       //continue if plane has already been tested
+            const auto [minPoint, maxPoint] = getBoundingBox(faceToVertices(face, param.vertices));
+            for (const auto planeSurfacePoint: {minPoint, maxPoint}) {
+                //constructs the plane that goes through a vertex lying on the bounding box of the face to be checked and spans in a specified direction.
+                Plane candidatePlane{planeSurfacePoint[static_cast<int>(param.splitDirection)], param.splitDirection};
+                //continue if plane has already been tested
+                if (testedPlaneCoordinates.find(candidatePlane.first) != testedPlaneCoordinates.cend()) {
                     continue;
                 }
                 testedPlaneCoordinates.emplace(candidatePlane.first);
-                if (auto [candidateCost, triangleIndexLists] = costForPlane(param, candidatePlane); candidateCost < cost) {//evaluate the candidate plane and store if it is better than the currently stored result
+                //evaluate the candidate plane and store if it is better than the currently stored result
+                if (auto [candidateCost, triangleIndexLists] = costForPlane(param, candidatePlane); candidateCost < cost) {
                     cost = candidateCost;
                     optPlane = candidatePlane;
                     optTriangleIndexLists = std::move(triangleIndexLists);
@@ -66,8 +70,10 @@ namespace polyhedralGravity {
         //initialize values from the array -> even if only one vertex is provided the box is still correct without executing the loop.
         Array3 min = vertices[0];
         Array3 max = vertices[0];
-        std::for_each(vertices.cbegin() + 1, vertices.cend(), [&min, &max](const Array3 &vertex) {//test each vertex for proximity to the origin and find minima and maxima
-            for (int i = 0; i < vertex.size(); i++) {                                             //test each dimension separately -> Calculates the corner points of the smallest bounding box gradually
+        //test each vertex for proximity to the origin and find minima and maxima
+        std::for_each(vertices.cbegin() + 1, vertices.cend(), [&min, &max](const Array3 &vertex) {
+            //test each dimension separately -> Calculates the corner points of the smallest bounding box gradually
+            for (int i = 0; i < vertex.size(); i++) {
                 min[i] = std::min(min[i], vertex[i]);
                 max[i] = std::max(max[i], vertex[i]);
             }
@@ -75,12 +81,17 @@ namespace polyhedralGravity {
         return {min, max};
     }
 
+    std::vector<Array3> KDTree::faceToVertices(const IndexArray3 &face, const std::vector<Array3> &vertices) {
+        return {vertices[face[0]], vertices[face[1]], vertices[face[2]]};
+    }
+
     std::pair<Box, Box> KDTree::splitBox(const Box &box, const Plane &plane) {
         //clone the original box two times -> modify clones to become child boxes defined by the splitting plane
         Box box1{box};
         Box box2{box};
         const Direction &axis{plane.second};
-        box1.second[static_cast<int>(axis)] = plane.first;//box.first == min ; box.second == max -> Shift edges of the boxes to match the plane
+        //box.first == min ; box.second == max -> Shift edges of the boxes to match the plane
+        box1.second[static_cast<int>(axis)] = plane.first;
         box2.first[static_cast<int>(axis)] = plane.first;
         return std::make_pair(box1, box2);
     }
@@ -92,20 +103,25 @@ namespace polyhedralGravity {
         }
         //calculate parameters for Surface Area Heuristic (SAH): childBoxSurfaceAreas; number of contained triangles in each box
         auto [box1, box2] = splitBox(param.boundingBox, plane);
-        auto [lessT, greaterT, equalT] = containedTriangles(param, plane);//equalT are triangles lying in the plane (not in the boxes)
+        //equalT are triangles lying in the plane (not in the boxes)
+        auto [lessT, greaterT, equalT] = containedTriangles(param, plane);
         const double surfaceAreaBounding = surfaceAreaOfBox(param.boundingBox);
         const double surfaceArea1 = surfaceAreaOfBox(box1);
         const double surfaceArea2 = surfaceAreaOfBox(box2);
         //evaluate SAH: Include equalT once in each box and record option with minimum cost
         double costLesser = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * (static_cast<double>(lessT->size() + equalT->size())) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>(greaterT->size()));
-        costLesser *= lessT->size() + equalT->size() == 0 || greaterT->empty() ? 0.8 : 1;//if empty space is cut off, reduce cost by 20%
+        //if empty space is cut off, reduce cost by 20%
+        costLesser *= lessT->size() + equalT->size() == 0 || greaterT->empty() ? 0.8 : 1;
         double costUpper = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * static_cast<double>(lessT->size()) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>((greaterT->size() + equalT->size())));
-        costUpper *= greaterT->size() + equalT->size() == 0 || lessT->empty() ? 0.8 : 1;//if empty space is cut off, reduce cost by 20%
+        //if empty space is cut off, reduce cost by 20%
+        costUpper *= greaterT->size() + equalT->size() == 0 || lessT->empty() ? 0.8 : 1;
         if (costLesser <= costUpper) {
-            lessT->insert(lessT->cend(), equalT->cbegin(), equalT->cend());//include equalT in the boxes triangles for further subdivision
+            //include equalT in the boxes triangles for further subdivision
+            lessT->insert(lessT->cend(), equalT->cbegin(), equalT->cend());
             return std::make_pair(costLesser, std::array{std::move(lessT), std::move(greaterT)});
         }
-        greaterT->insert(greaterT->cend(), equalT->cbegin(), equalT->cend());//include equalT in the boxes triangles for further subdivision
+        //include equalT in the boxes triangles for further subdivision
+        greaterT->insert(greaterT->cend(), equalT->cbegin(), equalT->cend());
         return {costUpper, std::array{(std::move(lessT)), (std::move(greaterT))}};
     }
 
@@ -128,8 +144,7 @@ namespace polyhedralGravity {
             const IndexArray3 &face{param.faces[faceIndex]};
             bool less{false}, greater{false}, equal{false};
             //transform a triangle into the three vertices it comprises
-            std::array<Array3, 3> vertices{};
-            std::transform(face.cbegin(), face.cend(), vertices.begin(), [&param](const size_t vertexIndex) { return param.vertices[vertexIndex]; });
+            auto vertices{faceToVertices(face, param.vertices)};
             for (const Array3 vertex: vertices) {
                 //vertex is closer to the origin than the plane
                 if (vertex[static_cast<int>(split.second)] < split.first) {
