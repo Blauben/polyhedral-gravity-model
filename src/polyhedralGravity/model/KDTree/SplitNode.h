@@ -2,8 +2,12 @@
 
 #include <memory>
 
-#include "KdDefinitions.h"
-#include "TreeNode.h"
+#include "polyhedralGravity/model/KDTree/KDTree.h"
+#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/TreeNode.h"
+#include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
+
+#include <algorithm>
 
 namespace polyhedralGravity {
 

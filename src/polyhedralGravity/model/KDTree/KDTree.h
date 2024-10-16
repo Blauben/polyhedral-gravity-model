@@ -1,7 +1,15 @@
 #pragma once
 
-#include "KdDefinitions.h"
-#include "TreeNode.h"
+#include "polyhedralGravity/model/KDTree/KDTree.h"
+#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/TreeNode.h"
+#include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
+
+#include <algorithm>
+#include <array>
+#include <memory>
+#include <unordered_set>
+#include <utility>
 
 namespace polyhedralGravity {
 

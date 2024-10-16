@@ -1,4 +1,4 @@
-#include "LeafNode.h"
+#include "polyhedralGravity/model/KDTree/LeafNode.h"
 
 namespace polyhedralGravity {
 

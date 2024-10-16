@@ -1,14 +1,4 @@
-#include <algorithm>
-#include <array>
-#include <limits>
-#include <memory>
-#include <utility>
-
-#include "KDTree.h"
-#include "TreeNodeFactory.h"
-
-#include <cassert>
-#include <unordered_set>
+#include "polyhedralGravity/model/KDTree/KDTree.h"
 
 namespace polyhedralGravity {
 
@@ -132,8 +122,6 @@ namespace polyhedralGravity {
         auto index_less = std::make_unique<TriangleIndexList>(param.indexBoundFaces.size() / 2);
         auto index_greater = std::make_unique<TriangleIndexList>(param.indexBoundFaces.size() / 2);
         auto index_equal = std::make_unique<TriangleIndexList>();
-
-        assert(index_less != nullptr && index_greater != nullptr && index_equal != nullptr);
 
         //perform check for every triangle contained in this node's bounding box.
         std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &split, &index_greater, &index_less, &index_equal](const size_t faceIndex) {

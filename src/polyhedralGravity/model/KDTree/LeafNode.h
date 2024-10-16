@@ -1,7 +1,7 @@
 #pragma once
 
-#include "KdDefinitions.h"
-#include "TreeNode.h"
+#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/TreeNode.h"
 
 #include <optional>
 

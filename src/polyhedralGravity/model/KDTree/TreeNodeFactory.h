@@ -1,6 +1,10 @@
 #pragma once
 
-#include "TreeNode.h"
+#include "polyhedralGravity/model/KDTree/KDTree.h"
+#include "polyhedralGravity/model/KDTree/LeafNode.h"
+#include "polyhedralGravity/model/KDTree/SplitNode.h"
+#include "polyhedralGravity/model/KDTree/TreeNode.h"
+
 #include <memory>
 
 namespace polyhedralGravity {

@@ -1,10 +1,4 @@
-#include "SplitNode.h"
-
-#include "KDTree.h"
-#include "KdDefinitions.h"
-#include "TreeNodeFactory.h"
-
-#include <algorithm>
+#include "polyhedralGravity/model/KDTree/SplitNode.h"
 
 namespace polyhedralGravity {
 
