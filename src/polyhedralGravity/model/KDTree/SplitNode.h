@@ -33,18 +33,18 @@ namespace polyhedralGravity {
      */
         Box _boundingBox;
         /**
-     * Contains the triangle lists for the lesser and greater bounding boxes. {@link TriangleIndexLists}
+     * Contains the triangle lists for the lesser and greater bounding boxes. {@link _triangleRanges}
      */
-        TriangleIndexLists<2> _triangleIndexLists;
+        TriangleIndexRanges<2> _triangleRanges;
 
     public:
         /**
          * Takes parameters from the parent node and stores them for lazy child node creation.
          * @param splitParam Parameters produced during the split that resulted in the creation of this node.
          * @plane The plane that splits this node's bounding box into two sub boxes. The child nodes are created based on these boxes.
-         * @triangleIndexLists Index sets of the triangles contained in the lesser and greater child nodes. {@link TriangleIndexList}
+         * @TriangleIndexRanges Index sets of the triangles contained in the lesser and greater child nodes. {@link TriangleIndexRange}
          */
-        SplitNode(const SplitParam &splitParam, Plane &plane, TriangleIndexLists<2> &triangleIndexLists);
+        SplitNode(SplitParam &splitParam, Plane &plane, TriangleIndexRanges<2> &triangleRanges);
         /**
      * Computes the lesser child node if not present already and returns it to the caller.
      * @return The SplitNode that is closer to the origin with respect to the split plane of this node.

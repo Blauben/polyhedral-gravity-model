@@ -38,15 +38,41 @@ namespace polyhedralGravity {
     using Box = std::pair<Array3, Array3>;
 
     /**
-     * A set that stores indices of the faces vector in the KDTree. This effectively corresponds to a set of triangles. For performance purposes a std::vector is used instead of a std::set.
+     * A range of triangles on the faces vector in the KDTree. This effectively corresponds to a set of triangles. Internally iterators begin() and end() are stored in a pair.
      */
-    using TriangleIndexList = std::vector<size_t>;
+    struct TriangleIndexRange {
+        std::vector<IndexArray3> &faces;
+        size_t begin_idx;
+        size_t end_idx;
+
+        [[nodiscard]] size_t size() const {
+            return end_idx - begin_idx;
+        }
+
+        [[nodiscard]] bool empty() const {
+            return begin_idx == end_idx;
+        }
+
+        std::vector<IndexArray3>::iterator begin() {
+            return faces.begin() + begin_idx;
+        }
+
+        std::vector<IndexArray3>::iterator end() {
+            return faces.begin() + end_idx;
+        }
+
+        TriangleIndexRange(size_t begin, size_t end, std::vector<IndexArray3> &faces)
+            : faces{faces}, begin_idx{begin}, end_idx{end} {
+        }
+        TriangleIndexRange(TriangleIndexRange& other) = default;
+        TriangleIndexRange & operator=(const TriangleIndexRange &other) = default;
+    };
 
     /**
-    * Triangle sets contained in an array. Used by the KDTree to divide a bounding boxes included triangles into smaller subsets. For the semantic purpose of the contained sets please refer to the comments in the usage context.
+    * Triangle ranges contained in an array. Used by the KDTree to divide a bounding boxes included triangles into smaller subsets. For the semantic purpose of the contained ranges please refer to the comments in the usage context.
      */
     template<int num>
-    using TriangleIndexLists = std::array<std::unique_ptr<TriangleIndexList>, num>;
+    using TriangleIndexRanges = std::array<TriangleIndexRange, num>;
 
     /**
      * Helper struct to bundle important parameters required for splitting a Polyhedron for better readability.
@@ -59,11 +85,11 @@ namespace polyhedralGravity {
         /**
          * The faces that connect the vertices to render the Polyhedron.
          */
-        const std::vector<IndexArray3> &faces;
+        std::vector<IndexArray3> &faces;
         /**
-         * An index list of faces that are included in the current bounding box of the KDTree. Important when building deeper levels of a KDTree.
+         * An index range of faces that are included in the current bounding box of the KDTree. Important when building deeper levels of a KDTree.
          */
-        TriangleIndexList indexBoundFaces;
+        TriangleIndexRange indexBoundFaces;
         /**
          * The current bounding box that should be divided further by the KDTree.
          */
@@ -78,8 +104,8 @@ namespace polyhedralGravity {
          * Constructor that initializes all fields. Intended for the use with std::make_unique. See {@link SplitParam} fields for further information.
          *
          */
-        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, TriangleIndexList indexBoundFaces, Box boundingBox, Direction splitDirection)
-            : vertices{vertices}, faces{faces}, indexBoundFaces{std::move(indexBoundFaces)}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
+        SplitParam(const std::vector<Array3> &vertices, std::vector<IndexArray3> &faces, TriangleIndexRange indexBoundFaces, Box boundingBox, Direction splitDirection)
+            : vertices{vertices}, faces{faces}, indexBoundFaces{indexBoundFaces}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
         }
     };
 }// namespace polyhedralGravity

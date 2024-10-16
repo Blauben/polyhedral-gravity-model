@@ -5,8 +5,7 @@ namespace polyhedralGravity {
     KDTree::KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces)
         : _vertices{vertices}, _faces{faces} {
         //on initialization of the tree a single bounding box which includes all the faces of the polyhedron is generated. Both the list of included faces and the parameters of the box are written to the split paramters
-        TriangleIndexList boundFaces(faces.size());
-        std::iota(boundFaces.begin(), boundFaces.end(), 0);
+        TriangleIndexRange boundFaces = {0, _faces.size(), _faces};
         const Box boundingBox{getBoundingBox(vertices)};
         this->_splitParam = std::make_unique<SplitParam>(_vertices, _faces, boundFaces, boundingBox, Direction::X);
     }
@@ -31,16 +30,16 @@ namespace polyhedralGravity {
     }
 
 
-    std::tuple<Plane, double, TriangleIndexLists<2>> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
+    std::tuple<Plane, double, TriangleIndexRanges<2>> KDTree::findPlane(const SplitParam &param) {// O(N^2) implementation
         //initialize the default plane and make it costly
         double cost = std::numeric_limits<double>::infinity();
         Plane optPlane{0, param.splitDirection};
         //store the triangleSets that are implicitly generated during plane testing for later use.
-        TriangleIndexLists<2> optTriangleIndexLists{};
+        TriangleIndexRanges<2> optTriangleIndexRanges{TriangleIndexRange{param.faces.begin(), param.faces.begin()}, TriangleIndexRange{param.faces.end(), param.faces.end()}};
         //each vertex proposes a split plane candidate: test for each of them, store them in buffer set to avoid duplicate testing
         std::unordered_set<double> testedPlaneCoordinates{};
-        std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates](const size_t faceIndex) {
-            const auto &face = param.faces[faceIndex];
+        auto [bound_start, bound_end] = param.indexBoundFaces;
+        std::for_each(bound_start, bound_end, [&param, &optPlane, &cost, &optTriangleIndexRanges, &testedPlaneCoordinates](const IndexArray3 &face) {
             const auto [minPoint, maxPoint] = getBoundingBox(faceToVertices(face, param.vertices));
             for (const auto planeSurfacePoint: {minPoint, maxPoint}) {
                 //constructs the plane that goes through a vertex lying on the bounding box of the face to be checked and spans in a specified direction.
@@ -51,14 +50,14 @@ namespace polyhedralGravity {
                 }
                 testedPlaneCoordinates.emplace(candidatePlane.first);
                 //evaluate the candidate plane and store if it is better than the currently stored result
-                if (auto [candidateCost, triangleIndexLists] = costForPlane(param, candidatePlane); candidateCost < cost) {
+                if (auto [candidateCost, TriangleIndexRanges] = costForPlane(param, candidatePlane); candidateCost < cost) {
                     cost = candidateCost;
                     optPlane = candidatePlane;
-                    optTriangleIndexLists = std::move(triangleIndexLists);
+                    optTriangleIndexRanges = TriangleIndexRanges;
                 }
             }
         });
-        return std::make_tuple(std::move(optPlane), cost, std::move(optTriangleIndexLists));
+        return std::make_tuple(std::move(optPlane), cost, std::move(optTriangleIndexRanges));
     }
 
     Box KDTree::getBoundingBox(const std::vector<Array3> &vertices) {
@@ -96,10 +95,10 @@ namespace polyhedralGravity {
         return std::make_pair(box1, box2);
     }
 
-    std::pair<const double, TriangleIndexLists<2>> KDTree::costForPlane(const SplitParam &param, const Plane &plane) {
+    std::pair<const double, TriangleIndexRanges<2>> KDTree::costForPlane(const SplitParam &param, const Plane &plane) {
         //Checks if the split plane is one of the faces of the bounding box, if so the split is useless
         if (plane.first == param.boundingBox.first[static_cast<int>(plane.second)] || plane.first == param.boundingBox.second[static_cast<int>(plane.second)]) {
-            return std::make_pair(std::numeric_limits<double>::infinity(), TriangleIndexLists<2>{});//will be discarded later because not splitting is cheaper (finitely many nodes!) than using this plane (infinite cost)
+            return {std::numeric_limits<double>::infinity(), {param.indexBoundFaces, param.indexBoundFaces}};//will be discarded later because not splitting is cheaper (finitely many nodes!) than using this plane (infinite cost)
         }
         //calculate parameters for Surface Area Heuristic (SAH): childBoxSurfaceAreas; number of contained triangles in each box
         auto [box1, box2] = splitBox(param.boundingBox, plane);
@@ -109,20 +108,20 @@ namespace polyhedralGravity {
         const double surfaceArea1 = surfaceAreaOfBox(box1);
         const double surfaceArea2 = surfaceAreaOfBox(box2);
         //evaluate SAH: Include equalT once in each box and record option with minimum cost
-        double costLesser = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * (static_cast<double>(lessT->size() + equalT->size())) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>(greaterT->size()));
+        double costLesser = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * (static_cast<double>(lessT.size() + equalT.size())) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>(greaterT.size()));
         //if empty space is cut off, reduce cost by 20%
-        costLesser *= lessT->size() + equalT->size() == 0 || greaterT->empty() ? 0.8 : 1;
-        double costUpper = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * static_cast<double>(lessT->size()) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>((greaterT->size() + equalT->size())));
+        costLesser *= lessT.size() + equalT.size() == 0 || greaterT.empty() ? 0.8 : 1;
+        double costUpper = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * static_cast<double>(lessT.size()) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>((greaterT.size() + equalT.size())));
         //if empty space is cut off, reduce cost by 20%
-        costUpper *= greaterT->size() + equalT->size() == 0 || lessT->empty() ? 0.8 : 1;
+        costUpper *= greaterT.size() + equalT.size() == 0 || lessT.empty() ? 0.8 : 1;
         if (costLesser <= costUpper) {
             //include equalT in the boxes triangles for further subdivision
-            lessT->insert(lessT->cend(), equalT->cbegin(), equalT->cend());
-            return std::make_pair(costLesser, std::array{std::move(lessT), std::move(greaterT)});
+            lessT.end = equalT.end;
+            return {costLesser, {lessT, greaterT}};
         }
         //include equalT in the boxes triangles for further subdivision
-        greaterT->insert(greaterT->cend(), equalT->cbegin(), equalT->cend());
-        return {costUpper, std::array{(std::move(lessT)), (std::move(greaterT))}};
+        greaterT.begin = equalT.begin;
+        return {costUpper, {lessT, greaterT}};
     }
 
     double KDTree::surfaceAreaOfBox(const Box &box) {
@@ -132,16 +131,15 @@ namespace polyhedralGravity {
         return 2 * (width * length + width * height + length * height);
     }
 
-    TriangleIndexLists<3> KDTree::containedTriangles(const SplitParam &param, const Plane &split) {
+    TriangleIndexRanges<3> KDTree::containedTriangles(const SplitParam &param, const Plane &split) {
         using namespace polyhedralGravity;
         //define three sets of triangles: closer to the origin, further away, in the plane
-        auto index_less = std::make_unique<TriangleIndexList>(param.indexBoundFaces.size() / 2);
-        auto index_greater = std::make_unique<TriangleIndexList>(param.indexBoundFaces.size() / 2);
-        auto index_equal = std::make_unique<TriangleIndexList>();
+        std::vector<IndexArray3> face_less{param.indexBoundFaces.size() / 2};
+        std::vector<IndexArray3> face_greater{param.indexBoundFaces.size() / 2};
+        std::vector<IndexArray3> face_equal{};
 
         //perform check for every triangle contained in this node's bounding box.
-        std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &split, &index_greater, &index_less, &index_equal](const size_t faceIndex) {
-            const IndexArray3 &face{param.faces[faceIndex]};
+        std::for_each(param.indexBoundFaces.begin, param.indexBoundFaces.end, [&param, &split, &face_greater, &face_less, &face_equal](const IndexArray3 &face) {
             bool less{false}, greater{false}, equal{false};
             //transform a triangle into the three vertices it comprises
             auto vertices{faceToVertices(face, param.vertices)};
@@ -158,19 +156,23 @@ namespace polyhedralGravity {
 
             //all vertices of the triangle lie in the plane -> triangle lies in the plane
             if (!less && !greater && equal) {
-                index_equal->push_back(faceIndex);
+                face_equal.push_back(face);
                 return;
             }
             //triangle has area in the greater bounding box and needs to be checked there for intersections
             if (greater) {
-                index_greater->push_back(faceIndex);
+                face_greater.push_back(face);
             }
             //triangle has area in the closer bounding box and needs to be checked there for intersections
             if (less) {
-                index_less->push_back(faceIndex);
+                face_less.push_back(face);
             }
         });
-        return std::array{(std::move(index_less)), (std::move(index_greater)), (std::move(index_equal))};
+
+        auto endLess = std::copy(face_less.cbegin(), face_less.cend(), param.faces.begin());
+        auto endEqual = std::copy(face_equal.cbegin(), face_equal.cend(), endLess);
+        auto endGreater = std::copy(face_greater.cbegin(), face_greater.cend(), endEqual);
+        return {TriangleIndexRange(param.indexBoundFaces.begin, endLess), TriangleIndexRange(endEqual, endGreater), TriangleIndexRange(endLess, endEqual)};
     }
 
 }// namespace polyhedralGravity

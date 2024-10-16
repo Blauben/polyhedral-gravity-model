@@ -29,9 +29,9 @@ namespace polyhedralGravity {
         /**
      * Finds the optimal split plane to split a provided rectangle section optimally.
      * @param param specifies the polyhedron section to be split @link SplitParam.
-     * @return Tuple of the optimal plane to split the specified bounding box, its cost as double and a list of triangle sets with respective positions to the found plane. Refer to {@link TriangleIndexLists<2>} for more information.
+     * @return Tuple of the optimal plane to split the specified bounding box, its cost as double and a list of triangle sets with respective positions to the found plane. Refer to {@link TriangleIndexRanges<2>} for more information.
      */
-        static std::tuple<Plane, double, TriangleIndexLists<2>> findPlane(const SplitParam &param);// O(N^2) implementation
+        static std::tuple<Plane, double, TriangleIndexRanges<2>> findPlane(const SplitParam &param);// O(N^2) implementation
 
         /**
      * Splits a box into two new boxes.
@@ -101,7 +101,7 @@ namespace polyhedralGravity {
         /**
          * The polyhedron's faces: A face is a triplet of vertex indices.
          */
-        const std::vector<IndexArray3> _faces;
+        std::vector<IndexArray3> _faces;
 
 
         /**
@@ -115,7 +115,7 @@ namespace polyhedralGravity {
      * @param plane the candidate split plane to be evaluated.
      * @return the cost for performing intersection operations on the finalized tree later, should the KDTree be built using the specified split plane and the triangle sets resulting through division by the plane.
      */
-        static std::pair<const double, TriangleIndexLists<2>> costForPlane(const SplitParam &param, const Plane &plane);
+        static std::pair<const double, TriangleIndexRanges<2>> costForPlane(const SplitParam &param, const Plane &plane);
         /**
      * Calculates the surface area of a box.
      * @param box specifies the box to be used.
@@ -130,7 +130,7 @@ namespace polyhedralGravity {
      * the set of triangles with non-zero area in the bounding box further away from the origin with respect to the split plane.
      * The set of triangles that lies on the plane.
      */
-        static TriangleIndexLists<3> containedTriangles(const SplitParam &param, const Plane &split);
+        static TriangleIndexRanges<3> containedTriangles(const SplitParam &param, const Plane &split);
     };
 
 }// namespace polyhedralGravity
