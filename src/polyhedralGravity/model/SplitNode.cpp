@@ -5,13 +5,14 @@
 #include "TreeNodeFactory.h"
 
 #include <algorithm>
-#include <oneapi/tbb/detail/_range_common.h>
 
 namespace polyhedralGravity {
 
     SplitNode::SplitNode(const SplitParam &splitParam, Plane &plane, TriangleIndexLists<2> &triangleIndexLists)
         : TreeNode(splitParam), _plane{plane}, _triangleIndexLists{std::move(triangleIndexLists)} {
+        //convert the bound faces to its vertices
         std::vector<Array3> boundVertices{};
+        boundVertices.reserve(splitParam.indexBoundFaces.size() * 3);
         std::for_each(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), [&boundVertices, &splitParam](const size_t faceIndex) {
             for (const auto &vertexIndex: splitParam.faces[faceIndex]) {
                 boundVertices.push_back(splitParam.vertices[vertexIndex]);
@@ -65,8 +66,8 @@ namespace polyhedralGravity {
         if (t_exit < t_enter || t_exit < 0) {                          // bounding box was not hit because the ray passed the box or is moving into the opposite direction of it, TODO: consider moving to root node because only called there
             return delegates;                                          //empty
         }
-        const double t_split{rayPlaneIntersection(origin, ray)};   //calculate point where plane was hit
-        if (t_split > 0 && t_enter < t_split && t_exit > t_split) {//the split plane is hit inside of the bounding box -> both child boxes need to be checked //TODO: consider optimizing: t_param stay the same in sub boxes
+        const double t_split{rayPlaneIntersection(origin, ray)};                              //calculate point where plane was hit
+        if (!std::isinf(t_split) && t_split >= 0 && t_enter <= t_split && t_exit >= t_split) {//the split plane is hit inside of the bounding box -> both child boxes need to be checked //TODO: consider optimizing: t_param stay the same in sub boxes
             delegates.push_back(getLesserNode());
             delegates.push_back(getGreaterNode());
         } else if (t_split < 0) {                                                                                                                                               // the origin is inside a box and the ray moves away from the plane

@@ -7,6 +7,7 @@
 #include "KDTree.h"
 #include "TreeNodeFactory.h"
 
+#include <cassert>
 #include <unordered_set>
 
 namespace polyhedralGravity {
@@ -68,10 +69,12 @@ namespace polyhedralGravity {
 
     Box KDTree::getBoundingBox(const std::vector<Array3> &vertices) {
         using namespace polyhedralGravity;
-        if (vertices.empty()) {//return empty box centered at the origin if no vertices provided
+        //return empty box centered at the origin if no vertices provided
+        if (vertices.empty()) {
             return {{0, 0, 0}, {0, 0, 0}};
         }
-        Array3 min = vertices[0];//initialize values from the array -> even if only one vertex is provided the box is still correct without executing the loop.
+        //initialize values from the array -> even if only one vertex is provided the box is still correct without executing the loop.
+        Array3 min = vertices[0];
         Array3 max = vertices[0];
         std::for_each(vertices.cbegin() + 1, vertices.cend(), [&min, &max](const Array3 &vertex) {//test each vertex for proximity to the origin and find minima and maxima
             for (int i = 0; i < vertex.size(); i++) {                                             //test each dimension separately -> Calculates the corner points of the smallest bounding box gradually
@@ -83,7 +86,8 @@ namespace polyhedralGravity {
     }
 
     std::pair<Box, Box> KDTree::splitBox(const Box &box, const Plane &plane) {
-        Box box1{box};//clone the original box two times -> modify clones to become child boxes defined by the splitting plane
+        //clone the original box two times -> modify clones to become child boxes defined by the splitting plane
+        Box box1{box};
         Box box2{box};
         const Direction &axis{plane.second};
         box1.second[static_cast<int>(axis)] = plane.first;//box.first == min ; box.second == max -> Shift edges of the boxes to match the plane
@@ -125,18 +129,22 @@ namespace polyhedralGravity {
     TriangleIndexLists<3> KDTree::containedTriangles(const SplitParam &param, const Plane &split) {
         using namespace polyhedralGravity;
         //define three sets of triangles: closer to the origin, further away, in the plane
-        auto index_less = std::make_unique<TriangleIndexList>();
-        auto index_greater = std::make_unique<TriangleIndexList>();
+        auto index_less = std::make_unique<TriangleIndexList>(param.indexBoundFaces.size() / 2);
+        auto index_greater = std::make_unique<TriangleIndexList>(param.indexBoundFaces.size() / 2);
         auto index_equal = std::make_unique<TriangleIndexList>();
+
+        assert(index_less != nullptr && index_greater != nullptr && index_equal != nullptr);
 
         //perform check for every triangle contained in this node's bounding box.
         std::for_each(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), [&param, &split, &index_greater, &index_less, &index_equal](const size_t faceIndex) {
             const IndexArray3 &face{param.faces[faceIndex]};
             bool less{false}, greater{false}, equal{false};
-            std::array<Array3, 3> vertices{};//transform a triangle into the three vertices it comprises
+            //transform a triangle into the three vertices it comprises
+            std::array<Array3, 3> vertices{};
             std::transform(face.cbegin(), face.cend(), vertices.begin(), [&param](const size_t vertexIndex) { return param.vertices[vertexIndex]; });
             for (const Array3 vertex: vertices) {
-                if (vertex[static_cast<int>(split.second)] < split.first) {//vertex is closer to the origin than the plane
+                //vertex is closer to the origin than the plane
+                if (vertex[static_cast<int>(split.second)] < split.first) {
                     less = true;
                 } else if (vertex[static_cast<int>(split.second)] > split.first) {//vertex is farther away of the origin than the plane
                     greater = true;
@@ -145,14 +153,17 @@ namespace polyhedralGravity {
                 }
             }
 
-            if (!less && !greater && equal) {//all vertices of the triangle lie in the plane -> triangle lies in the plane
+            //all vertices of the triangle lie in the plane -> triangle lies in the plane
+            if (!less && !greater && equal) {
                 index_equal->push_back(faceIndex);
                 return;
             }
-            if (greater) {//triangle has area in the greater bounding box and needs to be checked there for intersections
+            //triangle has area in the greater bounding box and needs to be checked there for intersections
+            if (greater) {
                 index_greater->push_back(faceIndex);
             }
-            if (less) {//triangle has area in the closer bounding box and needs to be checked there for intersections
+            //triangle has area in the closer bounding box and needs to be checked there for intersections
+            if (less) {
                 index_less->push_back(faceIndex);
             }
         });

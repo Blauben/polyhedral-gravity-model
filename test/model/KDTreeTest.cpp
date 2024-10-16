@@ -113,13 +113,28 @@ namespace polyhedralGravity {
     TEST_F(KDTreeTest, SinglePointBig) {
         using namespace polyhedralGravity;
         using namespace util;
-        //-0.31089395957487309 -0.20646381600749783 -0.10768682612591211
-        //-0.73308635936809496 -0.019439615885303501 0.0032035748621284262
         TetgenAdapter src{std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}};
         auto [vertices, faces]{src.getPolyhedralSource()};
         constexpr Array3 point{-0.3686961575432427, 0.070645976854416037, 0.26454502782828748};
         constexpr int index{7127};
         constexpr Array3 origin{200, 0, 0};
+        auto ray{(point - origin) / 10.0};
+        KDTree tree{vertices, faces};
+        std::set<Array3> intersections;
+        tree.getFaceIntersections(origin, ray, intersections);
+        auto debug = toVector(intersections);
+        EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2];
+    }
+
+    TEST_F(KDTreeTest, Debug) {//FAIL: Index 399, point {0.23029106354915743, 0.15073537447485788, 0.15459847553287728}
+        using namespace polyhedralGravity;
+        using namespace util;
+        TetgenAdapter src{std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}};
+        auto [vertices, faces]{src.getPolyhedralSource()};
+        constexpr Array3 point{0.23029106354915743, 0.15073537447485788, 0.15459847553287728};
+        //-0.69817106185554101 , 0.22928626607740366 , -0.11489507670806454 Index: 10100
+        constexpr int index{399};
+        constexpr Array3 origin{0, 0, 0};
         auto ray{(point - origin) / 10.0};
         KDTree tree{vertices, faces};
         std::set<Array3> intersections;
@@ -144,7 +159,7 @@ namespace polyhedralGravity {
             std::set<Array3> intersections;
             tree.getFaceIntersections(origin, ray, intersections);
             auto debug = toVector(intersections);
-            EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2];
+            EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2] << " Index: " << index;
         }
     }
 }// namespace polyhedralGravity
