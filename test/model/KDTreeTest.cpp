@@ -89,6 +89,18 @@ namespace polyhedralGravity {
         EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2];
     }
 
+    TEST_F(KDTreeTest, DebugSingle) {
+        using namespace util;
+        constexpr Array3 point{-0.96780544473918595 , -0.96412106883251969 , 1};
+        constexpr Array3 origin{2, 0, 0};
+        auto ray{(point - origin) / 10.0};
+        KDTree tree{cube_vertices, cube_faces};
+        std::set<Array3> intersections;
+        tree.getFaceIntersections(origin, ray, intersections);
+        auto debug = toVector(intersections);
+        EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2];
+    }
+
 
     TEST_F(KDTreeTest, RandomSamplingCube) {
         using namespace polyhedralGravity;
@@ -106,7 +118,7 @@ namespace polyhedralGravity {
             std::set<Array3> intersections;
             tree.getFaceIntersections(origin, ray, intersections);
             auto debug = toVector(intersections);
-            EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2];
+            EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2] << " Index: " << index;
         }
     }
 
@@ -123,10 +135,10 @@ namespace polyhedralGravity {
         std::set<Array3> intersections;
         tree.getFaceIntersections(origin, ray, intersections);
         auto debug = toVector(intersections);
-        EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2];
+        EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2] << " Index: " << index;
     }
 
-    TEST_F(KDTreeTest, Debug) {//FAIL: Index 399, point {0.23029106354915743, 0.15073537447485788, 0.15459847553287728}
+    TEST_F(KDTreeTest, DebugBig) {//FAIL: Index 399, point {0.23029106354915743, 0.15073537447485788, 0.15459847553287728}
         using namespace polyhedralGravity;
         using namespace util;
         TetgenAdapter src{std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}};
@@ -140,7 +152,7 @@ namespace polyhedralGravity {
         std::set<Array3> intersections;
         tree.getFaceIntersections(origin, ray, intersections);
         auto debug = toVector(intersections);
-        EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2];
+        EXPECT_TRUE(std::any_of(intersections.cbegin(), intersections.cend(), [&point](const auto &intersection) { return isEqual(point, intersection); })) << point[0] << " , " << point[1] << " , " << point[2] << " Index: " << index;
     }
 
     TEST_F(KDTreeTest, RandomSamplingBig) {

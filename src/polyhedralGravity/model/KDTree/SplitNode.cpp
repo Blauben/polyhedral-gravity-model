@@ -8,7 +8,7 @@ namespace polyhedralGravity {
         std::vector<Array3> boundVertices{};
         boundVertices.reserve(splitParam.indexBoundFaces.size() * 3);
         std::for_each(splitParam.indexBoundFaces.begin(), splitParam.indexBoundFaces.end(), [&boundVertices, &splitParam](const IndexArray3 &face) {
-            const auto vertices{KDTree::faceToVertices(face, splitParam.vertices)};
+            const auto vertices{KDTree::faceToVertices(face, *splitParam.vertices)};
             boundVertices.insert(boundVertices.end(), vertices.cbegin(), vertices.cend());
         });
         _boundingBox = KDTree::getBoundingBox(boundVertices);
@@ -18,17 +18,16 @@ namespace polyhedralGravity {
         //node is not yet built
         if (!this->_lesser) {
             //copy parent param and modify to fit new node
-            const SplitParam childParam{
-                    .vertices = splitParam->vertices,
-                    .faces = splitParam->faces,
-                    //get the triangles of the lesser box
-                    .indexBoundFaces = this->_triangleRanges[0],
-                    //get the lesser box after splitting;
-                    .boundingBox = KDTree::splitBox(this->_boundingBox, this->_plane).first,
-                    //set the next splitting dimension: begin: (X -> Y -> Z); goto begin;
-                    .splitDirection = static_cast<Direction>((static_cast<int>(this->splitParam->splitDirection) + 1) % DIMENSIONS)};
+            SplitParam childParam{*splitParam};
+            //get the triangles of the lesser box
+            childParam.indexBoundFaces = this->_triangleRanges[0],
+            //get the lesser box after splitting;
+            childParam.boundingBox = KDTree::splitBox(this->_boundingBox, this->_plane).first;
+            //set the next splitting dimension: begin: (X -> Y -> Z); goto begin;
+            childParam.splitDirection = static_cast<Direction>((static_cast<int>(this->splitParam->splitDirection) + 1) % DIMENSIONS);
             _lesser = TreeNodeFactory::treeNodeFactory(childParam);
-            maybeFreeParam();//if both nodes are built, split parameters are no longer needed
+            //if both nodes are built, split parameters are no longer needed
+            maybeFreeParam();
         }
         return _lesser;
     }
@@ -37,17 +36,16 @@ namespace polyhedralGravity {
         //node is not yet built
         if (!this->_greater) {
             //copy parent param and modify to fit new node
-            const SplitParam childParam{
-                    .vertices = splitParam->vertices,
-                    .faces = splitParam->faces,
-                    //get the triangles of the lesser box
-                    .indexBoundFaces = this->_triangleRanges[1],
-                    //get the greater box after splitting;
-                    .boundingBox = KDTree::splitBox(this->_boundingBox, this->_plane).second,
-                    //set the next splitting dimension: begin: (X -> Y -> Z); goto begin;
-                    .splitDirection = static_cast<Direction>((static_cast<int>(this->splitParam->splitDirection) + 1) % DIMENSIONS)};//node is not yet built
+            SplitParam childParam{*splitParam};
+            //get the triangles of the lesser box
+            childParam.indexBoundFaces = this->_triangleRanges[1];
+            //get the greater box after splitting;
+            childParam.boundingBox = KDTree::splitBox(this->_boundingBox, this->_plane).second;
+            //set the next splitting dimension: begin: (X -> Y -> Z); goto begin;
+            childParam.splitDirection = static_cast<Direction>((static_cast<int>(this->splitParam->splitDirection) + 1) % DIMENSIONS);
             _greater = TreeNodeFactory::treeNodeFactory(childParam);
-            maybeFreeParam();//if both nodes are built, split parameters are no longer needed
+            //if both nodes are built, split parameters are no longer needed
+            maybeFreeParam();
         }
         return _greater;
     }

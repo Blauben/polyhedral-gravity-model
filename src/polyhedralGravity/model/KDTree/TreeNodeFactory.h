@@ -19,7 +19,7 @@ namespace polyhedralGravity {
      * @param splitParam Parameters for intersection testing and child node creation. {@link SplitParam}
      * @return A unique pointer to the new TreeNode.
      */
-        static std::unique_ptr<TreeNode> treeNodeFactory(const SplitParam &splitParam);
+        static std::unique_ptr<TreeNode> treeNodeFactory(SplitParam &splitParam);
     };
 
 }// namespace polyhedralGravity

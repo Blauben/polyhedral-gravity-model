@@ -9,7 +9,7 @@ namespace polyhedralGravity {
     }
 
     void LeafNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) {
-        std::for_each(this->splitParam->indexBoundFaces.begin, this->splitParam->indexBoundFaces.end, [this, &ray, &origin, &intersections](const IndexArray3 &face) {
+        std::for_each(this->splitParam->indexBoundFaces.cbegin(), this->splitParam->indexBoundFaces.cend(), [this, &ray, &origin, &intersections](const IndexArray3 &face) {
             if (const std::optional<Array3> intersection = rayIntersectsTriangle(origin, ray, face); intersection.has_value()) {
                 intersections.insert(intersection.value());
             }
@@ -17,7 +17,7 @@ namespace polyhedralGravity {
     }
 
     std::optional<Array3> LeafNode::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const IndexArray3 &triangleVertexIndex) const {
-        auto edgeVertices{KDTree::faceToVertices(triangleVertexIndex, this->splitParam->vertices)};
+        auto edgeVertices{KDTree::faceToVertices(triangleVertexIndex, *this->splitParam->vertices)};
         return rayIntersectsTriangle(rayOrigin, rayVector, edgeVertices);
     }
 
