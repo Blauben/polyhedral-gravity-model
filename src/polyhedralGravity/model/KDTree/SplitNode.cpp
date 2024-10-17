@@ -1,10 +1,4 @@
-#include "SplitNode.h"
-
-#include "KDTree.h"
-#include "KdDefinitions.h"
-#include "TreeNodeFactory.h"
-
-#include <algorithm>
+#include "polyhedralGravity/model/KDTree/SplitNode.h"
 
 namespace polyhedralGravity {
 
@@ -14,9 +8,8 @@ namespace polyhedralGravity {
         std::vector<Array3> boundVertices{};
         boundVertices.reserve(splitParam.indexBoundFaces.size() * 3);
         std::for_each(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), [&boundVertices, &splitParam](const size_t faceIndex) {
-            for (const auto &vertexIndex: splitParam.faces[faceIndex]) {
-                boundVertices.push_back(splitParam.vertices[vertexIndex]);
-            }
+            const auto vertices{KDTree::faceToVertices(splitParam.faces[faceIndex], splitParam.vertices)};
+            boundVertices.insert(boundVertices.end(), vertices.cbegin(), vertices.cend());
         });
         _boundingBox = KDTree::getBoundingBox(boundVertices);
     }

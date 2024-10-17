@@ -1,10 +1,10 @@
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-
-#include "polyhedralGravity/model/KDTree.h"
+#include "polyhedralGravity/model/KDTree/KDTree.h"
 
 #include "polyhedralGravity/input/TetgenAdapter.h"
 #include "polyhedralGravity/model/Polyhedron.h"
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include <array>
 #include <random>
 #include <string>

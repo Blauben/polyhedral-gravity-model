@@ -1,4 +1,6 @@
-#include "LeafNode.h"
+#include "polyhedralGravity/model/KDTree/LeafNode.h"
+
+#include "KDTree.h"
 
 namespace polyhedralGravity {
 
@@ -15,18 +17,18 @@ namespace polyhedralGravity {
     }
 
     std::optional<Array3> LeafNode::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const IndexArray3 &triangleVertexIndex) const {
-        Array3Triplet edgeVertices{};
-        std::transform(triangleVertexIndex.cbegin(), triangleVertexIndex.cend(), edgeVertices.begin(), [this](const size_t vertexIndex) {//transforms a face to its vertices
-            return this->splitParam->vertices[vertexIndex];
-        });
+        auto edgeVertices{KDTree::faceToVertices(triangleVertexIndex, this->splitParam->vertices)};
         return rayIntersectsTriangle(rayOrigin, rayVector, edgeVertices);
     }
 
-    std::optional<Array3> LeafNode::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangleVertices) {
+    std::optional<Array3> LeafNode::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const std::vector<Array3> &triangleVertices) {
         // Adapted Möller–Trumbore intersection algorithm
         // see https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
         using namespace polyhedralGravity;
         using namespace util;
+        if (triangleVertices.size() != 3) {
+            return std::nullopt;
+        }
         const Array3 edge1 = triangleVertices[1] - triangleVertices[0];
         const Array3 edge2 = triangleVertices[2] - triangleVertices[0];
         const Array3 h = cross(rayVector, edge2);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "KDTree.h"
+#include "polyhedralGravity/model/KDTree/KDTree.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
@@ -365,19 +365,6 @@ namespace polyhedralGravity {
          * @return true if the ray intersects the triangle
          */
         [[nodiscard]] size_t countRayPolyhedronIntersections(const Array3Triplet &face) const;
-
-        //TODO: consider moving to KDTree
-        /**
-         * Calculates how often a vector starting at a specific origin intersects a triangular face.
-         * Uses the Möller–Trumbore intersection algorithm.
-         * @param rayOrigin the origin of the ray
-         * @param rayVector the vector describing the ray
-         * @param triangle a triangular face
-         * @return intersection point or null
-         *
-         * @related Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
-         */
-        static std::optional<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
     };
 
 }

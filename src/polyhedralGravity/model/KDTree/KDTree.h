@@ -1,7 +1,15 @@
 #pragma once
 
-#include "KdDefinitions.h"
-#include "TreeNode.h"
+#include "polyhedralGravity/model/KDTree/KDTree.h"
+#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/TreeNode.h"
+#include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
+
+#include <algorithm>
+#include <array>
+#include <memory>
+#include <unordered_set>
+#include <utility>
 
 namespace polyhedralGravity {
 
@@ -70,6 +78,14 @@ namespace polyhedralGravity {
         * @return the bounding box {@link Box}
         */
         static Box getBoundingBox(const std::vector<Array3> &vertices);
+
+        /**
+            *    Finds the minimal bounding box for face.
+                * @param face the set of vertex indices that comprise the face for which to find the box.
+                * @param vertices the list of vertices that the indices refer to.
+                * @return the bounding box {@link Box}
+                */
+        static std::vector<Array3> faceToVertices(const IndexArray3 &face, const std::vector<Array3> &vertices);
 
 
     private:

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "GravityModelData.h"
+#include "polyhedralGravity/model/GravityModelData.h"
+
 #include <array>
 #include <memory>
 #include <utility>

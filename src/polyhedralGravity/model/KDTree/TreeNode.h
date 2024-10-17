@@ -1,6 +1,6 @@
 #pragma once
 
-#include "KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 
 namespace polyhedralGravity {
 

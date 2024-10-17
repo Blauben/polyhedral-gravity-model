@@ -1,7 +1,4 @@
-#include "TreeNodeFactory.h"
-#include "KDTree.h"
-#include "LeafNode.h"
-#include "SplitNode.h"
+#include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
 
 namespace polyhedralGravity {
     std::unique_ptr<TreeNode> TreeNodeFactory::treeNodeFactory(const SplitParam &splitParam) {

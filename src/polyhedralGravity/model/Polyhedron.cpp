@@ -11,7 +11,7 @@ namespace polyhedralGravity {
           _faces{faces},
           _density{density},
           _orientation{orientation},
-        _tree{std::make_shared<KDTree>(vertices, faces)} {
+          _tree{std::make_shared<KDTree>(vertices, faces)} {
         //Checks that the node with index zero is actually used
         if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](auto &face) {
                 return face[0] == 0 || face[1] == 0 || face[2] == 0;
@@ -212,39 +212,4 @@ namespace polyhedralGravity {
         // Count every triangular face which is intersected by the ray
         return this->_tree->countIntersections(rayOrigin, rayVector);
     }
-
-    //TODO: moved to LeafNode.cpp, consider removing here
-    std::optional<Array3> Polyhedron::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle) {
-        // Adapted Möller–Trumbore intersection algorithm
-        // see https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
-        using namespace util;
-        const Array3 edge1 = triangle[1] - triangle[0];
-        const Array3 edge2 = triangle[2] - triangle[0];
-        const Array3 h = cross(rayVector, edge2);
-        const double a = dot(edge1, h);
-        if (a > -EPSILON_ZERO_OFFSET && a < EPSILON_ZERO_OFFSET) {
-            return {};
-        }
-
-        const double f = 1.0 / a;
-        const Array3 s = rayOrigin - triangle[0];
-        const double u = f * dot(s, h);
-        if (u < 0.0 || u > 1.0) {
-            return {};
-        }
-
-        const Array3 q = cross(s, edge1);
-        const double v = f * dot(rayVector, q);
-        if (v < 0.0 || u + v > 1.0) {
-            return {};
-        }
-
-        const double t = f * dot(edge2, q);
-        if (t > EPSILON_ZERO_OFFSET) {
-            return rayOrigin + rayVector * t;
-        } else {
-            return {};
-        }
-    }
-
-}
+};// namespace polyhedralGravity
