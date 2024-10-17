@@ -44,7 +44,7 @@ namespace polyhedralGravity {
     /**
     * Triangle sets contained in an array. Used by the KDTree to divide a bounding boxes included triangles into smaller subsets. For the semantic purpose of the contained sets please refer to the comments in the usage context.
      */
-    template<int num>
+    template<size_t num>
     using TriangleIndexLists = std::array<std::unique_ptr<TriangleIndexList>, num>;
 
     /**
@@ -77,8 +77,9 @@ namespace polyhedralGravity {
          * Constructor that initializes all fields. Intended for the use with std::make_unique. See {@link SplitParam} fields for further information.
          *
          */
-        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, TriangleIndexList indexBoundFaces, Box boundingBox, Direction splitDirection)
-            : vertices{vertices}, faces{faces}, indexBoundFaces{std::move(indexBoundFaces)}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
+        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, Box boundingBox, Direction splitDirection)
+            : vertices{vertices}, faces{faces}, indexBoundFaces{TriangleIndexList(faces.size())}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
+            std::iota(indexBoundFaces.begin(), indexBoundFaces.end(), 0);
         }
     };
 }// namespace polyhedralGravity

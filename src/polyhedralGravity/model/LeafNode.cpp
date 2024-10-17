@@ -8,7 +8,8 @@ namespace polyhedralGravity {
 
     void LeafNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) {
         std::for_each(this->splitParam->indexBoundFaces.cbegin(), this->splitParam->indexBoundFaces.cend(), [this, &ray, &origin, &intersections](const size_t faceIndex) {
-            if (const std::optional<Array3> intersection = rayIntersectsTriangle(origin, ray, this->splitParam->faces[faceIndex]); intersection.has_value()) {
+            const std::optional<Array3> intersection = rayIntersectsTriangle(origin, ray, this->splitParam->faces[faceIndex]);
+            if (intersection.has_value()) {
                 intersections.insert(intersection.value());
             }
         });
@@ -16,7 +17,8 @@ namespace polyhedralGravity {
 
     std::optional<Array3> LeafNode::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const IndexArray3 &triangleVertexIndex) const {
         Array3Triplet edgeVertices{};
-        std::transform(triangleVertexIndex.cbegin(), triangleVertexIndex.cend(), edgeVertices.begin(), [this](const size_t vertexIndex) {//transforms a face to its vertices
+        //transforms a face to its vertices
+        std::transform(triangleVertexIndex.cbegin(), triangleVertexIndex.cend(), edgeVertices.begin(), [this](const size_t vertexIndex) {
             return this->splitParam->vertices[vertexIndex];
         });
         return rayIntersectsTriangle(rayOrigin, rayVector, edgeVertices);
@@ -32,27 +34,27 @@ namespace polyhedralGravity {
         const Array3 h = cross(rayVector, edge2);
         const double a = util::dot(edge1, h);
         if (a > -EPSILON_ZERO_OFFSET && a < EPSILON_ZERO_OFFSET) {
-            return {};
+            return std::nullopt;
         }
 
         const double f = 1.0 / a;
         const Array3 s = rayOrigin - triangleVertices[0];
         const double u = f * dot(s, h);
         if (u < 0.0 || u > 1.0) {
-            return {};
+            return std::nullopt;
         }
 
         const Array3 q = cross(s, edge1);
         const double v = f * dot(rayVector, q);
         if (v < 0.0 || u + v > 1.0) {
-            return {};
+            return std::nullopt;
         }
 
         const double t = f * dot(edge2, q);
         if (t > EPSILON_ZERO_OFFSET) {
             return rayOrigin + rayVector * t;
         } else {
-            return {};
+            return std::nullopt;
         }
 }
 
