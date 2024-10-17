@@ -133,13 +133,16 @@ namespace polyhedralGravity {
 
     TriangleIndexRanges<3> KDTree::containedTriangles(const SplitParam &splitParam, const Plane &split) {
         using namespace polyhedralGravity;
-        //define three sets of triangles: closer to the origin, further away, in the plane
-        std::vector<IndexArray3> face_less{splitParam.indexBoundFaces.size() / 2};
-        std::vector<IndexArray3> face_greater{splitParam.indexBoundFaces.size() / 2};
+        //define four sets of triangles: closer to the origin in respect to the plane, further away in respect to the plane, in the plane, going through the plane
+        std::vector<IndexArray3> face_less{};
+        face_less.reserve(splitParam.indexBoundFaces.size() / 2);
+        std::vector<IndexArray3> face_greater{};
+        face_greater.reserve(splitParam.indexBoundFaces.size() / 2);
         std::vector<IndexArray3> face_equal{};
+        std::vector<IndexArray3> face_throughPlane{};
 
         //perform check for every triangle contained in this node's bounding box.
-        std::for_each(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), [&splitParam, &split, &face_greater, &face_less, &face_equal](const IndexArray3 &face) {
+        std::for_each(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), [&splitParam, &split, &face_greater, &face_less, &face_equal, &face_throughPlane](const IndexArray3 &face) {
             bool less{false}, greater{false}, equal{false};
             //transform a triangle into the three vertices it comprises
             auto vertices{faceToVertices(face, *splitParam.vertices)};
@@ -155,13 +158,20 @@ namespace polyhedralGravity {
             }
 
             //all vertices of the triangle lie in the plane -> triangle lies in the plane
-            if (!less && !greater && equal) {
+            if (equal && !less && !greater) {
                 face_equal.push_back(face);
+                return;
+            }
+            //triangle goes though the plane: to avoid duplication only insert into face_less for now and handle greater case later.
+            if(less && greater) {
+                face_less.push_back(face);
+                face_throughPlane.push_back(face);
                 return;
             }
             //triangle has area in the greater bounding box and needs to be checked there for intersections
             if (greater) {
                 face_greater.push_back(face);
+                return;
             }
             //triangle has area in the closer bounding box and needs to be checked there for intersections
             if (less) {
@@ -169,15 +179,16 @@ namespace polyhedralGravity {
             }
         });
 
+        //TODO: more faces are queried through the iterator than there is space to safe
         //Copies the newly sorted vectors into the original one
-        splitParam.indexBoundFaces.faces->reserve(face_less.size() + face_equal.size() + face_greater.size());
         const auto endLess = std::copy(face_less.cbegin(), face_less.cend(), splitParam.indexBoundFaces.begin());
         const auto endEqual = std::copy(face_equal.cbegin(), face_equal.cend(), endLess);
-        std::copy(face_greater.cbegin(), face_greater.cend(), endEqual);
+        const auto end = std::copy(face_greater.cbegin(), face_greater.cend(), endEqual);
         //calculates the ranges for less, equal and greater based on the data acquired earlier
         const auto rangeLess = TriangleIndexRange(splitParam.indexBoundFaces, splitParam.indexBoundFaces.begin_idx, splitParam.indexBoundFaces.begin_idx + face_less.size());
         const auto rangeEqual = TriangleIndexRange(splitParam.indexBoundFaces, rangeLess.end_idx, rangeLess.end_idx + face_equal.size());
-        const auto rangeGreater = TriangleIndexRange(splitParam.indexBoundFaces, rangeEqual.end_idx, rangeEqual.end_idx + face_greater.size());
+        auto rangeGreater = TriangleIndexRange(splitParam.indexBoundFaces, rangeEqual.end_idx, rangeEqual.end_idx + face_greater.size());
+        rangeGreater.duplicate_faces = std::make_shared<std::vector<IndexArray3>>(std::move(face_throughPlane));
         return {rangeLess, rangeGreater, rangeEqual};
     }
 

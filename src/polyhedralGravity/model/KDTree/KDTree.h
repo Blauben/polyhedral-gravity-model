@@ -4,6 +4,7 @@
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 #include "polyhedralGravity/model/KDTree/TreeNode.h"
 #include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
+#include "polyhedralGravity/model/KDTree/TriangleIndexRange.h"
 
 #include <algorithm>
 #include <array>
