@@ -29,12 +29,66 @@ namespace polyhedralGravity {
      *
      * E.g. Specifying 0.0 and Direction::X would describe the YZ plane that goes through the origin.
      */
-    using Plane = std::pair<double, Direction>;
+    struct Plane {
+        /**
+         * Each point lying on the plane has to have this value in the dimension specified in the orientation parameter.
+         */
+        double axisCoordinate;
+        /**
+         * Specifies which coordinate dimension is fixed for every point on the plane.
+         */
+        Direction orientation;
+    };
 
     /**
      * Defines a rectangular box by taking two opposite corner points. First is the point closest to the origin and second is the point farthest away.
      */
-    using Box = std::pair<Array3, Array3>;
+    struct Box {
+        /**
+         * The point closer to the origin, thus minimal
+         */
+        Array3 minPoint;
+        /**
+         * The point further away from the origin, thus maximal.
+         */
+        Array3 maxPoint;
+
+        //refer to https://en.wikipedia.org/wiki/Slab_method
+        [[nodiscard]] std::pair<double, double> rayBoxIntersection(const Array3 &origin, const Array3 &ray) const {
+            //calculate the parameter t in $ origin + t * ray = point $
+            auto const lambdaIntersectSlabPoint = [&origin, &ray](const Array3 &point) {
+                return std::make_tuple(
+                        (point[0] - origin[0]) / ray[0],
+                        (point[1] - origin[1]) / ray[1],
+                        (point[2] - origin[2]) / ray[2]);
+            };
+            //intersections with slabs defined through minPoint
+            auto [tx_1, ty_1, tz_1] = lambdaIntersectSlabPoint(minPoint);
+            //intersections with slabs defined through maxPoint
+            auto [tx_2, ty_2, tz_2] = lambdaIntersectSlabPoint(maxPoint);
+
+            //return the parameters in ordered by '<'
+            const auto lambdaMinMaxPair = [](const double first, const double second) -> std::pair<double, double> { return {std::min(first, second), std::max(first, second)}; };
+
+            auto [tx_enter, tx_exit] = lambdaMinMaxPair(tx_1, tx_2);
+            auto [ty_enter, ty_exit] = lambdaMinMaxPair(ty_1, ty_2);
+            auto [tz_enter, tz_exit] = lambdaMinMaxPair(tz_1, tz_2);
+
+            //calculate the point where all slabs have been entered: t_enter
+            const double t_enter{std::max(tx_enter, std::max(ty_enter, tz_enter))};
+            //calculates the point where the first slab has been exited: t_exit
+            const double t_exit{std::min(tx_exit, std::min(ty_exit, tz_exit))};
+
+            return {t_enter, t_exit};
+        }
+
+        explicit Box(const std::pair<Array3, Array3> &pair)
+            : minPoint{pair.first}, maxPoint{pair.second} {
+        }
+        Box()
+            : minPoint{0.0, 0.0, 0.0}, maxPoint{0.0, 0.0, 0.0} {
+        }
+    };
 
     /**
      * A set that stores indices of the faces vector in the KDTree. This effectively corresponds to a set of triangles. For performance purposes a std::vector is used instead of a std::set.

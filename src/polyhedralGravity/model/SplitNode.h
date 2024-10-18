@@ -43,7 +43,7 @@ namespace polyhedralGravity {
          * @plane The plane that splits this node's bounding box into two sub boxes. The child nodes are created based on these boxes.
          * @triangleIndexLists Index sets of the triangles contained in the lesser and greater child nodes. {@link TriangleIndexList}
          */
-        SplitNode(const SplitParam &splitParam, Plane &plane, TriangleIndexLists<2> &triangleIndexLists);
+        SplitNode(const SplitParam &splitParam, const Plane &plane, TriangleIndexLists<2> &triangleIndexLists);
         /**
          * Computes the child node decided by the given index (0 for lesser, 1 for greater) if not present already and returns it to the caller.
          * @param index Specifies which node to build. 0 or LESSER for _lesser, 1 or GREATER for _greater.

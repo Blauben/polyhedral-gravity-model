@@ -53,10 +53,10 @@ namespace polyhedralGravity {
                 //constructs the plane that goes through the vertex at index vertexIndex and spans in a specified direction.
                 Plane candidatePlane{param.vertices[vertexIndex][static_cast<int>(param.splitDirection)], param.splitDirection};
                 //continue if plane has already been tested
-                if (testedPlaneCoordinates.find(candidatePlane.first) != testedPlaneCoordinates.cend()) {
+                if (testedPlaneCoordinates.find(candidatePlane.axisCoordinate) != testedPlaneCoordinates.cend()) {
                     continue;
                 }
-                testedPlaneCoordinates.emplace(candidatePlane.first);
+                testedPlaneCoordinates.emplace(candidatePlane.axisCoordinate);
                 //evaluate the candidate plane and store if it is better than the currently stored result
                 if (auto [candidateCost, triangleIndexLists] = costForPlane(param, candidatePlane); candidateCost < cost) {
                     cost = candidateCost;
@@ -69,32 +69,32 @@ namespace polyhedralGravity {
     }
 
     Box KDTree::getBoundingBox(const std::vector<Array3> &vertices) {
-        using namespace polyhedralGravity;
-        return {util::findMinMaxCoordinates<std::vector<Array3>>(vertices)};
+        using namespace util;
+        return Box(findMinMaxCoordinates<std::vector, Array3>(vertices));
     }
 
     std::pair<Box, Box> KDTree::splitBox(const Box &box, const Plane &plane) {
         //clone the original box two times -> modify clones to become child boxes defined by the splitting plane
         Box box1{box};
         Box box2{box};
-        const Direction &axis{plane.second};
-        //box.first == min ; box.second == max -> Shift edges of the boxes to match the plane
-        box1.second[static_cast<int>(axis)] = plane.first;
-        box2.first[static_cast<int>(axis)] = plane.first;
+        const Direction &axis{plane.orientation};
+        //Shift edges of the boxes to match the plane
+        box1.maxPoint[static_cast<int>(axis)] = plane.axisCoordinate;
+        box2.minPoint[static_cast<int>(axis)] = plane.axisCoordinate;
         return std::make_pair(box1, box2);
     }
 
-    std::pair<const double, TriangleIndexLists<2>> KDTree::costForPlane(const SplitParam &param, const Plane &plane) {
+    std::pair<const double, TriangleIndexLists<2>> KDTree::costForPlane(const SplitParam &splitParam, const Plane &plane) {
         //Checks if the split plane is one of the faces of the bounding box, if so the split is useless
-        if (plane.first == param.boundingBox.first[static_cast<int>(plane.second)] || plane.first == param.boundingBox.second[static_cast<int>(plane.second)]) {
+        if (plane.axisCoordinate == splitParam.boundingBox.minPoint[static_cast<int>(plane.orientation)] || plane.axisCoordinate == splitParam.boundingBox.maxPoint[static_cast<int>(plane.orientation)]) {
             //will be discarded later because not splitting is cheaper (finitely many nodes!) than using this plane (infinite cost)
             return std::make_pair(std::numeric_limits<double>::infinity(), TriangleIndexLists<2>{});
         }
         //calculate parameters for Surface Area Heuristic (SAH): childBoxSurfaceAreas; number of contained triangles in each box
-        auto [box1, box2] = splitBox(param.boundingBox, plane);
+        auto [box1, box2] = splitBox(splitParam.boundingBox, plane);
         //equalT are triangles lying in the plane (not in the boxes)
-        auto [lessT, greaterT, equalT] = containedTriangles(param, plane);
-        const double surfaceAreaBounding = surfaceAreaOfBox(param.boundingBox);
+        auto [lessT, greaterT, equalT] = containedTriangles(splitParam, plane);
+        const double surfaceAreaBounding = surfaceAreaOfBox(splitParam.boundingBox);
         const double surfaceArea1 = surfaceAreaOfBox(box1);
         const double surfaceArea2 = surfaceAreaOfBox(box2);
         //evaluate SAH: Include equalT once in each box and record option with minimum cost
@@ -115,9 +115,9 @@ namespace polyhedralGravity {
     }
 
     double KDTree::surfaceAreaOfBox(const Box &box) {
-        const double width = std::abs(box.second[0] - box.first[0]);
-        const double length = std::abs(box.second[1] - box.first[1]);
-        const double height = std::abs(box.second[2] - box.first[2]);
+        const double width = std::abs(box.maxPoint[0] - box.minPoint[0]);
+        const double length = std::abs(box.maxPoint[1] - box.minPoint[1]);
+        const double height = std::abs(box.maxPoint[2] - box.minPoint[2]);
         return 2 * (width * length + width * height + length * height);
     }
 
@@ -136,10 +136,10 @@ namespace polyhedralGravity {
             bool less{false}, greater{false}, equal{false};
             for (const Array3 vertex: vertices) {
                 //vertex is closer to the origin than the plane
-                if (vertex[static_cast<int>(split.second)] < split.first) {
+                if (vertex[static_cast<int>(split.orientation)] < split.axisCoordinate) {
                     less = true;
                     //vertex is farther away of the origin than the plane
-                } else if (vertex[static_cast<int>(split.second)] > split.first) {
+                } else if (vertex[static_cast<int>(split.orientation)] > split.axisCoordinate) {
                     greater = true;
                     //vertex lies on the plane
                 }

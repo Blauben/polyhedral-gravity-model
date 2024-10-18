@@ -127,11 +127,11 @@ namespace polyhedralGravity {
 
         /**
         * Evaluates the cost function should the specified bounding box and it's faces be divided by the specified plane. Used to evaluate possible split planes.
-         * @param param specifies the polyhedron section to be split {@link SplitParam}.
+         * @param splitParam specifies the polyhedron section to be split {@link SplitParam}.
         * @param plane the candidate split plane to be evaluated.
         * @return the cost for performing intersection operations on the finalized tree later, should the KDTree be built using the specified split plane and the triangle sets resulting through division by the plane.
         */
-        static std::pair<const double, TriangleIndexLists<2>> costForPlane(const SplitParam &param, const Plane &plane);
+        static std::pair<const double, TriangleIndexLists<2>> costForPlane(const SplitParam &splitParam, const Plane &plane);
         /**
         * Calculates the surface area of a box.
         * @param box specifies the box to be used.

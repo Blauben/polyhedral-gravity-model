@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <functional>
+#include <gtest/internal/gtest-param-util.h>
 #include <iostream>
 #include <numeric>
 #include <set>
@@ -439,15 +440,15 @@ namespace polyhedralGravity::util {
     * @param elements the container of whose elements to search for min and max ccordinates
     * @return the findings formatted in a pair of new elements. E.g <(0,0,0) , (1,1,1)> if the container {(0,0,1), (1,1,0)} is passed.
     */
-    template<typename Container>
-    std::pair<typename Container::value_type, typename Container::value_type> findMinMaxCoordinates(Container elements) {
+    template<template<typename> typename Container, typename ValueType>
+    std::pair<ValueType, ValueType> findMinMaxCoordinates(Container<ValueType> elements) {
         //return empty box centered at the origin if no vertices provided
         if (elements.empty()) {
             return {{0, 0, 0}, {0, 0, 0}};
         }
         //initialize values from the array -> even if only one vertex is provided the box is still correct without executing the loop.
-        typename Container::value_type min = elements[0];
-        typename Container::value_type max = elements[0];
+       ValueType min = elements[0];
+        ValueType max = elements[0];
         //test each vertex for proximity to the origin and find minima and maxima
         for (const auto& vertex : elements) {
             // test each dimension separately
