@@ -42,7 +42,7 @@ namespace polyhedralGravity {
          * @param triangleVertices the face to test against, described by the vertices that comprise it (passed by value).
          * @return
          */
-        static std::optional<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const std::vector<Array3> &triangleVertices);
+        static std::optional<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangleVertices);
     };
 
 }// namespace polyhedralGravity
