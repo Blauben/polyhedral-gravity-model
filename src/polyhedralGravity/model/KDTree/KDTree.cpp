@@ -26,35 +26,67 @@ namespace polyhedralGravity {
         this->getRootNode().getFaceIntersections(origin, ray, intersections);
     }
 
-    // O(N^2) implementation
-    std::tuple<Plane, double, TriangleIndexLists<2>> KDTree::findPlane(const SplitParam &param) {
+    // O(N*log^2(N)) implementation
+    std::tuple<Plane, double, TriangleIndexLists<2>> KDTree::findPlane(const SplitParam &splitParam) {//TODO iterate over all
         //initialize the default plane and make it costly
         double cost = std::numeric_limits<double>::infinity();
-        Plane optPlane{0, param.splitDirection};
+        Plane optPlane{0, splitParam.splitDirection};
         //store the triangleSets that are implicitly generated during plane testing for later use.
         TriangleIndexLists<2> optTriangleIndexLists{};
-        //each vertex proposes a split plane candidate: test for each of them, store them in buffer set to avoid duplicate testing
-        std::unordered_set<double> testedPlaneCoordinates{};
-        auto [vertex3_begin, vertex3_end] = transformIterator(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), param.vertices, param.faces);
-        std::for_each(vertex3_begin, vertex3_end, [&param, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates](const auto& indexAndTriplet) {
+        //each vertex proposes a split plane candidate: create an event and queue it in the buffer
+        std::vector<PlaneEvent> events{};
+        auto [vertex3_begin, vertex3_end] = transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
+        std::for_each(vertex3_begin, vertex3_end, [&splitParam, &optPlane, &cost, &optTriangleIndexLists, &events](const auto &indexAndTriplet) {
             const auto [index, triplet] = indexAndTriplet;
             const auto [minPoint, maxPoint] = getBoundingBox<std::array<Array3, 3>>(triplet);
-            for (const auto planeSurfacePoint: {minPoint, maxPoint}) {
-                //constructs the plane that goes through a vertex lying on the bounding box of the face to be checked and spans in a specified direction.
-                Plane candidatePlane{planeSurfacePoint[static_cast<int>(param.splitDirection)], param.splitDirection};
-                //continue if plane has already been tested
-                if (testedPlaneCoordinates.find(candidatePlane.axisCoordinate) != testedPlaneCoordinates.cend()) {
-                    continue;
-                }
-                testedPlaneCoordinates.emplace(candidatePlane.axisCoordinate);
-                //evaluate the candidate plane and store if it is better than the currently stored result
-                if (auto [candidateCost, triangleIndexLists] = costForPlane(param, candidatePlane); candidateCost < cost) {
-                    cost = candidateCost;
-                    optPlane = candidatePlane;
-                    optTriangleIndexLists = std::move(triangleIndexLists);
-                }
+            // if the the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
+            if (minPoint[splitParam.splitDirection] == maxPoint[splitParam.splitDirection]) {
+                events.emplace_back(
+                                .type = PlaneEventType::planar,
+                                .plane = Plane{
+                                        .axisCoordinate = minPoint[splitParam.splitDirection],
+                                        .orientation = splitParam.splitDirection},
+                                .faceIndex = index);
+                return;
             }
+            //else create a starting and ending event consisting of the planes defined by the min and max points of the face's bounding box.
+            events.emplace_back(
+                            .type = PlaneEventType::starting,
+                            .plane = Plane{
+                                    .axisCoordinate = minPoint[splitParam.splitDirection],
+                                    .orientation = splitParam.splitDirection},
+                            .faceIndex = index);
+            events.emplace_back(
+                            .type = PlaneEventType::ending,
+                            .plane = Plane{
+                                    .axisCoordinate = maxPoint[splitParam.splitDirection],
+                                    .orientation = splitParam.splitDirection},
+                            .faceIndex = index);
         });
+        std::sort(events.begin(), events.end());
+        size_t trianglesLeft{0}, trianglesRight{splitParam.indexBoundFaces.size()}, trianglesPlanar{0};
+        for (int i{0}; i < events.size(); i++) {
+            Plane &candidatePlane = events[i].plane;
+            size_t p_start{0}, p_end{0}, p_planar{0};
+            while (i < events.size() && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::ending) {
+                p_end++;
+                i++;
+            }
+            while (i < events.size() && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::planar) {
+                p_planar++;
+                i++;
+            }
+            while (i < events.size() && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::starting) {
+                p_start++;
+                i++;
+            }
+            trianglesPlanar = p_planar;
+            trianglesRight -= p_planar + p_end;
+            auto [cost, minSideChosen] = costForPlane(splitParam.boundingBox, candidatePlane, p_start, p_end, p_planar);
+            trianglesLeft += p_planar + p_start;
+            trianglesPlanar = 0;
+            //TODO: continue here -> update best plane
+        }
         return std::make_tuple(optPlane, cost, std::move(optTriangleIndexLists));
     }
 
@@ -75,34 +107,29 @@ namespace polyhedralGravity {
         return std::make_pair(box1, box2);
     }
 
-    std::pair<const double, TriangleIndexLists<2>> KDTree::costForPlane(const SplitParam &splitParam, const Plane &plane) {
+    std::pair<const double, bool> KDTree::costForPlane(const Box &boundingBox, const Plane &plane, const size_t trianglesMin, const size_t trianglesMax, const size_t trianglesPlanar) {
         //Checks if the split plane is one of the faces of the bounding box, if so the split is useless
-        if (plane.axisCoordinate == splitParam.boundingBox.minPoint[static_cast<int>(plane.orientation)] || plane.axisCoordinate == splitParam.boundingBox.maxPoint[static_cast<int>(plane.orientation)]) {
+        if (plane.axisCoordinate == boundingBox.minPoint[static_cast<int>(plane.orientation)] || plane.axisCoordinate == boundingBox.maxPoint[static_cast<int>(plane.orientation)]) {
             //will be discarded later because not splitting is cheaper (finitely many nodes!) than using this plane (infinite cost)
-            return std::make_pair(std::numeric_limits<double>::infinity(), TriangleIndexLists<2>{});
+            return {std::numeric_limits<double>::infinity(), false};
         }
         //calculate parameters for Surface Area Heuristic (SAH): childBoxSurfaceAreas; number of contained triangles in each box
-        auto [box1, box2] = splitBox(splitParam.boundingBox, plane);
+        auto [box1, box2] = splitBox(boundingBox, plane);
         //equalT are triangles lying in the plane (not in the boxes)
-        auto [lessT, greaterT, equalT] = containedTriangles(splitParam, plane);
-        const double surfaceAreaBounding = surfaceAreaOfBox(splitParam.boundingBox);
+        const double surfaceAreaBounding = surfaceAreaOfBox(boundingBox);
         const double surfaceArea1 = surfaceAreaOfBox(box1);
         const double surfaceArea2 = surfaceAreaOfBox(box2);
         //evaluate SAH: Include equalT once in each box and record option with minimum cost
-        double costLesser = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * (static_cast<double>(lessT->size() + equalT->size())) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>(greaterT->size()));
+        double costLesser = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * (static_cast<double>(trianglesMin + trianglesPlanar)) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>(trianglesMax));
         //if empty space is cut off, reduce cost by 20%
-        costLesser *= lessT->size() + equalT->size() == 0 || greaterT->empty() ? 0.8 : 1.0;
-        double costUpper = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * static_cast<double>(lessT->size()) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>((greaterT->size() + equalT->size())));
+        costLesser *= trianglesMin + trianglesPlanar == 0 || trianglesMax == 0 ? 0.8 : 1.0;
+        double costUpper = traverseStepCost + triangleIntersectionCost * ((surfaceArea1 / surfaceAreaBounding) * static_cast<double>(trianglesMin) + (surfaceArea2 / surfaceAreaBounding) * static_cast<double>((trianglesMax + trianglesPlanar)));
         //if empty space is cut off, reduce cost by 20%
-        costUpper *= greaterT->size() + equalT->size() == 0 || lessT->empty() ? 0.8 : 1.0;
+        costUpper *= trianglesMax + trianglesPlanar == 0 || trianglesMin == 0 ? 0.8 : 1.0;
         if (costLesser <= costUpper) {
-            //include equalT in the boxes triangles for further subdivision
-            lessT->insert(lessT->cend(), equalT->cbegin(), equalT->cend());
-            return std::make_pair(costLesser, std::array{std::move(lessT), std::move(greaterT)});
+            return {costLesser, true};
         }
-        //include equalT in the boxes triangles for further subdivision
-        greaterT->insert(greaterT->cend(), equalT->cbegin(), equalT->cend());
-        return {costUpper, std::array{(std::move(lessT)), (std::move(greaterT))}};
+        return {costUpper, false};
     }
 
     double KDTree::surfaceAreaOfBox(const Box &box) {
@@ -118,7 +145,6 @@ namespace polyhedralGravity {
         auto index_less = std::make_unique<TriangleIndexList>(param.indexBoundFaces.size() / 2);
         auto index_greater = std::make_unique<TriangleIndexList>(param.indexBoundFaces.size() / 2);
         auto index_equal = std::make_unique<TriangleIndexList>();
-
 
 
         //perform check for every triangle contained in this node's bounding box.

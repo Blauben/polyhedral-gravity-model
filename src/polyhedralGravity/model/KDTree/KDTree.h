@@ -8,9 +8,9 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <thrust/iterator/transform_iterator.h>
 #include <unordered_set>
 #include <utility>
-#include <thrust/iterator/transform_iterator.h>
 
 namespace polyhedralGravity {
 
@@ -27,13 +27,59 @@ namespace polyhedralGravity {
         */
         KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces);
 
-        // O(N^2) implementation
+        // O(N*log^2(N)) implementation
         /**
         * Finds the optimal split plane to split a provided rectangle section optimally.
-        * @param param specifies the polyhedron section to be split @link SplitParam.
+        * @param splitParam specifies the polyhedron section to be split @link SplitParam.
         * @return Tuple of the optimal plane to split the specified bounding box, its cost as double and a list of triangle sets with respective positions to the found plane. Refer to {@link TriangleIndexLists<2>} for more information.
         */
-        static std::tuple<Plane, double, TriangleIndexLists<2>> findPlane(const SplitParam &param);
+        static std::tuple<Plane, double, TriangleIndexLists<2>> findPlane(const SplitParam &splitParam);
+
+        /**
+         * Used by {@link PlaneEvent} to position the face that generated the event relative to the generated plane.
+         */
+        enum class PlaneEventType {
+            ending = 0,
+            planar = 1,
+            starting = 2
+        };
+
+        /**
+         * Sorting function to be applied should the planes in two PlaneEvents ({@link PlaneEvent}) share the same axis coordinate.
+         * @param first The first PlaneEventType
+         * @param second The second PlaneEventType
+         * @return true if the first argument should precede the second argument
+         */
+        bool operator<(const PlaneEventType &first, const PlaneEventType &second) const {
+            return static_cast<int>(first) < static_cast<int>(second);
+        }
+
+        /**
+         * Generated when traversing the vector of faces and building their candidate planes.
+         */
+        struct PlaneEvent {
+            PlaneEventType type;
+            /**
+             * The candidate plane suggested by the face included in this struct.
+             */
+            Plane plane;
+            /**
+             * The index of the face that generated this candidate plane.
+             */
+            unsigned faceIndex;
+
+            /**
+             * Less operator used for sorting an PlaneEvent vector.
+             * @param other the PlaneEvent to compare this to.
+             * @return true if this should precede the other argument.
+             */
+            bool operator<(const PlaneEvent &other) const {
+                if (this->plane.axisCoordinate == other.plane.axisCoordinate) {
+                    return this->type < other.type;
+                }
+                return this->plane.axisCoordinate < other.plane.axisCoordinate;
+            }
+        };
 
         /**
         * Splits a box into two new boxes.
@@ -91,15 +137,14 @@ namespace polyhedralGravity {
         * @param faces the faces vector to lookup face indices.
         * @return pair of transform iterators.
         */
-        [[nodiscard]] static inline auto transformIterator(const std::vector<unsigned long>::const_iterator begin, const std::vector<unsigned long>::const_iterator end, const std::vector<Array3>& vertices, const std::vector<IndexArray3>& faces) {
+        [[nodiscard]] static inline auto transformIterator(const std::vector<unsigned long>::const_iterator begin, const std::vector<unsigned long>::const_iterator end, const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces) {
             //The offset must be captured by value to ensure its lifetime!
             const auto lambdaApplication = [&vertices, &faces](unsigned long faceIndex) {
-                const auto& face = faces[faceIndex];
-                Array3Triplet vertexTriplet =  {
-                    vertices[face[0]],
-                    vertices[face[1]],
-                    vertices[face[2]]
-                } ;
+                const auto &face = faces[faceIndex];
+                Array3Triplet vertexTriplet = {
+                        vertices[face[0]],
+                        vertices[face[1]],
+                        vertices[face[2]]};
                 return std::make_pair(faceIndex, vertexTriplet);
             };
 
@@ -133,11 +178,15 @@ namespace polyhedralGravity {
 
         /**
         * Evaluates the cost function should the specified bounding box and it's faces be divided by the specified plane. Used to evaluate possible split planes.
-        * @param splitParam specifies the polyhedron section to be split {@link SplitParam}.
+        * @param boundingBox the bounding box encompassing the scene to be split.
         * @param plane the candidate split plane to be evaluated.
-        * @return the cost for performing intersection operations on the finalized tree later, should the KDTree be built using the specified split plane and the triangle sets resulting through division by the plane.
+        * @param trianglesMin the number of triangles overlapping with the min side of the bounding box.
+        * @param trianglesMax the number of triangles overlapping with the max side of the bounding box.
+        * @param trianglesPlanar the number of triangles lying in the plane.
+        * @return A pair of: 1. the cost for performing intersection operations on the finalized tree later, should the KDTree be built using the specified split plane and the triangle sets resulting through division by the plane.
+        * 2. true if the planar triangles should be added to the min side of the bounding box.
         */
-        static std::pair<const double, TriangleIndexLists<2>> costForPlane(const SplitParam &splitParam, const Plane &plane);
+        static std::pair<const double, bool> costForPlane(const Box &boundingBox, const Plane &plane, size_t trianglesMin, size_t trianglesMax, size_t trianglesPlanar);
         /**
         * Calculates the surface area of a box.
         * @param box specifies the box to be used.
