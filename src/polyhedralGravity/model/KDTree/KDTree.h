@@ -36,52 +36,6 @@ namespace polyhedralGravity {
         static std::tuple<Plane, double, TriangleIndexLists<2>> findPlane(const SplitParam &splitParam);
 
         /**
-         * Used by {@link PlaneEvent} to position the face that generated the event relative to the generated plane.
-         */
-        enum class PlaneEventType {
-            ending = 0,
-            planar = 1,
-            starting = 2
-        };
-
-        /**
-         * Sorting function to be applied should the planes in two PlaneEvents ({@link PlaneEvent}) share the same axis coordinate.
-         * @param first The first PlaneEventType
-         * @param second The second PlaneEventType
-         * @return true if the first argument should precede the second argument
-         */
-        bool operator<(const PlaneEventType &first, const PlaneEventType &second) const {
-            return static_cast<int>(first) < static_cast<int>(second);
-        }
-
-        /**
-         * Generated when traversing the vector of faces and building their candidate planes.
-         */
-        struct PlaneEvent {
-            PlaneEventType type;
-            /**
-             * The candidate plane suggested by the face included in this struct.
-             */
-            Plane plane;
-            /**
-             * The index of the face that generated this candidate plane.
-             */
-            unsigned faceIndex;
-
-            /**
-             * Less operator used for sorting an PlaneEvent vector.
-             * @param other the PlaneEvent to compare this to.
-             * @return true if this should precede the other argument.
-             */
-            bool operator<(const PlaneEvent &other) const {
-                if (this->plane.axisCoordinate == other.plane.axisCoordinate) {
-                    return this->type < other.type;
-                }
-                return this->plane.axisCoordinate < other.plane.axisCoordinate;
-            }
-        };
-
-        /**
         * Splits a box into two new boxes.
         * @param box the box to be split.
         * @param plane the plane by which to split the original box.
@@ -187,12 +141,30 @@ namespace polyhedralGravity {
         * 2. true if the planar triangles should be added to the min side of the bounding box.
         */
         static std::pair<const double, bool> costForPlane(const Box &boundingBox, const Plane &plane, size_t trianglesMin, size_t trianglesMax, size_t trianglesPlanar);
+
+        /**
+         * Generates the vector of PlaneEvents comprising all the possible candidate planes. {@link PlaneEvent}
+         * @param splitParam Contains the parameters of the scene to find candidate planes for. {@link SplitParam}
+         * @return The vector of PlaneEvents
+         */
+        static std::vector<PlaneEvent> generatePlaneEvents(const SplitParam &splitParam);
+
+        /**
+         * When an optimal plane has been found extract the index lists of faces for further subdivision through child nodes.
+         * @param planeEvents The events that were generated during {@link findPlane}.
+         * @param plane The plane to split the faces by.
+         * @param minSide Whether to include planar faces to the bounding box closer to the origin.
+         * @return The triangleIndexlists for the bounding boxes closer and further away from the origin.
+         */
+        static TriangleIndexLists<2> generateTriangleSubsets(const std::vector<PlaneEvent> &planeEvents, const Plane &plane, bool minSide);
+
         /**
         * Calculates the surface area of a box.
         * @param box specifies the box to be used.
         * @return the surface area
         */
-        static double surfaceAreaOfBox(const Box &box);
+        static double
+        surfaceAreaOfBox(const Box &box);
         /**
         * Splits a section of a polyhedron into two bounding boxes and calculates the triangle face sets contained in the new bounding boxes.
         * @param param specifies the polyhedron section to be split.

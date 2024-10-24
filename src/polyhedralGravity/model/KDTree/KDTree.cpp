@@ -27,68 +27,128 @@ namespace polyhedralGravity {
     }
 
     // O(N*log^2(N)) implementation
-    std::tuple<Plane, double, TriangleIndexLists<2>> KDTree::findPlane(const SplitParam &splitParam) {//TODO iterate over all
+    std::tuple<Plane, double, TriangleIndexLists<2>> KDTree::findPlane(const SplitParam &splitParam) {//TODO iterate over all dimensions
         //initialize the default plane and make it costly
         double cost = std::numeric_limits<double>::infinity();
-        Plane optPlane{0, splitParam.splitDirection};
-        //store the triangleSets that are implicitly generated during plane testing for later use.
-        TriangleIndexLists<2> optTriangleIndexLists{};
+        Plane optPlane{};
+        bool minSide{true};
         //each vertex proposes a split plane candidate: create an event and queue it in the buffer
-        std::vector<PlaneEvent> events{};
-        auto [vertex3_begin, vertex3_end] = transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
-        std::for_each(vertex3_begin, vertex3_end, [&splitParam, &optPlane, &cost, &optTriangleIndexLists, &events](const auto &indexAndTriplet) {
-            const auto [index, triplet] = indexAndTriplet;
-            const auto [minPoint, maxPoint] = getBoundingBox<std::array<Array3, 3>>(triplet);
-            // if the the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
-            if (minPoint[splitParam.splitDirection] == maxPoint[splitParam.splitDirection]) {
-                events.emplace_back(
-                                .type = PlaneEventType::planar,
-                                .plane = Plane{
-                                        .axisCoordinate = minPoint[splitParam.splitDirection],
-                                        .orientation = splitParam.splitDirection},
-                                .faceIndex = index);
-                return;
-            }
-            //else create a starting and ending event consisting of the planes defined by the min and max points of the face's bounding box.
-            events.emplace_back(
-                            .type = PlaneEventType::starting,
-                            .plane = Plane{
-                                    .axisCoordinate = minPoint[splitParam.splitDirection],
-                                    .orientation = splitParam.splitDirection},
-                            .faceIndex = index);
-            events.emplace_back(
-                            .type = PlaneEventType::ending,
-                            .plane = Plane{
-                                    .axisCoordinate = maxPoint[splitParam.splitDirection],
-                                    .orientation = splitParam.splitDirection},
-                            .faceIndex = index);
-        });
-        std::sort(events.begin(), events.end());
+        std::vector<PlaneEvent> events{std::move(generatePlaneEvents(splitParam))};
         size_t trianglesLeft{0}, trianglesRight{splitParam.indexBoundFaces.size()}, trianglesPlanar{0};
+        //traverse all the events
         for (int i{0}; i < events.size(); i++) {
+            //poll a plane to test
             Plane &candidatePlane = events[i].plane;
+            //for each plane calculate the faces whose vertices lie in the plane. Differentiate between the face starting in the plane, ending in the plane or all vertices lying in the plane
             size_t p_start{0}, p_end{0}, p_planar{0};
+            //count all faces that end in the plane, this works because the PlaneEvents are sorted by position and then by PlaneEventType
             while (i < events.size() && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::ending) {
                 p_end++;
                 i++;
             }
+            //count all the faces that lie in the plane
             while (i < events.size() && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::planar) {
                 p_planar++;
                 i++;
             }
+            //count all the faces that start in the plane
             while (i < events.size() && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::starting) {
                 p_start++;
                 i++;
             }
+            //update the absolute triangle amounts relative to the current plane using the values of the new plane
             trianglesPlanar = p_planar;
             trianglesRight -= p_planar + p_end;
-            auto [cost, minSideChosen] = costForPlane(splitParam.boundingBox, candidatePlane, p_start, p_end, p_planar);
+            //evaluate plane and update should the new plane be more efficient
+            auto [candidateCost, minSideChosen] = costForPlane(splitParam.boundingBox, candidatePlane, p_start, p_end, p_planar);
+            if (candidateCost < cost) {
+                cost = candidateCost;
+                optPlane = candidatePlane;
+                minSide = minSideChosen;
+            }
+            //shift the plane to the next candidate and prepare next iteration
             trianglesLeft += p_planar + p_start;
             trianglesPlanar = 0;
-            //TODO: continue here -> update best plane
         }
-        return std::make_tuple(optPlane, cost, std::move(optTriangleIndexLists));
+        //generate the triangle index lists for the child bounding boxes and return them along with the optimal plane and the plane's cost.
+        return std::make_tuple(optPlane, cost, generateTriangleSubsets(events, optPlane, minSide));
     }
+
+    std::vector<PlaneEvent> KDTree::generatePlaneEvents(const SplitParam &splitParam) {
+        std::vector<PlaneEvent> events{};
+        events.reserve(splitParam.indexBoundFaces.size() * 2);
+        //transform the faces into vertices
+        auto [vertex3_begin, vertex3_end] = transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
+        std::for_each(vertex3_begin, vertex3_end, [&splitParam, &events](const auto &indexAndTriplet) {
+            const auto [index, triplet] = indexAndTriplet;
+            //calculate the bounding box of the face using its vertices. The edges of the box are used as candidate planes.
+            const auto [minPoint, maxPoint] = getBoundingBox<std::array<Array3, 3>>(triplet);
+            // if the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
+            if (minPoint[static_cast<int>(splitParam.splitDirection)] == maxPoint[static_cast<int>(splitParam.splitDirection)]) {
+                events.emplace_back(
+                        PlaneEventType::planar,
+                        Plane{
+                                .axisCoordinate = minPoint[static_cast<int>(splitParam.splitDirection)],
+                                .orientation = splitParam.splitDirection},
+                        index);
+                return;
+            }
+            //else create a starting and ending event consisting of the planes defined by the min and max points of the face's bounding box.
+            events.emplace_back(
+                    PlaneEventType::starting,
+                    Plane{
+                            .axisCoordinate = minPoint[static_cast<int>(splitParam.splitDirection)],
+                            .orientation = splitParam.splitDirection},
+                    index);
+            events.emplace_back(
+                    PlaneEventType::ending,
+                    Plane{
+                            .axisCoordinate = maxPoint[static_cast<int>(splitParam.splitDirection)],
+                            .orientation = splitParam.splitDirection},
+                    index);
+        });
+        //sort the events by plane position and then by PlaneEventType. Refer to {@link PlaneEventType} for the specific order
+        std::sort(events.begin(), events.end());
+        return events;
+    }
+
+    TriangleIndexLists<2> KDTree::generateTriangleSubsets(const std::vector<PlaneEvent> &planeEvents, const Plane &plane, const bool minSide) {
+        TriangleIndexList facesMin{}, facesMax{};
+        //set to store already processed faces to avoid duplication. Make use of O(1) lookup / insertion time.
+        std::unordered_set<unsigned long> processedFaces{};
+        //each face will most of the time generate two events, the split plane will try to distribute the faces evenly
+        //Thus reserving 0.5 * 0.5 * planeEvents.size() for each vector
+        facesMin.reserve(planeEvents.size() / 4);
+        facesMax.reserve(planeEvents.size() / 4);
+        std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&facesMin, &facesMax, &plane, &processedFaces, minSide](const auto &event) {
+            //triangle has already been processed -> nothing to do, else insert into set
+            if (processedFaces.find(event.faceIndex) != processedFaces.end()) {
+                return;
+            }
+            processedFaces.insert(event.faceIndex);
+            //sort the triangles by inferring their position from the event's candidate split plane
+            if (event.plane.axisCoordinate < plane.axisCoordinate) {
+                facesMin.push_back(event.faceIndex);
+            } else if (event.plane.axisCoordinate > plane.axisCoordinate) {
+                facesMax.push_back(event.faceIndex);
+            }
+            //the triangle is in, starting or ending in the plane to split by -> the PlanarEventType signals its position then
+            else if (event.type == PlaneEventType::planar) {
+                //minSide specifies where to include planar faces
+                minSide ? facesMin.push_back(event.faceIndex) : facesMax.push_back(event.faceIndex);
+            }
+            //the face starts in the plane, thus its area overlaps with the bounding box further away from the origin.
+            else if (event.type == PlaneEventType::starting) {
+                facesMax.push_back(event.faceIndex);
+            }
+            //the face ends in the plane, thus its area overlaps with the bounding box closer to the origin.
+            else {
+                facesMin.push_back(event.faceIndex);
+            }
+        });
+        return {std::make_unique<TriangleIndexList>(facesMin), std::make_unique<TriangleIndexList>(facesMax)};
+    }
+
 
     template<typename Container>
     Box KDTree::getBoundingBox(const Container &vertices) {
