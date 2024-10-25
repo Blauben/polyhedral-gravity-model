@@ -7,7 +7,7 @@ namespace polyhedralGravity {
         //convert the bound faces to its vertices
         auto [vertex_begin, vertex_end] = KDTree::transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
         const std::vector<Array3> boundVertices = std::accumulate(vertex_begin, vertex_end, std::vector<Array3>{}, [](std::vector<Array3> &accumulator, auto idAndVertexTriplet) {
-            std::for_each(idAndVertexTriplet.second.cbegin(), idAndVertexTriplet.second.cend(), [&accumulator](const Array3 &vertex) {accumulator.push_back(vertex); });
+            std::for_each(idAndVertexTriplet.second.cbegin(), idAndVertexTriplet.second.cend(), [&accumulator](const Array3 &vertex) { accumulator.push_back(vertex); });
             return accumulator;
         });
         _boundingBox = KDTree::getBoundingBox(boundVertices);
@@ -16,7 +16,7 @@ namespace polyhedralGravity {
     std::shared_ptr<TreeNode> SplitNode::getChildNode(size_t index) {
         std::shared_ptr<TreeNode> node = index == LESSER ? _lesser : _greater;
         //node is not yet built
-        if(node == nullptr) {
+        if (node == nullptr) {
             //copy parent param and modify to fit new node
             SplitParam childParam{*this->_splitParam};
             //get the bounding box after splitting;
@@ -27,7 +27,7 @@ namespace polyhedralGravity {
             childParam.splitDirection = static_cast<Direction>((static_cast<int>(this->_splitParam->splitDirection) + 1) % DIMENSIONS);
             node = TreeNodeFactory::treeNodeFactory(childParam);
         }
-    return node;
+        return node;
     }
 
     void SplitNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) {

@@ -165,15 +165,6 @@ namespace polyhedralGravity {
         */
         static double
         surfaceAreaOfBox(const Box &box);
-        /**
-        * Splits a section of a polyhedron into two bounding boxes and calculates the triangle face sets contained in the new bounding boxes.
-        * @param param specifies the polyhedron section to be split.
-        * @param split the plane by which to split the polyhedron section.
-        * @return Three triangle lists contained in an array. Those being the set of triangles with non-zero area in the bounding box closer to the origin with respect to the split plane,
-        * the set of triangles with non-zero area in the bounding box further away from the origin with respect to the split plane.
-        * The set of triangles that lies on the plane.
-        */
-        static TriangleIndexLists<3> containedTriangles(const SplitParam &param, const Plane &split);
     };
 
 }// namespace polyhedralGravity
