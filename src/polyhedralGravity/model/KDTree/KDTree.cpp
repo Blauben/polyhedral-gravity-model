@@ -125,7 +125,7 @@ namespace polyhedralGravity {
         facesMaxLookup.reserve(planeEvents.size() / 4);
         std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&facesMin, &facesMax, &plane, minSide, &facesMinLookup, &facesMaxLookup](const auto &event) {
             //lambda function to combine lookup and insertion into one place
-            auto insertIfAbsent = [&facesMin, &facesMinLookup, &facesMax, &facesMaxLookup](unsigned long faceIndex, unsigned index) {
+            auto insertIfAbsent = [&facesMin, &facesMinLookup, &facesMax, &facesMaxLookup](unsigned long faceIndex, const u_int8_t index) {
                 auto &vector = index == MIN ? facesMin : facesMax;
                 auto &lookup = index == MIN ? facesMinLookup : facesMaxLookup;
                 if (lookup.find(faceIndex) == lookup.end()) {
@@ -139,10 +139,8 @@ namespace polyhedralGravity {
                 }
             };
             //sort the triangles by inferring their position from the event's candidate split plane
-            if (event.plane.axisCoordinate < plane.axisCoordinate) {
-                insertIfAbsent(event.faceIndex, MIN);
-            } else if (event.plane.axisCoordinate > plane.axisCoordinate) {
-                insertIfAbsent(event.faceIndex, MAX);
+            if (event.plane.axisCoordinate != plane.axisCoordinate) {
+                insertIfAbsent(event.faceIndex, event.plane.axisCoordinate < plane.axisCoordinate ? MIN : MAX);
             }
             //the triangle is in, starting or ending in the plane to split by -> the PlanarEventType signals its position then
             else if (event.type == PlaneEventType::planar) {

@@ -26,7 +26,11 @@ namespace polyhedralGravity {
             childParam.indexBoundFaces = *std::move(_triangleIndexLists[index]);
             childParam.splitDirection = static_cast<Direction>((static_cast<int>(this->_splitParam->splitDirection) + 1) % DIMENSIONS);
             node = TreeNodeFactory::treeNodeFactory(childParam);
+            //increase the recursion depth of the direct child by 1
             node->recursionDepth = recursionDepth + 1;
+            if (_lesser != nullptr && _greater != nullptr) {
+                _splitParam.reset();
+            }
         }
         return node;
     }
