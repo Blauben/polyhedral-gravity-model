@@ -114,23 +114,25 @@ namespace polyhedralGravity {
     }
 
     TriangleIndexLists<2> KDTree::generateTriangleSubsets(const std::vector<PlaneEvent> &planeEvents, const Plane &plane, const bool minSide) {
-        TriangleIndexList facesMin{}, facesMax{};
+        auto facesMin = std::make_unique<TriangleIndexList>();
+        auto facesMax = std::make_unique<TriangleIndexList>();
         //set data structure to avoid processing faces twice -> introduces O(1) lookup instead of O(n) lookup using the vectors directly
-        std::unordered_set<unsigned long> facesMinLookup{}, facesMaxLookup{};
+        std::unordered_set<unsigned long> facesMinLookup{};
+        std::unordered_set<unsigned long> facesMaxLookup{};
         //each face will most of the time generate two events, the split plane will try to distribute the faces evenly
         //Thus reserving 0.5 * 0.5 * planeEvents.size() for each vector
-        facesMin.reserve(planeEvents.size() / 4);
-        facesMax.reserve(planeEvents.size() / 4);
+        facesMin->reserve(planeEvents.size() / 4);
+        facesMax->reserve(planeEvents.size() / 4);
         facesMinLookup.reserve(planeEvents.size() / 4);
         facesMaxLookup.reserve(planeEvents.size() / 4);
         std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&facesMin, &facesMax, &plane, minSide, &facesMinLookup, &facesMaxLookup](const auto &event) {
             //lambda function to combine lookup and insertion into one place
-            auto insertIfAbsent = [&facesMin, &facesMinLookup, &facesMax, &facesMaxLookup](unsigned long faceIndex, const u_int8_t index) {
-                auto &vector = index == MIN ? facesMin : facesMax;
+            auto insertIfAbsent = [&facesMin, &facesMinLookup, &facesMax, &facesMaxLookup](const unsigned long faceIndex, const u_int8_t index) {
+                const auto &vector = index == MIN ? facesMin : facesMax;
                 auto &lookup = index == MIN ? facesMinLookup : facesMaxLookup;
                 if (lookup.find(faceIndex) == lookup.end()) {
                     lookup.insert(faceIndex);
-                    vector.push_back(faceIndex);
+                    vector->push_back(faceIndex);
                 }
                 // Since each face can only be referenced by max two events (since there are only two planes encasing it),
                 // after the face has been already been processed once, it can be removed from the lookup buffer after the second time to save space
@@ -156,7 +158,7 @@ namespace polyhedralGravity {
                 insertIfAbsent(event.faceIndex, MIN);
             }
         });
-        return {std::make_unique<TriangleIndexList>(facesMin), std::make_unique<TriangleIndexList>(facesMax)};
+        return {std::move(facesMin), std::move(facesMax)};
     }
 
 
