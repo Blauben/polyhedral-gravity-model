@@ -17,6 +17,7 @@ namespace polyhedralGravity {
      * @param intersections The set intersections are added to.
      */
         virtual void getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) = 0;
+        unsigned long recursionDepth{0};
 
     protected:
         /**

@@ -115,29 +115,47 @@ namespace polyhedralGravity {
 
     TriangleIndexLists<2> KDTree::generateTriangleSubsets(const std::vector<PlaneEvent> &planeEvents, const Plane &plane, const bool minSide) {
         TriangleIndexList facesMin{}, facesMax{};
+        //set data structure to avoid processing faces twice -> introduces O(1) lookup instead of O(n) lookup using the vectors directly
+        std::unordered_set<unsigned long> facesMinLookup{}, facesMaxLookup{};
         //each face will most of the time generate two events, the split plane will try to distribute the faces evenly
         //Thus reserving 0.5 * 0.5 * planeEvents.size() for each vector
         facesMin.reserve(planeEvents.size() / 4);
         facesMax.reserve(planeEvents.size() / 4);
-        std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&facesMin, &facesMax, &plane, minSide](const auto &event) {
+        facesMinLookup.reserve(planeEvents.size() / 4);
+        facesMaxLookup.reserve(planeEvents.size() / 4);
+        std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&facesMin, &facesMax, &plane, minSide, &facesMinLookup, &facesMaxLookup](const auto &event) {
+            //lambda function to combine lookup and insertion into one place
+            auto insertIfAbsent = [&facesMin, &facesMinLookup, &facesMax, &facesMaxLookup](unsigned long faceIndex, unsigned index) {
+                auto &vector = index == MIN ? facesMin : facesMax;
+                auto &lookup = index == MIN ? facesMinLookup : facesMaxLookup;
+                if (lookup.find(faceIndex) == lookup.end()) {
+                    lookup.insert(faceIndex);
+                    vector.push_back(faceIndex);
+                }
+                // Since each face can only be referenced by max two events (since there are only two planes encasing it),
+                // after the face has been already been processed once, it can be removed from the lookup buffer after the second time to save space
+                else {
+                    lookup.erase(lookup.find(faceIndex));
+                }
+            };
             //sort the triangles by inferring their position from the event's candidate split plane
-            if (event.plane.axisCoordinate < plane.axisCoordinate && std::find(facesMin.cbegin(), facesMin.cend(), event.faceIndex) == facesMin.cend()) {//TODO: refactor
-                facesMin.push_back(event.faceIndex);
-            } else if (event.plane.axisCoordinate > plane.axisCoordinate && std::find(facesMax.cbegin(), facesMax.cend(), event.faceIndex) == facesMax.cend()) {
-                facesMax.push_back(event.faceIndex);
+            if (event.plane.axisCoordinate < plane.axisCoordinate) {
+                insertIfAbsent(event.faceIndex, MIN);
+            } else if (event.plane.axisCoordinate > plane.axisCoordinate) {
+                insertIfAbsent(event.faceIndex, MAX);
             }
             //the triangle is in, starting or ending in the plane to split by -> the PlanarEventType signals its position then
             else if (event.type == PlaneEventType::planar) {
                 //minSide specifies where to include planar faces
-                minSide ? facesMin.push_back(event.faceIndex) : facesMax.push_back(event.faceIndex);
+                insertIfAbsent(event.faceIndex, minSide ? MIN : MAX);
             }
             //the face starts in the plane, thus its area overlaps with the bounding box further away from the origin.
             else if (event.type == PlaneEventType::starting) {
-                facesMax.push_back(event.faceIndex);
+                insertIfAbsent(event.faceIndex, MAX);
             }
             //the face ends in the plane, thus its area overlaps with the bounding box closer to the origin.
             else {
-                facesMin.push_back(event.faceIndex);
+                insertIfAbsent(event.faceIndex, MIN);
             }
         });
         return {std::make_unique<TriangleIndexList>(facesMin), std::make_unique<TriangleIndexList>(facesMax)};

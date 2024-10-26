@@ -12,6 +12,9 @@
 #include <unordered_set>
 #include <utility>
 
+#define MIN (0)
+#define MAX (1)
+
 namespace polyhedralGravity {
 
     /**
