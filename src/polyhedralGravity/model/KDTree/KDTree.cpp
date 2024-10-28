@@ -1,5 +1,7 @@
 #include "polyhedralGravity/model/KDTree/KDTree.h"
 
+#include <yaml-cpp/node/node.h>
+
 namespace polyhedralGravity {
 
     //on initialization of the tree a single bounding box which includes all the faces of the polyhedron is generated. Both the list of included faces and the parameters of the box are written to the split parameters
@@ -7,12 +9,12 @@ namespace polyhedralGravity {
         : _vertices{vertices}, _faces{faces}, _splitParam{std::make_unique<SplitParam>(_vertices, _faces, getBoundingBox(vertices), Direction::X)} {
     }
 
-    TreeNode &KDTree::getRootNode() {
+    std::shared_ptr<TreeNode> KDTree::getRootNode() {
         //if the node has already been generated, don't do it again. Instead let the factory determine the TreeNode subclass based on the optimal split.
         if (!this->_rootNode) {
-            this->_rootNode = TreeNodeFactory::treeNodeFactory(*std::move(this->_splitParam));
+            this->_rootNode = TreeNodeFactory::treeNodeFactory(*std::move(this->_splitParam), 0);
         }
-        return *this->_rootNode;
+        return this->_rootNode;
     }
 
     size_t KDTree::countIntersections(const Array3 &origin, const Array3 &ray) {
@@ -23,7 +25,24 @@ namespace polyhedralGravity {
     }
 
     void KDTree::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) {
-        this->getRootNode().getFaceIntersections(origin, ray, intersections);
+        //iterative approach to avoid stack and heap overflows
+        //queue for children of processed nodes
+        std::deque<std::shared_ptr<TreeNode>> queue{};
+        //init with tree root
+        queue.push_back(getRootNode());
+        while (!queue.empty()) {
+            auto node = queue.front();
+            //if node is SplitNode perform intersection checks on the children and queue them accordingly
+            if (const auto split = std::dynamic_pointer_cast<SplitNode>(node)) {
+                const auto children = split->getChildrenForIntersection(origin, ray);
+                std::for_each(std::begin(children), std::end(children), [&queue](auto child) {queue.push_back(child);});
+            }
+            //if node is leaf then perform intersections with the triangles contained
+            else if (const auto leaf = std::dynamic_pointer_cast<LeafNode>(node)) {
+                leaf->getFaceIntersections(origin, ray, intersections);
+            }
+            queue.pop_front();
+        }
     }
 
     // O(N*log^2(N)) implementation

@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <queue>
 #include <thrust/iterator/transform_iterator.h>
 #include <unordered_set>
 #include <utility>
@@ -59,7 +60,7 @@ namespace polyhedralGravity {
         * Creates the root tree node if not initialized and returns it.
         * @return the root tree Node.
         */
-        TreeNode &getRootNode();
+        std::shared_ptr<TreeNode> getRootNode();
 
         /**
         * Used to calculate intersections of a ray and the polyhedron's faces contained in this node.
@@ -116,7 +117,7 @@ namespace polyhedralGravity {
         /**
         * The entry node of the KDTree. Only access using getter.
         */
-        std::unique_ptr<TreeNode> _rootNode;
+        std::shared_ptr<TreeNode> _rootNode;
 
         /**
          * The polyhedron's vertices.

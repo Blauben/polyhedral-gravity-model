@@ -2,19 +2,25 @@
 
 namespace polyhedralGravity {
 
-    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, TriangleIndexLists<2> &triangleIndexLists)
-        : TreeNode(splitParam), _plane{plane}, _triangleIndexLists{std::move(triangleIndexLists)} {
-        //convert the bound faces to its vertices
+    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, TriangleIndexLists<2> &triangleIndexLists, size_t currentRecursionDepth)
+        : TreeNode(splitParam, currentRecursionDepth), _plane{plane}, _triangleIndexLists{std::move(triangleIndexLists)} {
+        //convert the bound faces to its vertices (Array3Triplet)
         auto [vertex_begin, vertex_end] = KDTree::transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
-        const std::vector<Array3> boundVertices = std::accumulate(vertex_begin, vertex_end, std::vector<Array3>{}, [](std::vector<Array3> &accumulator, auto idAndVertexTriplet) {
-            std::for_each(idAndVertexTriplet.second.cbegin(), idAndVertexTriplet.second.cend(), [&accumulator](const Array3 &vertex) { accumulator.push_back(vertex); });
-            return accumulator;
+        //Further split the triplets into Array3 objects
+        std::vector<Array3> boundVertices{};
+        boundVertices.reserve(std::distance(vertex_begin, vertex_end));
+        std::for_each(vertex_begin, vertex_end, [&boundVertices](auto idAndVertexTriplet) {
+            for(const Array3 &vertex : idAndVertexTriplet.second) {
+               boundVertices.push_back(vertex);
+            }
+
         });
         _boundingBox = KDTree::getBoundingBox(boundVertices);
     }
 
-    std::shared_ptr<TreeNode> SplitNode::getChildNode(size_t index) {
-        std::shared_ptr<TreeNode> node = index == LESSER ? _lesser : _greater;
+    std::shared_ptr<TreeNode> SplitNode::getChildNode(const size_t index) {
+        //create a reference to store the built node in
+        std::shared_ptr<TreeNode>& node = index == LESSER ? _lesser : _greater;
         //node is not yet built
         if (node == nullptr) {
             //copy parent param and modify to fit new node
@@ -25,23 +31,13 @@ namespace polyhedralGravity {
             //get the triangles of the box
             childParam.indexBoundFaces = *std::move(_triangleIndexLists[index]);
             childParam.splitDirection = static_cast<Direction>((static_cast<int>(this->_splitParam->splitDirection) + 1) % DIMENSIONS);
-            node = TreeNodeFactory::treeNodeFactory(childParam);
             //increase the recursion depth of the direct child by 1
-            node->recursionDepth = recursionDepth + 1;
+            node = TreeNodeFactory::treeNodeFactory(childParam, _recursionDepth + 1);
             if (_lesser != nullptr && _greater != nullptr) {
                 _splitParam.reset();
             }
         }
         return node;
-    }
-
-    void SplitNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) {
-        //calculate affected child nodes
-        const auto delegates = getChildrenForIntersection(origin, ray);
-        //perform intersections on the child nodes
-        std::for_each(delegates.cbegin(), delegates.cend(), [&origin, &ray, &intersections](const auto &child) {
-            child->getFaceIntersections(origin, ray, intersections);
-        });
     }
 
     std::vector<std::shared_ptr<TreeNode>> SplitNode::getChildrenForIntersection(const Array3 &origin, const Array3 &ray) {

@@ -2,11 +2,12 @@
 
 namespace polyhedralGravity {
 
-    LeafNode::LeafNode(const SplitParam &splitParam)
-        : TreeNode(splitParam) {
+    LeafNode::LeafNode(const SplitParam &splitParam, const size_t currentRecursionDepth)
+        : TreeNode(splitParam, currentRecursionDepth) {
     }
 
-    void LeafNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) {
+    void LeafNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) const {
+        //traverses all contained faces and performs intersection tests with them -> store results in the buffer passed in the arguments
         std::for_each(this->_splitParam->indexBoundFaces.cbegin(), this->_splitParam->indexBoundFaces.cend(), [this, &ray, &origin, &intersections](const size_t faceIndex) {
             const std::optional<Array3> intersection = rayIntersectsTriangle(origin, ray, this->_splitParam->faces[faceIndex]);
             if (intersection.has_value()) {
