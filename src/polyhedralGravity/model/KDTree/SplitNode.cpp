@@ -3,20 +3,7 @@
 namespace polyhedralGravity {
 
     SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, TriangleIndexLists<2> &triangleIndexLists, size_t currentRecursionDepth)
-        : TreeNode(splitParam, currentRecursionDepth), _plane{plane}, _triangleIndexLists{std::move(triangleIndexLists)} {
-        //convert the bound faces to its vertices (Array3Triplet)
-        auto [vertex_begin, vertex_end] = KDTree::transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
-        //Further split the triplets into Array3 objects
-        std::vector<Array3> boundVertices{};
-        boundVertices.reserve(std::distance(vertex_begin, vertex_end));
-        std::for_each(vertex_begin, vertex_end, [&boundVertices](auto idAndVertexTriplet) {
-            for(const Array3 &vertex : idAndVertexTriplet.second) {
-               boundVertices.push_back(vertex);
-            }
-
-        });
-        _boundingBox = KDTree::getBoundingBox(boundVertices);
-    }
+        : TreeNode(splitParam, currentRecursionDepth), _plane{plane}, _triangleIndexLists{std::move(triangleIndexLists)}, _boundingBox{splitParam.boundingBox} {}
 
     std::shared_ptr<TreeNode> SplitNode::getChildNode(const size_t index) {
         //create a reference to store the built node in

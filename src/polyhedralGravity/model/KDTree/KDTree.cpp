@@ -35,7 +35,7 @@ namespace polyhedralGravity {
             //if node is SplitNode perform intersection checks on the children and queue them accordingly
             if (const auto split = std::dynamic_pointer_cast<SplitNode>(node)) {
                 const auto children = split->getChildrenForIntersection(origin, ray);
-                std::for_each(std::begin(children), std::end(children), [&queue](auto child) {queue.push_back(child);});
+                std::for_each(std::begin(children), std::end(children), [&queue](auto child) { queue.push_back(child); });
             }
             //if node is leaf then perform intersections with the triangles contained
             else if (const auto leaf = std::dynamic_pointer_cast<LeafNode>(node)) {
@@ -103,12 +103,14 @@ namespace polyhedralGravity {
             const auto [index, triplet] = indexAndTriplet;
             //calculate the bounding box of the face using its vertices. The edges of the box are used as candidate planes.
             const auto [minPoint, maxPoint] = getBoundingBox<std::array<Array3, 3>>(triplet);
+            //clip plane coordinates to voxel
+            const auto [minAxisCoordinate, maxAxisCoordinate] = clipToVoxel(splitParam.boundingBox, splitParam.splitDirection, minPoint, maxPoint);
             // if the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
-            if (minPoint[static_cast<int>(splitParam.splitDirection)] == maxPoint[static_cast<int>(splitParam.splitDirection)]) {
+            if (minAxisCoordinate == maxAxisCoordinate) {
                 events.emplace_back(
                         PlaneEventType::planar,
                         Plane{
-                                .axisCoordinate = minPoint[static_cast<int>(splitParam.splitDirection)],
+                                .axisCoordinate = minAxisCoordinate,
                                 .orientation = splitParam.splitDirection},
                         index);
                 return;
@@ -117,13 +119,13 @@ namespace polyhedralGravity {
             events.emplace_back(
                     PlaneEventType::starting,
                     Plane{
-                            .axisCoordinate = minPoint[static_cast<int>(splitParam.splitDirection)],
+                            .axisCoordinate = minAxisCoordinate,
                             .orientation = splitParam.splitDirection},
                     index);
             events.emplace_back(
                     PlaneEventType::ending,
                     Plane{
-                            .axisCoordinate = maxPoint[static_cast<int>(splitParam.splitDirection)],
+                            .axisCoordinate = maxAxisCoordinate,
                             .orientation = splitParam.splitDirection},
                     index);
         });
@@ -220,6 +222,22 @@ namespace polyhedralGravity {
         }
         //if empty space is cut off, reduce cost by 20%
         return {factor * costUpper, false};
+    }
+
+    template<typename... Points>
+    std::array<double, sizeof...(Points)> KDTree::clipToVoxel(const Box &box, const Direction direction, Points... points) {
+        auto clip = [&box, &direction](const Array3 &point) -> double {
+            const auto &coordinate = point[static_cast<int>(direction)];
+            if (coordinate < box.minPoint[static_cast<int>(direction)]) {
+                return box.minPoint[static_cast<int>(direction)];
+            }
+            if (coordinate > box.maxPoint[static_cast<int>(direction)]) {
+                return box.maxPoint[static_cast<int>(direction)];
+            }
+            return coordinate;
+        };
+        std::array<double, sizeof...(Points)> result{clip(points)...};
+        return result;
     }
 
     double KDTree::surfaceAreaOfBox(const Box &box) {

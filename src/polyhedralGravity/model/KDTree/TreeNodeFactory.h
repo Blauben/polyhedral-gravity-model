@@ -7,8 +7,7 @@
 
 #include <memory>
 
-//TODO: consider implementing more dynamic checks
-#define MAX_RECURSION_DEPTH 16
+#define MAX_RECURSION_DEPTH 64
 
 namespace polyhedralGravity {
 

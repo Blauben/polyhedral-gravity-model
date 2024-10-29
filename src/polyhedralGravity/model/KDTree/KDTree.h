@@ -163,12 +163,21 @@ namespace polyhedralGravity {
         static TriangleIndexLists<2> generateTriangleSubsets(const std::vector<PlaneEvent> &planeEvents, const Plane &plane, bool minSide);
 
         /**
+         * Clip points to a box in a specific direction.
+         * @param box The box to clip to.
+         * @param direction The direction that should be clipped in.
+         * @param points
+         * @return The clipped coordinates.
+         */
+        template<typename... Points>
+        static std::array<double, sizeof...(Points)> clipToVoxel(const Box &box, Direction direction, Points... points);
+
+        /**
         * Calculates the surface area of a box.
         * @param box specifies the box to be used.
         * @return the surface area
         */
-        static double
-        surfaceAreaOfBox(const Box &box);
+        static double surfaceAreaOfBox(const Box &box);
     };
 
 }// namespace polyhedralGravity
