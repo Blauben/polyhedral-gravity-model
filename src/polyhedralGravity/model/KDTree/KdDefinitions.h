@@ -99,8 +99,8 @@ namespace polyhedralGravity {
     /**
     * Triangle sets contained in an array. Used by the KDTree to divide a bounding boxes included triangles into smaller subsets. For the semantic purpose of the contained sets please refer to the comments in the usage context.
      */
-    template<size_t num>
-    using TriangleIndexLists = std::array<std::unique_ptr<TriangleIndexList>, num>;
+    template<size_t Number>
+    using TriangleIndexLists = std::array<std::unique_ptr<TriangleIndexList>, Number>;
 
     /**
      * Helper struct to bundle important parameters required for splitting a Polyhedron for better readability.
