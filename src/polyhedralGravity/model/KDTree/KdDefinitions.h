@@ -69,11 +69,9 @@ namespace polyhedralGravity {
             auto [tx_2, ty_2, tz_2] = lambdaIntersectSlabPoint(maxPoint);
 
             //return the parameters in ordered by '<'
-            const auto lambdaMinMaxPair = [](const double first, const double second) -> std::pair<double, double> { return {std::min(first, second), std::max(first, second)}; };
-
-            auto [tx_enter, tx_exit] = lambdaMinMaxPair(tx_1, tx_2);
-            auto [ty_enter, ty_exit] = lambdaMinMaxPair(ty_1, ty_2);
-            auto [tz_enter, tz_exit] = lambdaMinMaxPair(tz_1, tz_2);
+            auto [tx_enter, tx_exit] = std::minmax(tx_1, tx_2);
+            auto [ty_enter, ty_exit] = std::minmax(ty_1, ty_2);
+            auto [tz_enter, tz_exit] = std::minmax(tz_1, tz_2);
 
             //calculate the point where all slabs have been entered: t_enter
             const double t_enter{std::max(tx_enter, std::max(ty_enter, tz_enter))};
