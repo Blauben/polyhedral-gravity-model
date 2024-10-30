@@ -83,19 +83,20 @@ namespace polyhedralGravity {
             {3, 7, 6},
             {4, 5, 6},
             {4, 6, 7}};
-    const Polyhedron KDTreeTest::_big{
-            std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"},
-            1.0,
-            polyhedralGravity::NormalOrientation::OUTWARDS,
-            polyhedralGravity::PolyhedronIntegrity::DISABLE};
 
     std::mt19937 KDTreeTest::gen = std::mt19937(SEED);
+    const Polyhedron KDTreeTest::_big{
+        std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"},
+        1.0,
+        NormalOrientation::OUTWARDS,
+        PolyhedronIntegrity::DISABLE
+    };
 
     TEST_P(KDTreeTest, PointsTest) {
         using namespace polyhedralGravity;
         using namespace util;
         const auto [vertices, faces, points] = GetParam();
-        KDTree tree{vertices, faces};
+        KDTree tree{vertices, faces, PlaneSelectionAlgorithm::Algorithm::LOGSQUARED};
         constexpr Array3 origin{200, 200, 200};
         for (const auto &point: points) {
             const auto ray{(point - origin) / 10.0};

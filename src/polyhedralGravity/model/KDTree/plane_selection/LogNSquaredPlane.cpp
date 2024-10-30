@@ -54,13 +54,13 @@ namespace polyhedralGravity {
         std::vector<PlaneEvent> events{};
         events.reserve(splitParam.indexBoundFaces.size() * 2);
         //transform the faces into vertices
-        auto [vertex3_begin, vertex3_end] = KDTree::transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
+        auto [vertex3_begin, vertex3_end] = transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
         std::for_each(vertex3_begin, vertex3_end, [&splitParam, &events](const auto &indexAndTriplet) {
             const auto [index, triplet] = indexAndTriplet;
             //calculate the bounding box of the face using its vertices. The edges of the box are used as candidate planes.
-            const auto [minPoint, maxPoint] = getBoundingBox<std::array<Array3, 3>>(triplet);
+            const auto [minPoint, maxPoint] = Box::getBoundingBox<std::array<Array3, 3>>(triplet);
             //clip plane coordinates to voxel
-            const auto [minAxisCoordinate, maxAxisCoordinate] = clipToVoxel(splitParam.boundingBox, splitParam.splitDirection, minPoint, maxPoint);
+            const auto [minAxisCoordinate, maxAxisCoordinate] = PlaneSelectionAlgorithm::clipToVoxel(splitParam.boundingBox, splitParam.splitDirection, minPoint, maxPoint);
             // if the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
             if (minAxisCoordinate == maxAxisCoordinate) {
                 events.emplace_back(

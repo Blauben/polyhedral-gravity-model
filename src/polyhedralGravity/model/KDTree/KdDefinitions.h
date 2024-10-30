@@ -4,10 +4,21 @@
 
 #include <array>
 #include <memory>
+#include <thrust/iterator/transform_iterator.h>
 #include <utility>
 #include <vector>
 
 namespace polyhedralGravity {
+
+    /**
+     * Index for array access.
+     */
+    constexpr uint8_t MIN{0};
+    /**
+    * Index for array access.
+    */
+    constexpr uint8_t MAX{1};
+
     /**
      * Assigns an integer index to the coordinate axes
      *
@@ -143,9 +154,6 @@ namespace polyhedralGravity {
     template<size_t num>
     using TriangleIndexLists = std::array<std::unique_ptr<TriangleIndexList>, num>;
 
-    //forward declaration for SplitParam
-    class PlaneSelectionAlgorithm;
-
     /**
      * Helper struct to bundle important parameters required for splitting a Polyhedron for better readability.
      */
@@ -173,18 +181,39 @@ namespace polyhedralGravity {
         Direction splitDirection;
 
         /**
-         * The algorithm used to find optimal split planes.
-         */
-        std::unique_ptr<PlaneSelectionAlgorithm> planeSelectionStrategy;
-
-        /**
          * Constructor that initializes all fields. Intended for the use with std::make_unique. See {@link SplitParam} fields for further information.
          *
          */
-        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const Box &boundingBox, const Direction splitDirection, std::unique_ptr<PlaneSelectionAlgorithm> algorithm)
-            : vertices{vertices}, faces{faces}, indexBoundFaces{TriangleIndexList(faces.size())}, boundingBox{boundingBox}, splitDirection{splitDirection}, planeSelectionStrategy{std::move(algorithm)} {
+        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const Box &boundingBox, const Direction splitDirection)
+            : vertices{vertices}, faces{faces}, indexBoundFaces{TriangleIndexList(faces.size())}, boundingBox{boundingBox}, splitDirection{splitDirection} {
             std::iota(indexBoundFaces.begin(), indexBoundFaces.end(), 0);
-        };
+        }
     };
+
+    /**
+        * An iterator transforming face indices to vertices and returning both.
+        * This function returns a pair of transform iterators (first = begin(), second = end()).
+        * @param begin begin iterator of the face indice vector to transform.
+        * @param end end iterator of the face indice vector to transform.
+        * @param vertices the vector of vertices to look up the indices obtained from the faces vector.
+        * @param faces the faces vector to lookup face indices.
+        * @return pair of transform iterators.
+        */
+    [[nodiscard]] static auto transformIterator(const std::vector<unsigned long>::const_iterator begin, const std::vector<unsigned long>::const_iterator end, const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces) {
+        //The offset must be captured by value to ensure its lifetime!
+        const auto lambdaApplication = [&vertices, &faces](unsigned long faceIndex) {
+            const auto &face = faces[faceIndex];
+            Array3Triplet vertexTriplet = {
+                vertices[face[0]],
+                vertices[face[1]],
+                vertices[face[2]]};
+            return std::make_pair(faceIndex, vertexTriplet);
+        };
+
+
+        auto first = thrust::make_transform_iterator(begin, lambdaApplication);
+        auto last = thrust::make_transform_iterator(end, lambdaApplication);
+        return std::make_pair(first, last);
+    }
 
 }// namespace polyhedralGravity

@@ -2,8 +2,10 @@
 
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
 
+#include <unordered_set>
+
 namespace polyhedralGravity {
-class LogNSquaredPlane : public PlaneSelectionAlgorithm {
+class LogNSquaredPlane final : public PlaneSelectionAlgorithm {
     public:
     std::tuple<Plane, double, TriangleIndexLists<2>> findPlane(const SplitParam &splitParam) override;
     private:

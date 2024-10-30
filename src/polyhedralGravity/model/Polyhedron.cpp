@@ -11,7 +11,7 @@ namespace polyhedralGravity {
           _faces{faces},
           _density{density},
           _orientation{orientation},
-          _tree{std::make_shared<KDTree>(vertices, faces)} {
+          _tree{std::make_shared<KDTree>(vertices, faces)} { //TODO: choose algorithm
         //Checks that the node with index zero is actually used
         if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](auto &face) {
                 return face[0] == 0 || face[1] == 0 || face[2] == 0;

@@ -13,7 +13,7 @@ namespace polyhedralGravity {
             //copy parent param and modify to fit new node
             SplitParam childParam{*this->_splitParam};
             //get the bounding box after splitting;
-            auto [lesserBox, greaterBox] = KDTree::splitBox(this->_boundingBox, this->_plane);
+            auto [lesserBox, greaterBox] = this->_boundingBox.splitBox(this->_plane);
             childParam.boundingBox = index == 0 ? lesserBox : greaterBox;
             //get the triangles of the box
             childParam.indexBoundFaces = *std::move(_triangleIndexLists[index]);

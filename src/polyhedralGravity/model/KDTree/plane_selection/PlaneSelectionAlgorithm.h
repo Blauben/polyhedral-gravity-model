@@ -1,6 +1,5 @@
 #pragma once
 
-#include "polyhedralGravity/model/KDTree/KDTree.h"
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 
 namespace polyhedralGravity {
@@ -27,7 +26,7 @@ namespace polyhedralGravity {
          * @param algorithm Specifies which algorithm to return.
          * @return The algorithm which executes the requested strategy.
          */
-        static std::unique_ptr<PlaneSelectionAlgorithm> create(Algorithm algorithm);
+        static std::shared_ptr<PlaneSelectionAlgorithm> create(Algorithm algorithm);
 
         /**
         * Constant that describes the cost of traversing the KDTree by one step.
@@ -60,7 +59,20 @@ namespace polyhedralGravity {
          * @return The clipped coordinates.
          */
         template<typename... Points>
-        static std::array<double, sizeof...(Points)> clipToVoxel(const Box &box, Direction direction, Points... points);
+        static std::array<double, sizeof...(Points)> clipToVoxel(const Box &box, const Direction direction, Points... points) {
+            auto clip = [&box, &direction](const Array3 &point) -> double {
+                const auto &coordinate = point[static_cast<int>(direction)];
+                if (coordinate < box.minPoint[static_cast<int>(direction)]) {
+                    return box.minPoint[static_cast<int>(direction)];
+                }
+                if (coordinate > box.maxPoint[static_cast<int>(direction)]) {
+                    return box.maxPoint[static_cast<int>(direction)];
+                }
+                return coordinate;
+            };
+            std::array<double, sizeof...(Points)> result{clip(points)...};
+            return result;
+        }
     };
 
     /**

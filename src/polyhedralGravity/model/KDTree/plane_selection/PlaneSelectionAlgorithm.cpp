@@ -4,7 +4,7 @@
 
 namespace polyhedralGravity {
 
-    std::unique_ptr<PlaneSelectionAlgorithm> PlaneSelectionAlgorithm::create(Algorithm algorithm) {
+    std::shared_ptr<PlaneSelectionAlgorithm> PlaneSelectionAlgorithm::create(const Algorithm algorithm) {
         switch (algorithm) {
             case Algorithm::NOTREE:
                 return std::make_unique<LogNSquaredPlane>();
@@ -35,21 +35,5 @@ namespace polyhedralGravity {
         }
         //if empty space is cut off, reduce cost by 20%
         return {factor * costUpper, false};
-    }
-
-    template<typename... Points>
-    std::array<double, sizeof...(Points)> PlaneSelectionAlgorithm::clipToVoxel(const Box &box, const Direction direction, Points... points) {
-        auto clip = [&box, &direction](const Array3 &point) -> double {
-            const auto &coordinate = point[static_cast<int>(direction)];
-            if (coordinate < box.minPoint[static_cast<int>(direction)]) {
-                return box.minPoint[static_cast<int>(direction)];
-            }
-            if (coordinate > box.maxPoint[static_cast<int>(direction)]) {
-                return box.maxPoint[static_cast<int>(direction)];
-            }
-            return coordinate;
-        };
-        std::array<double, sizeof...(Points)> result{clip(points)...};
-        return result;
     }
 }// namespace polyhedralGravity

@@ -2,9 +2,12 @@
 
 namespace polyhedralGravity {
 
+    std::shared_ptr<PlaneSelectionAlgorithm> KDTree::planeSelectionStrategy{PlaneSelectionAlgorithm::create(PlaneSelectionAlgorithm::Algorithm::NOTREE)};
+
     //on initialization of the tree a single bounding box which includes all the faces of the polyhedron is generated. Both the list of included faces and the parameters of the box are written to the split parameters
-    KDTree::KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, PlaneSelectionAlgorithm::Algorithm algorithm)
-        : _vertices{vertices}, _faces{faces}, _splitParam{std::make_unique<SplitParam>(_vertices, _faces, Box.getBoundingBox(vertices), Direction::X, PlaneSelectionAlgorithm::create(algorithm))} {
+    KDTree::KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const PlaneSelectionAlgorithm::Algorithm algorithm)
+        : _vertices{vertices},  _faces{faces}, _splitParam{std::make_unique<SplitParam>(_vertices, _faces, Box::getBoundingBox(_vertices), Direction::X)} {
+        planeSelectionStrategy = std::move(PlaneSelectionAlgorithm::create(algorithm));
     }
 
     std::shared_ptr<TreeNode> KDTree::getRootNode() {
