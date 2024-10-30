@@ -54,7 +54,12 @@ namespace polyhedralGravity {
          */
         Array3 maxPoint;
 
-        //refer to https://en.wikipedia.org/wiki/Slab_method
+        /**
+         * Calculates the intersection points of a ray and a box.
+         * @param origin The origin of the ray.
+         * @param ray The ray direction vector.
+         * @return Parameters t of the equation $ intersection_point = origin + t * ray $ for the entry and exit intersection points.
+         */
         [[nodiscard]] std::pair<double, double> rayBoxIntersection(const Array3 &origin, const Array3 &ray) const {
             //calculate the parameter t in $ origin + t * ray = point $
             auto const lambdaIntersectSlabPoint = [&origin, &ray](const Array3 &point) {
@@ -81,6 +86,44 @@ namespace polyhedralGravity {
             return {t_enter, t_exit};
         }
 
+        /**
+        * Calculates the surface area of a box.
+        * @return the surface area
+        */
+        [[nodiscard]] double surfaceArea() const {
+            const double width = std::abs(maxPoint[0] - minPoint[0]);
+            const double length = std::abs(maxPoint[1] - minPoint[1]);
+            const double height = std::abs(maxPoint[2] - minPoint[2]);
+            return 2 * (width * length + width * height + length * height);
+        }
+
+        /**
+       * Splits this box into two new boxes.
+       * @param plane the plane by which to split the original box.
+       * @return a pair of boxes that result by splitting this box.
+       */
+        [[nodiscard]] std::pair<Box, Box> splitBox(const Plane &plane) const {
+            //clone the original box two times -> modify clones to become child boxes defined by the splitting plane
+            Box box1{*this};
+            Box box2{*this};
+            const Direction &axis{plane.orientation};
+            //Shift edges of the boxes to match the plane
+            box1.maxPoint[static_cast<int>(axis)] = plane.axisCoordinate;
+            box2.minPoint[static_cast<int>(axis)] = plane.axisCoordinate;
+            return std::make_pair(box1, box2);
+        }
+
+        /**
+        * Finds the minimal bounding box for a set of vertices.
+        * @param vertices the set of vertex coordinates for which to find the box
+        * @return the bounding box {@link Box}
+        */
+        template<typename Container>
+        static Box getBoundingBox(const Container &vertices) {
+            using namespace util;
+            return Box(findMinMaxCoordinates<Container, Array3>(vertices));
+        }
+
         explicit Box(const std::pair<Array3, Array3> &pair)
             : minPoint{pair.first}, maxPoint{pair.second} {
         }
@@ -99,6 +142,9 @@ namespace polyhedralGravity {
      */
     template<size_t num>
     using TriangleIndexLists = std::array<std::unique_ptr<TriangleIndexList>, num>;
+
+    //forward declaration for SplitParam
+    class PlaneSelectionAlgorithm;
 
     /**
      * Helper struct to bundle important parameters required for splitting a Polyhedron for better readability.
@@ -127,52 +173,18 @@ namespace polyhedralGravity {
         Direction splitDirection;
 
         /**
+         * The algorithm used to find optimal split planes.
+         */
+        std::unique_ptr<PlaneSelectionAlgorithm> planeSelectionStrategy;
+
+        /**
          * Constructor that initializes all fields. Intended for the use with std::make_unique. See {@link SplitParam} fields for further information.
          *
          */
-        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, Box boundingBox, Direction splitDirection)
-            : vertices{vertices}, faces{faces}, indexBoundFaces{TriangleIndexList(faces.size())}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
+        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const Box &boundingBox, const Direction splitDirection, std::unique_ptr<PlaneSelectionAlgorithm> algorithm)
+            : vertices{vertices}, faces{faces}, indexBoundFaces{TriangleIndexList(faces.size())}, boundingBox{boundingBox}, splitDirection{splitDirection}, planeSelectionStrategy{std::move(algorithm)} {
             std::iota(indexBoundFaces.begin(), indexBoundFaces.end(), 0);
-        }
+        };
     };
 
-    /**
-    * Used by {@link PlaneEvent} to position the face that generated the event relative to the generated plane.
-    */
-    enum class PlaneEventType {
-        ending = 0,
-        planar = 1,
-        starting = 2,
-    };
-
-    /**
-     * Generated when traversing the vector of faces and building their candidate planes.
-     */
-    struct PlaneEvent {
-        PlaneEventType type;
-        /**
-         * The candidate plane suggested by the face included in this struct.
-         */
-        Plane plane;
-        /**
-         * The index of the face that generated this candidate plane.
-         */
-        unsigned faceIndex;
-
-        PlaneEvent(const PlaneEventType type, const Plane plane, const unsigned faceIndex)
-            : type{type}, plane{plane}, faceIndex{faceIndex} {
-        }
-
-        /**
-         * Less operator used for sorting an PlaneEvent vector.
-         * @param other the PlaneEvent to compare this to.
-         * @return true if this should precede the other argument.
-         */
-        bool operator<(const PlaneEvent &other) const {
-            if (this->plane.axisCoordinate == other.plane.axisCoordinate) {
-                return this->type < other.type;
-            }
-            return this->plane.axisCoordinate < other.plane.axisCoordinate;
-        }
-    };
 }// namespace polyhedralGravity
