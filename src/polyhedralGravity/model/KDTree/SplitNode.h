@@ -9,8 +9,8 @@
 
 #include <algorithm>
 
-#define LESSER 0
-#define GREATER 1
+constexpr uint8_t LESSER{0};
+constexpr uint8_t GREATER{1};
 
 namespace polyhedralGravity {
 

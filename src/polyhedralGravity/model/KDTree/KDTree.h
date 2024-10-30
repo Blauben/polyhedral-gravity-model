@@ -13,8 +13,8 @@
 #include <unordered_set>
 #include <utility>
 
-#define MIN (0)
-#define MAX (1)
+constexpr uint8_t MIN{0};
+constexpr uint8_t MAX{1};
 
 namespace polyhedralGravity {
 

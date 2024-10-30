@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#define MAX_RECURSION_DEPTH 64
+constexpr uint8_t MAX_RECURSION_DEPTH{64};
 
 namespace polyhedralGravity {
 
