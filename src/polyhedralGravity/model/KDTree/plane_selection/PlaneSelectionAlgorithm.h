@@ -2,16 +2,17 @@
 
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 
+
 namespace polyhedralGravity {
 
     class PlaneSelectionAlgorithm {
     public:
         virtual ~PlaneSelectionAlgorithm() = default;
         /**
-    * Finds the optimal split plane to split a provided rectangle section optimally.
-    * @param splitParam specifies the polyhedron section to be split @link SplitParam.
-    * @return Tuple of the optimal plane to split the specified bounding box, its cost as double and a list of triangle sets with respective positions to the found plane. Refer to {@link TriangleIndexLists<2>} for more information.
-    */
+        * Finds the optimal split plane to split a provided rectangle section optimally.
+        * @param splitParam specifies the polyhedron section to be split @link SplitParam.
+        * @return Tuple of the optimal plane to split the specified bounding box, its cost as double and a list of triangle sets with respective positions to the found plane. Refer to {@link TriangleIndexLists<2>} for more information.
+        */
         virtual std::tuple<Plane, double, TriangleIndexLists<2>> findPlane(const SplitParam &splitParam) = 0;
 
         enum class Algorithm {
@@ -21,12 +22,6 @@ namespace polyhedralGravity {
             LOG
         };
 
-        /**
-         * Factory method to return the plane finding selection algorithm specified by the enum parameter.
-         * @param algorithm Specifies which algorithm to return.
-         * @return The algorithm which executes the requested strategy.
-         */
-        static std::shared_ptr<PlaneSelectionAlgorithm> create(Algorithm algorithm);
 
         /**
         * Constant that describes the cost of traversing the KDTree by one step.
@@ -37,6 +32,11 @@ namespace polyhedralGravity {
         * Constant that describes the cost of intersecting a ray and a single object.
         */
         constexpr static double triangleIntersectionCost{1.0};
+
+        /**
+        * The algorithm used to find optimal split planes.
+        */
+        static std::shared_ptr<PlaneSelectionAlgorithm> planeSelectionStrategy;
 
     protected:
         /**

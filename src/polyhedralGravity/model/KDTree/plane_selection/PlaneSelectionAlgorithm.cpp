@@ -1,17 +1,10 @@
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
 
-#include "LogNSquaredPlane.h"
+#include "NoTreePlane.h"
 
 namespace polyhedralGravity {
 
-    std::shared_ptr<PlaneSelectionAlgorithm> PlaneSelectionAlgorithm::create(const Algorithm algorithm) {
-        switch (algorithm) {
-            case Algorithm::NOTREE:
-                return std::make_unique<LogNSquaredPlane>();
-            default:
-                return std::make_unique<LogNSquaredPlane>();//TODO: adjust
-        }
-    }
+    std::shared_ptr<PlaneSelectionAlgorithm> PlaneSelectionAlgorithm::planeSelectionStrategy{std::make_shared<NoTreePlane>()};
 
     std::pair<const double, bool> PlaneSelectionAlgorithm::costForPlane(const Box &boundingBox, const Plane &plane, const size_t trianglesMin, const size_t trianglesMax, const size_t trianglesPlanar) {
         //Checks if the split plane is one of the faces of the bounding box, if so the split is useless

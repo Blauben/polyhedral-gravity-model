@@ -2,18 +2,16 @@
 
 namespace polyhedralGravity {
 
-    std::shared_ptr<PlaneSelectionAlgorithm> KDTree::planeSelectionStrategy{PlaneSelectionAlgorithm::create(PlaneSelectionAlgorithm::Algorithm::NOTREE)};
-
     //on initialization of the tree a single bounding box which includes all the faces of the polyhedron is generated. Both the list of included faces and the parameters of the box are written to the split parameters
     KDTree::KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const PlaneSelectionAlgorithm::Algorithm algorithm)
-        : _vertices{vertices},  _faces{faces}, _splitParam{std::make_unique<SplitParam>(_vertices, _faces, Box::getBoundingBox(_vertices), Direction::X)} {
-        planeSelectionStrategy = std::move(PlaneSelectionAlgorithm::create(algorithm));
+        : _vertices{vertices}, _faces{faces}, _splitParam{std::make_unique<SplitParam>(_vertices, _faces, Box::getBoundingBox(_vertices), Direction::X)} {
+        PlaneSelectionAlgorithm::planeSelectionStrategy = std::move(PlaneSelectionAlgorithmFactory::create(algorithm));
     }
 
     std::shared_ptr<TreeNode> KDTree::getRootNode() {
         //if the node has already been generated, don't do it again. Instead let the factory determine the TreeNode subclass based on the optimal split.
         if (!this->_rootNode) {
-            this->_rootNode = TreeNodeFactory::treeNodeFactory(*std::move(this->_splitParam), 0);
+            this->_rootNode = TreeNodeFactory::treeNodeFactory(*std::move(this->_splitParam), 0, PlaneSelectionAlgorithm::planeSelectionStrategy);
         }
         return this->_rootNode;
     }

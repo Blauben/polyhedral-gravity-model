@@ -1,9 +1,8 @@
 #pragma once
 
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
-#include "polyhedralGravity/model/KDTree/TreeNode.h"
 #include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
-#include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
+#include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithmFactory.h"
 
 #include <algorithm>
 #include <array>
@@ -31,6 +30,7 @@ namespace polyhedralGravity {
          * The polyhedron's faces: A face is a triplet of vertex indices.
          */
         const std::vector<IndexArray3> _faces;
+
     public:
         /**
         * Call to build a KDTree to speed up intersections of rays with a polyhedron's faces.
@@ -63,15 +63,9 @@ namespace polyhedralGravity {
          */
         size_t countIntersections(const Array3 &origin, const Array3 &ray);
 
-       /**
+        /**
        * Parameters for lazily building the root node {@link SplitParam}
        */
         std::unique_ptr<SplitParam> _splitParam;
-
-        /**
-        * The algorithm used to find optimal split planes.
-        */
-        static std::shared_ptr<PlaneSelectionAlgorithm> planeSelectionStrategy;
     };
-
 }// namespace polyhedralGravity

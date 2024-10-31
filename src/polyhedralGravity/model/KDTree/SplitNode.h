@@ -1,13 +1,11 @@
 #pragma once
 
-#include <memory>
-
 #include "polyhedralGravity/model/KDTree/KDTree.h"
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
-#include "polyhedralGravity/model/KDTree/TreeNode.h"
 #include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
 
 #include <algorithm>
+#include <memory>
 
 constexpr uint8_t LESSER{0};
 constexpr uint8_t GREATER{1};

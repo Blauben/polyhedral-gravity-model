@@ -3,11 +3,12 @@
 namespace polyhedralGravity {
 
     SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, TriangleIndexLists<2> &triangleIndexLists, size_t currentRecursionDepth)
-        : TreeNode(splitParam, currentRecursionDepth), _plane{plane}, _triangleIndexLists{std::move(triangleIndexLists)}, _boundingBox{splitParam.boundingBox} {}
+        : TreeNode(splitParam, currentRecursionDepth), _plane{plane}, _triangleIndexLists{std::move(triangleIndexLists)}, _boundingBox{splitParam.boundingBox} {
+    }
 
     std::shared_ptr<TreeNode> SplitNode::getChildNode(const size_t index) {
         //create a reference to store the built node in
-        std::shared_ptr<TreeNode>& node = index == LESSER ? _lesser : _greater;
+        std::shared_ptr<TreeNode> &node = index == LESSER ? _lesser : _greater;
         //node is not yet built
         if (node == nullptr) {
             //copy parent param and modify to fit new node
@@ -19,7 +20,7 @@ namespace polyhedralGravity {
             childParam.indexBoundFaces = *std::move(_triangleIndexLists[index]);
             childParam.splitDirection = static_cast<Direction>((static_cast<int>(this->_splitParam->splitDirection) + 1) % DIMENSIONS);
             //increase the recursion depth of the direct child by 1
-            node = TreeNodeFactory::treeNodeFactory(childParam, _recursionDepth + 1);
+            node = TreeNodeFactory::treeNodeFactory(childParam, _recursionDepth + 1, PlaneSelectionAlgorithm::planeSelectionStrategy);
             if (_lesser != nullptr && _greater != nullptr) {
                 _splitParam.reset();
             }
