@@ -2,9 +2,28 @@
 
 namespace polyhedralGravity {
     // O(N*log^2(N)) implementation
-    std::tuple<Plane, double, TriangleIndexLists<2>> LogNSquaredPlane::findPlane(const SplitParam &splitParam) {//TODO iterate over all dimensions
+    std::tuple<Plane, double, TriangleIndexLists<2>> LogNSquaredPlane::findPlane(const SplitParam &splitParam) {
+        Plane optPlane{};
+        double cost{std::numeric_limits<double>::infinity()};
+        std::vector<PlaneEvent> optimalEvents{};
+        bool minSide{true};
+        for (const auto dimension: {Direction::X, Direction::Y, Direction::Z}) {
+            splitParam.splitDirection = dimension;
+            auto [candidatePlane, candidateCost, events, minSideChosen] = findPlaneForSingleDimension(splitParam);
+            if (candidateCost < cost) {
+                optPlane = candidatePlane;
+                cost = candidateCost;
+                optimalEvents = events;
+                minSide = minSideChosen;
+            }
+        }
+        //generate the triangle index lists for the child bounding boxes and return them along with the optimal plane and the plane's cost.
+        return {optPlane, cost, generateTriangleSubsets(optimalEvents, optPlane, minSide)};
+    }
+
+    std::tuple<Plane, double, std::vector<PlaneEvent>, bool> LogNSquaredPlane::findPlaneForSingleDimension(const SplitParam &splitParam) {
         //initialize the default plane and make it costly
-        double cost = std::numeric_limits<double>::infinity();
+        double cost{std::numeric_limits<double>::infinity()};
         Plane optPlane{};
         bool minSide{true};
         //each vertex proposes a split plane candidate: create an event and queue it in the buffer
@@ -46,9 +65,9 @@ namespace polyhedralGravity {
             trianglesMin += p_planar + p_start;
             trianglesPlanar = 0;
         }
-        //generate the triangle index lists for the child bounding boxes and return them along with the optimal plane and the plane's cost.
-        return std::make_tuple(optPlane, cost, generateTriangleSubsets(events, optPlane, minSide));
+        return {optPlane, cost, events, minSide};
     }
+
 
     std::vector<PlaneEvent> LogNSquaredPlane::generatePlaneEvents(const SplitParam &splitParam) {
         std::vector<PlaneEvent> events{};

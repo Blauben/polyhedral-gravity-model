@@ -2,7 +2,6 @@
 
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 
-
 namespace polyhedralGravity {
 
     class PlaneSelectionAlgorithm {

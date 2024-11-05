@@ -178,7 +178,7 @@ namespace polyhedralGravity {
          * The direction in which the current bounding box should be divided by further.
          * Refer to {@link Plane} on how to interpret the Direction.
          */
-        Direction splitDirection;
+        mutable Direction splitDirection;
 
         /**
          * Constructor that initializes all fields. Intended for the use with std::make_unique. See {@link SplitParam} fields for further information.

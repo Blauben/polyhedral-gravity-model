@@ -56,7 +56,7 @@ namespace polyhedralGravity {
             delegates.push_back(origin[static_cast<int>(_plane.orientation)] < _plane.axisCoordinate ? getChildNode(LESSER) : getChildNode(GREATER));
             return delegates;
         }
-        //intersection point of the ray and the split plane
+        //intersection point of the ray and the bounding box
         const double intersectionCoord{ray[static_cast<int>(_plane.orientation)] * t_enter + origin[static_cast<int>(_plane.orientation)]};
         // the entry point of the ray to the bounding box is nearer to the origin than the split plane -> ray hits lesser box
         if (intersectionCoord < _plane.axisCoordinate) {
