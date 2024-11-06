@@ -23,7 +23,7 @@ namespace polyhedralGravity {
      * @param planeAlgorithm The algorithm used to find the optimal split plane.
      * @return A unique pointer to the new TreeNode.
      */
-        static std::unique_ptr<TreeNode> treeNodeFactory(const SplitParam &splitParam, size_t currentRecursionDepth, const std::shared_ptr<PlaneSelectionAlgorithm> &planeAlgorithm);
+        static std::unique_ptr<TreeNode> treeNodeFactory(const SplitParam &splitParam, size_t currentRecursionDepth);
     };
 
 }// namespace polyhedralGravity

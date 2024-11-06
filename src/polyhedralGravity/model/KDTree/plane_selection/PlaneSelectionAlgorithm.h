@@ -35,7 +35,7 @@ namespace polyhedralGravity {
         /**
         * The algorithm used to find optimal split planes.
         */
-        static std::shared_ptr<PlaneSelectionAlgorithm> planeSelectionStrategy;
+        static std::unique_ptr<PlaneSelectionAlgorithm> planeSelectionStrategy;
 
     protected:
         /**
@@ -96,6 +96,7 @@ namespace polyhedralGravity {
          * The index of the face that generated this candidate plane.
          */
         unsigned faceIndex;
+
 
         PlaneEvent(const PlaneEventType type, const Plane plane, const unsigned faceIndex)
             : type{type}, plane{plane}, faceIndex{faceIndex} {
