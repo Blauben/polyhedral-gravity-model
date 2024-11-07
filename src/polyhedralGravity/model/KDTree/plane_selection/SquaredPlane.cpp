@@ -3,7 +3,7 @@
 namespace polyhedralGravity {
 
     // O(N^2) implementation
-    std::tuple<Plane, double, TriangleIndexLists<2>> SquaredPlane::findPlane(const SplitParam &splitParam) {
+    std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> SquaredPlane::findPlane(const SplitParam &splitParam) {
         //initialize the default plane and make it costly
         double cost = std::numeric_limits<double>::infinity();
         Plane optPlane{0, splitParam.splitDirection};

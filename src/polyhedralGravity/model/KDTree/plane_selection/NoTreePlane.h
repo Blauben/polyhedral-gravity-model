@@ -10,7 +10,7 @@ namespace polyhedralGravity {
         * @param splitParam specifies the polyhedron section to be split @link SplitParam.
         * @return Tuple of the default plane to split the specified bounding box, infinite cost as double and a list of empty triangle sets. Refer to {@link TriangleIndexLists<2>} for more information.
         */
-        std::tuple<Plane, double, TriangleIndexLists<2>> findPlane(const SplitParam &splitParam) override {
+        std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> findPlane(const SplitParam &splitParam) override {
             return {Plane{}, std::numeric_limits<double>::infinity(), TriangleIndexLists<2>{std::make_unique<TriangleIndexList>(), std::make_unique<TriangleIndexList>()}};
         }
     };

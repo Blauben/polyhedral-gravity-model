@@ -2,8 +2,8 @@
 
 namespace polyhedralGravity {
 
-    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, TriangleIndexLists<2> &triangleIndexLists, size_t currentRecursionDepth)
-        : TreeNode(splitParam, currentRecursionDepth), _plane{plane}, _triangleIndexLists{std::move(triangleIndexLists)}, _boundingBox{splitParam.boundingBox} {
+    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, const size_t currentRecursionDepth)
+        : TreeNode(splitParam, currentRecursionDepth), _plane{plane}, _boundingBox{splitParam.boundingBox}, _triangleLists{std::move(triangleIndexLists)} {
     }
 
     std::shared_ptr<TreeNode> SplitNode::getChildNode(const size_t index) {
@@ -17,7 +17,7 @@ namespace polyhedralGravity {
             auto [lesserBox, greaterBox] = this->_boundingBox.splitBox(this->_plane);
             childParam.boundingBox = index == 0 ? lesserBox : greaterBox;
             //get the triangles of the box
-            childParam.indexBoundFaces = *std::move(_triangleIndexLists[index]);
+            std::visit([&childParam, index](auto &typeLists) -> void { childParam.boundFaces = *std::move(typeLists[index]); }, _triangleLists);
             childParam.splitDirection = static_cast<Direction>((static_cast<int>(this->_splitParam->splitDirection) + 1) % DIMENSIONS);
             //increase the recursion depth of the direct child by 1
             node = TreeNodeFactory::treeNodeFactory(childParam, _recursionDepth + 1);

@@ -36,7 +36,7 @@ namespace polyhedralGravity {
         /**
          * Contains the triangle lists for the lesser and greater bounding boxes. {@link TriangleIndexLists}
         */
-        TriangleIndexLists<2> _triangleIndexLists;
+        std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> _triangleLists;
 
     public:
         /**
@@ -46,7 +46,7 @@ namespace polyhedralGravity {
          * @param triangleIndexLists Index sets of the triangles contained in the lesser and greater child nodes. {@link TriangleIndexList}
          * @param currentRecursionDepth the tree depth of the current node. Used to limit the size of the tree.
          */
-        SplitNode(const SplitParam &splitParam, const Plane &plane, TriangleIndexLists<2> &triangleIndexLists, size_t currentRecursionDepth);
+        SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, size_t currentRecursionDepth);
         /**
          * Computes the child node decided by the given index (0 for lesser, 1 for greater) if not present already and returns it to the caller.
          * @param index Specifies which node to build. 0 or LESSER for _lesser, 1 or GREATER for _greater.

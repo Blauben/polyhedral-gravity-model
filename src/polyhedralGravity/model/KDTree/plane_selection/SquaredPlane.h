@@ -14,7 +14,7 @@ namespace polyhedralGravity {
         * @param splitParam specifies the polyhedron section to be split @link SplitParam.
         * @return Tuple of the optimal plane to split the specified bounding box, its cost as double and a list of triangle sets with respective positions to the found plane. Refer to {@link TriangleIndexLists<2>} for more information.
         */
-        std::tuple<Plane, double, TriangleIndexLists<2>> findPlane(const SplitParam &splitParam) override;
+        std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> findPlane(const SplitParam &splitParam) override;
 
         /**
         * Splits a section of a polyhedron into two bounding boxes and calculates the triangle face sets contained in the new bounding boxes.
@@ -26,4 +26,4 @@ namespace polyhedralGravity {
         */
         static TriangleIndexLists<3> containedTriangles(const SplitParam &param, const Plane &split);
     };
-}
+}// namespace polyhedralGravity

@@ -19,7 +19,7 @@ namespace polyhedralGravity {
         /**
     * Stores parameters required for building child nodes lazily. Gets freed if the Node is an inner node and after both children are built.
     */
-        std::unique_ptr<const SplitParam> _splitParam;
+        std::unique_ptr<SplitParam> _splitParam;
         /**
          * the distance to the tree's root from this node. Used to limit the depth and the size of the tree.
          */

@@ -1,11 +1,13 @@
 #include "polyhedralGravity/model/KDTree/plane_selection/LogNSquaredPlane.h"
 
+#include <oneapi/tbb/detail/_range_common.h>
+
 namespace polyhedralGravity {
     // O(N*log^2(N)) implementation
-    std::tuple<Plane, double, TriangleIndexLists<2>> LogNSquaredPlane::findPlane(const SplitParam &splitParam) {
+    std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> LogNSquaredPlane::findPlane(const SplitParam &splitParam) {
         Plane optPlane{};
         double cost{std::numeric_limits<double>::infinity()};
-        std::vector<PlaneEvent> optimalEvents{};
+        PlaneEventList optimalEvents{};
         bool minSide{true};
         for (const auto dimension: {Direction::X, Direction::Y, Direction::Z}) {
             splitParam.splitDirection = dimension;
@@ -21,14 +23,14 @@ namespace polyhedralGravity {
         return {optPlane, cost, generateTriangleSubsets(optimalEvents, optPlane, minSide)};
     }
 
-    std::tuple<Plane, double, std::vector<PlaneEvent>, bool> LogNSquaredPlane::findPlaneForSingleDimension(const SplitParam &splitParam) {
+    std::tuple<Plane, double, PlaneEventList, bool> LogNSquaredPlane::findPlaneForSingleDimension(const SplitParam &splitParam) {
         //initialize the default plane and make it costly
         double cost{std::numeric_limits<double>::infinity()};
         Plane optPlane{};
         bool minSide{true};
         //each vertex proposes a split plane candidate: create an event and queue it in the buffer
-        std::vector<PlaneEvent> events{std::move(generatePlaneEvents(splitParam))};
-        size_t trianglesMin{0}, trianglesMax{splitParam.indexBoundFaces.size()}, trianglesPlanar{0};
+        PlaneEventList events{std::move(generatePlaneEvents(splitParam))};
+        size_t trianglesMin{0}, trianglesMax{countFaces(splitParam.boundFaces)}, trianglesPlanar{0};
         //traverse all the events
         int i{0};
         while (i < events.size()) {
@@ -69,11 +71,15 @@ namespace polyhedralGravity {
     }
 
 
-    std::vector<PlaneEvent> LogNSquaredPlane::generatePlaneEvents(const SplitParam &splitParam) {
-        std::vector<PlaneEvent> events{};
-        events.reserve(splitParam.indexBoundFaces.size() * 2);
+    PlaneEventList LogNSquaredPlane::generatePlaneEvents(const SplitParam &splitParam) {
+        PlaneEventList events{};
+        events.reserve(countFaces(splitParam.boundFaces) * 2);
+        if (std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
+            return {};
+        }
+        const auto &boundTriangles{std::get<TriangleIndexList>(splitParam.boundFaces)};
         //transform the faces into vertices
-        auto [vertex3_begin, vertex3_end] = transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
+        auto [vertex3_begin, vertex3_end] = transformIterator(boundTriangles.cbegin(), boundTriangles.cend(), splitParam.vertices, splitParam.faces);
         std::for_each(vertex3_begin, vertex3_end, [&splitParam, &events](const auto &indexAndTriplet) {
             const auto [index, triplet] = indexAndTriplet;
             //calculate the bounding box of the face using its vertices. The edges of the box are used as candidate planes.
@@ -109,7 +115,7 @@ namespace polyhedralGravity {
         return events;
     }
 
-    TriangleIndexLists<2> LogNSquaredPlane::generateTriangleSubsets(const std::vector<PlaneEvent> &planeEvents, const Plane &plane, const bool minSide) {
+    TriangleIndexLists<2> LogNSquaredPlane::generateTriangleSubsets(const PlaneEventList &planeEvents, const Plane &plane, const bool minSide) {
         auto facesMin = std::make_unique<TriangleIndexList>();
         auto facesMax = std::make_unique<TriangleIndexList>();
         //set data structure to avoid processing faces twice -> introduces O(1) lookup instead of O(n) lookup using the vectors directly

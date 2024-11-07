@@ -6,16 +6,29 @@ namespace polyhedralGravity {
         if (currentRecursionDepth >= MAX_RECURSION_DEPTH) {
             return std::make_unique<LeafNode>(splitParam, currentRecursionDepth);
         }
+        const size_t numberOfFaces{countFaces(splitParam.boundFaces)};
         //find optimal plane splitting this node's bounding box
-        auto [plane, planeCost, triangleIndexLists] = PlaneSelectionAlgorithm::planeSelectionStrategy->findPlane(splitParam);
-        const double costWithoutSplit = static_cast<double>(splitParam.indexBoundFaces.size()) * PlaneSelectionAlgorithm::triangleIntersectionCost;
-        //Should a plane be found (plane cost is finite) true if one box is equal or larger to the original and the other box is non-zero. This ensures that the boxes become smaller each split except cutting off empty space.
-        const bool boxesNotDividedIntoSmaller = std::isinf(planeCost) || splitParam.indexBoundFaces.size() <= triangleIndexLists[0]->size() + triangleIndexLists[1]->size() && (triangleIndexLists[0]->empty() || triangleIndexLists[1]->empty());
+        auto [plane, planeCost, triangleLists] = PlaneSelectionAlgorithm::planeSelectionStrategy->findPlane(splitParam);
+        const double costWithoutSplit = static_cast<double>(numberOfFaces) * PlaneSelectionAlgorithm::triangleIntersectionCost;
+
+        // Check if the boxes are divided into smaller regions
+        bool splitFailsToReduceSize = std::visit([numberOfFaces](auto &typeLists) {
+            // Count faces in each split box
+            const size_t facesInMinimalBox = typeLists[0]->size();
+            const size_t facesInMaximalBox = typeLists[1]->size();
+
+            // Ensure that the split meaningfully divides faces
+            return (numberOfFaces <= facesInMinimalBox + facesInMaximalBox) && (facesInMinimalBox == 0 || facesInMaximalBox == 0);
+        },
+                                                 triangleLists);
+        // Condition to avoid further splitting if plane cost is infinite (no plane found to be evaluated) or split is ineffective
+        const bool boxesNotDividedIntoSmaller = std::isinf(planeCost) || splitFailsToReduceSize;
+
         //if the cost of splitting this node further is greater than just traversing the bound triangles, then don't split and return a LeafNode
         if (planeCost > costWithoutSplit || boxesNotDividedIntoSmaller) {
             return std::make_unique<LeafNode>(splitParam, currentRecursionDepth);
         }
         //if not more costly, perform the split
-        return std::make_unique<SplitNode>(splitParam, plane, triangleIndexLists, currentRecursionDepth);
+        return std::make_unique<SplitNode>(splitParam, plane, triangleLists, currentRecursionDepth);
     }
 }// namespace polyhedralGravity
