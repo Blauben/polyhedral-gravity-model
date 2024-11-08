@@ -38,7 +38,7 @@ namespace polyhedralGravity {
      * @return The normal vector.
      */
     static Array3 normal(const Direction direction) {
-        switch(direction) {
+        switch (direction) {
             case Direction::X:
                 return Array3{1, 0, 0};
             case Direction::Y:
@@ -80,9 +80,25 @@ namespace polyhedralGravity {
             using namespace util;
             return polyhedralGravity::normal(orientation) * (returnFlipped ? -1 : 1);
         }
+
+        /**
+         * Returns the origin point of a plane, meaning a point that lies on the plane.
+         * @return The origin point.
+         */
+        [[nodiscard]] Array3 originPoint() const {
+            Array3 point{};
+            point.fill(0);
+            point[static_cast<int>(orientation)] = axisCoordinate;
+            return point;
+        }
+
         Plane() = default;
-        Plane(const Array3 &point, Direction direction) : axisCoordinate(point[static_cast<int>(direction)]), orientation(direction) {}
-        Plane(const double point, const Direction direction): axisCoordinate(point), orientation(direction) {}
+        Plane(const Array3 &point, Direction direction)
+            : axisCoordinate(point[static_cast<int>(direction)]), orientation(direction) {
+        }
+        Plane(const double point, const Direction direction)
+            : axisCoordinate(point), orientation(direction) {
+        }
     };
 
     /**
@@ -168,11 +184,77 @@ namespace polyhedralGravity {
             return Box(findMinMaxCoordinates<Container, Array3>(vertices));
         }
 
+        /**
+        * Takes points of a face of a polyhedron and clips them to a box. If all the points lie in the box no changes are made but if points lie outside of the box they are linearly interpolated onto the box.
+        * Uses the Sutherland-Hodgman-Algorithm.
+        * @param box The box to clip the points to.
+        * @param points The corner points of the face to be clipped.
+        * @return The new corner points of the clipped face.
+        */
+        static std::vector<Array3> clipToVoxel(const Box &box, const std::array<Array3, 3> &points) {
+            using namespace util;
+            //use clipped as the input vector because the inner for loop swaps input and clipped each iteration,
+            //since each iteration needs the output of the previous iteration as input.
+            std::vector<Array3> clipped(points.cbegin(), points.cend());
+            std::vector<Array3> input{};
+            input.reserve(points.size());
+            //every plane defined by the maxPoint has to flip its normal because the normals have to point inside the bounding box.
+            bool flipPlane = false;
+            for (const Direction direction: {Direction::X, Direction::Y, Direction::Z}) {
+                const auto directionPlanes = {Plane(box.minPoint, direction), Plane(box.maxPoint, direction)};
+                for (const auto &plane: directionPlanes) {
+                    std::swap(input, clipped);
+                    clipToVoxelPlane(plane, flipPlane, input, clipped);
+                    input.clear();
+                    flipPlane = !flipPlane;
+                }
+            }
+            return clipped;
+        }
+
         explicit Box(const std::pair<Array3, Array3> &pair)
             : minPoint{pair.first}, maxPoint{pair.second} {
         }
         Box()
             : minPoint{0.0, 0.0, 0.0}, maxPoint{0.0, 0.0, 0.0} {
+        }
+
+    private:
+        /**
+         * Takes a plane and a set of vertices and clips them accordingly.
+         * Used as a sub procedure by the Sutherland-Hodgman-Algorithm.
+         * @param plane The plane to split the vertices by
+         * @param flipPlaneNormal Specifies which side of the plane is inside (In the direction or opposite of the plane normal).
+         * @param source The vertices to be transformed to lie on the inside of the plane.
+         * @param dest The transformed vertices.
+         */
+        static void clipToVoxelPlane(const Plane &plane, const bool flipPlaneNormal, const std::vector<Array3> &source, std::vector<Array3> &dest) {
+            using namespace util;
+            //the distance is interpreted in the normal direction, negative values are in opposite direction of the normal.
+            static constexpr auto isInside = [](const double distance) { return distance >= 0.0; };
+            static constexpr auto intersectionPoint = [](const Array3 &from, const Array3 &to, const double distanceFrom, const double distanceTo) {
+                // solve for t in $ [(t * from + (1-t) * to ) - origin] * normal = 0 $
+                // equation explained: search for a point on the plane defined by $ (point - origin) * normal $, where point is linearly interpolated using vectors from and to.
+                const double t{distanceTo / (distanceTo - distanceFrom)};
+                return from * t + (1.0 - t) * to;
+            };
+            for (size_t i{0}; i < source.size(); i++) {
+                const Array3 &from{source[i]};
+                const Array3 &to{source[(i + 1) % source.size()]};
+                // $ (from - origin) * normal = cos alpha * |from - origin| * |normal| = cos alpha * |from - origin| * 1 $ ^= distance of from to the plane in the direction of the normal.
+                const double distanceFrom{dot(from - plane.originPoint(), plane.normal(flipPlaneNormal))};
+                const double distanceTo{dot(to - plane.originPoint(), plane.normal(flipPlaneNormal))};
+                if (isInside(distanceFrom) && isInside(distanceTo)) {
+                    dest.push_back(to);
+                } else if(isInside(distanceFrom) && !isInside(distanceTo)) {
+                    dest.emplace_back(intersectionPoint(from, to, distanceFrom, distanceTo ));
+                } else if(!isInside(distanceTo) && isInside(distanceFrom)) {
+                    dest.emplace_back(intersectionPoint(from, to, distanceFrom, distanceTo))
+                    dest.push_back(to);
+                } else if(!isInside(distanceFrom) && !isInside(distanceTo)) {
+                    //do nothing
+                }
+            }
         }
     };
 
