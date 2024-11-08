@@ -33,6 +33,24 @@ namespace polyhedralGravity {
     };
 
     /**
+     * Returns the normal vector for a direction.
+     * @param direction The direction to return the normal vector for.
+     * @return The normal vector.
+     */
+    static Array3 normal(const Direction direction) {
+        switch(direction) {
+            case Direction::X:
+                return Array3{1, 0, 0};
+            case Direction::Y:
+                return Array3{0, 1, 0};
+            case Direction::Z:
+                return Array3{0, 0, 1};
+            default:
+                return Array3{0, 0, 0};
+        }
+    }
+
+    /**
      * Number of dimensions for the polyhedron. Also corresponds to the number of elements of the {@link Direction} enum.
      */
     constexpr int DIMENSIONS = 3;
@@ -41,7 +59,7 @@ namespace polyhedralGravity {
      * Defines a plane that is parallel to one of the coordinate planes, by taking the fixed axis coordinate value for the plane and the coordinate index ({@link Direction}) that is fixed for every \
      * point on the plane.
      *
-     * E.g. Specifying 0.0 and Direction::X would describe the YZ plane that goes through the origin.
+     * E.g. Specifying 0.0 and Direction::X would describe the YZ plane that goes through the origin. The direction is equivalent to the coordinate that is 1 in the normal vector of the plane, the others are 0.
      */
     struct Plane {
         /**
@@ -52,6 +70,19 @@ namespace polyhedralGravity {
          * Specifies which coordinate dimension is fixed for every point on the plane.
          */
         Direction orientation;
+
+        /**
+        * Returns the normal vector for this plane.
+        * @param returnFlipped Whether to return the normal pointing in the opposite direction.
+        * @return The normal vector.
+        */
+        [[nodiscard]] Array3 normal(const bool returnFlipped = false) const {
+            using namespace util;
+            return polyhedralGravity::normal(orientation) * (returnFlipped ? -1 : 1);
+        }
+        Plane() = default;
+        Plane(const Array3 &point, Direction direction) : axisCoordinate(point[static_cast<int>(direction)]), orientation(direction) {}
+        Plane(const double point, const Direction direction): axisCoordinate(point), orientation(direction) {}
     };
 
     /**

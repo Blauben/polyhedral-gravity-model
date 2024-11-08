@@ -50,47 +50,38 @@ namespace polyhedralGravity {
        */
         static std::pair<const double, bool> costForPlane(const Box &boundingBox, const Plane &plane, size_t trianglesMin, size_t trianglesMax, size_t trianglesPlanar);
 
-        //TODO: rework, continue here
         /**
-         * Clip points or coordinates to a box only adjusting the values in a specific dimension.
-         * @param box The box to which to clip to.
-         * @param direction The dimension in which to clip.
-         * @param values The points or coordinates to clip.
-         * @return An array of clipped values.
+         * Takes points of a face of a polyhedron and clips them to a box. If all the points lie in the box no changes are made but if points lie outside of the box they are linearly
+         * @param box The box to clip the points to.
+         * @param points The corner points of the face to be clipped.
+         * @return The new corner points of the clipped face.
          */
-        template<typename... Values>
-        static std::array<double, sizeof...(Values)> clipToVoxel(const Box &box, const Direction direction, Values... values) {
-            return {clipToVoxel(box, direction, values)...};
-        }
+        static std::vector<Array3> clipToVoxel(const Box &box, const std::array<Array3, 3> &points) {
+            using namespace util;
+            std::vector input(points.cbegin(), points.cend());
+            std::vector<Array3> clipped(points.size());
+            //every plane defined by the maxPoint has to flip its normal because the normals have to point inside the bounding box.
+            bool flipPlane = false;
+            for (const Direction direction : {Direction::X, Direction::Y, Direction::Z}) {
+                const auto directionPlanes = {Plane(box.minPoint, direction), Plane(box.maxPoint, direction)};
+                for(const auto& plane : directionPlanes) {
 
-        /**
-         * Clip coordinate to a box in a specific direction.
-         * @param box The box to clip to.
-         * @param direction The direction that should be clipped in.
-         * @param coordinate The coordinate of dimension direction to clip to the box.
-         * @return The clipped coordinates.
-         */
-        template<typename Coordinate>
-        static Coordinate clipToVoxel(const Box &box, const Direction direction, Coordinate coordinate) {
-            if (coordinate < box.minPoint[static_cast<int>(direction)]) {
-                return box.minPoint[static_cast<int>(direction)];
+                }
             }
-            if (coordinate > box.maxPoint[static_cast<int>(direction)]) {
-                return box.maxPoint[static_cast<int>(direction)];
+                const auto &origin = points[i];
+                const auto &dest = points[i + 1 % points.size()];
+                const auto ray = dest - origin;
+                const auto [t_enter, t_exit] = boundingBox.rayBoxIntersection(origin, ray);
+                //box is not hit, no information can be inferred
+                if (std::isinf(t_enter) || std::isinf(t_exit)) {
+                    continue;
+                }
+                //intersection point lies in negative ray direction -> origin is inside of box
+                //intersection point with box lies in ray direction -> origin outside of box, use intersection point instead
+                pushIfAbsent(t_enter <= 0 ? origin : origin + (ray * t_enter));
+                pushIfAbsent(t_exit >= 1 ? dest : origin + (ray * t_exit));
             }
-            return coordinate;
-        }
-
-        /**
-         * Clip points to a box in a specific direction.
-         * @param box The box to clip to.
-         * @param direction The direction that should be clipped in.
-         * @param point A container of double coordinates.
-         * @return The clipped coordinates.
-         */
-        template<template<typename, size_t> typename Point, typename Coordinate, size_t dimension>
-        static Coordinate clipToVoxel(const Box &box, const Direction direction, Point<Coordinate, dimension> point) {
-            return {clipToVoxel(box, direction, point[static_cast<size_t>(direction)])};
+            return clipped;
         }
     };
 

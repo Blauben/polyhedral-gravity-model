@@ -116,27 +116,35 @@ namespace polyhedralGravity {
         return events;
     }
 
-    //TODO: continue here
+    //Step 2 (used to call Step 1)
     PlaneEventLists<2> LogNPlane::generatePlaneEventSubsets(const PlaneEventList &planeEvents, const Plane &plane, const bool minSide) {
         const auto faceClassification{classifyTrianglesRelativeToPlane(planeEvents, plane, minSide)};
         auto planeEventsMin = std::make_unique<PlaneEventList>();
         auto planeEventsMax = std::make_unique<PlaneEventList>();
-        std::vector<PlaneEvent> planarEventsMin{}, planarEventsMax{};
+        TriangleIndexList facesIndexBoth{};
+        planeEventsMin->reserve(planeEvents.size() / 2);
+        planeEventsMax->reserve(planeEvents.size() / 2);
+        //value estimation taken from source paper
+        facesIndexBoth.reserve(std::ceil(std::sqrt(planeEvents.size())));
 
-        std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&faceClassification, &planeEventsMin, &planeEventsMax](const auto &event) {
+        std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&faceClassification, &planeEventsMin, &planeEventsMax, &facesIndexBoth](const auto &event) {
             switch (faceClassification[event.faceIndex]) {
+                //face of event only contributes to min side event can be added to side without clipping because no overlap with split plane
                 case Locale::MIN_ONLY:
                     planeEventsMin->push_back(event);
                     break;
+                //face of event only contributes to max side event can be added to side without clipping because no overlap with split plane
                 case Locale::MAX_ONLY:
                     planeEventsMax->push_back(event);
                     break;
-                default://TODO clipping
-                    switch ()
+                //face has area on both sides -> event has to be discarded and scheduled for separate event generation
+                default:
+                    facesIndexBoth.push_back(event.faceIndex);
             }
         });
     }
 
+    //Step 1
     std::unordered_map<size_t, LogNPlane::Locale> LogNPlane::classifyTrianglesRelativeToPlane(const PlaneEventList &events, const Plane &plane, const bool minSide) {
         std::unordered_map<size_t, Locale> result{};
         //each face generates 6 plane events on average, thus the amount of faces can be roughly estimated.
@@ -163,5 +171,7 @@ namespace polyhedralGravity {
         return result;
     }
 
+    PlaneEventList LogNPlane::generatePlaneEventsForClippedFaces(const SplitParam &splitParam, const TriangleIndexList &faceIndices, const Plane &plane) {
+    }
 
 }// namespace polyhedralGravity

@@ -14,7 +14,8 @@ namespace polyhedralGravity {
         auto [vertex3_begin, vertex3_end] = transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
         std::for_each(vertex3_begin, vertex3_end, [&splitParam, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates](const auto &indexAndTriplet) {
             const auto [index, triplet] = indexAndTriplet;
-            const auto [minPoint, maxPoint] = Box::getBoundingBox<std::array<Array3, 3>>(triplet);
+            //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
+            const auto [minPoint, maxPoint] = Box::getBoundingBox<std::array<Array3, 3>>(clipToVoxel(splitParam.boundingBox, triplet));
             for (const auto planeSurfacePoint: {minPoint, maxPoint}) {
                 //constructs the plane that goes through a vertex lying on the bounding box of the face to be checked and spans in a specified direction.
                 Plane candidatePlane{planeSurfacePoint[static_cast<int>(splitParam.splitDirection)], splitParam.splitDirection};

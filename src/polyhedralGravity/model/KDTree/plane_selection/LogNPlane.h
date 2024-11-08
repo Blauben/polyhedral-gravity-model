@@ -47,6 +47,7 @@ namespace polyhedralGravity {
          * @return An unordered_map used for lookups of individual face locales.
          */
         static std::unordered_map<size_t, Locale> classifyTrianglesRelativeToPlane(const PlaneEventList &events, const Plane &plane, bool minSide);
-    };
 
+        static PlaneEventList generatePlaneEventsForClippedFaces(const SplitParam &splitParam, const TriangleIndexList &faceIndices, const Plane &plane);
+    };
 }// namespace polyhedralGravity

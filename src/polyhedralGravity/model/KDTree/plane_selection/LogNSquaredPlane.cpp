@@ -82,16 +82,14 @@ namespace polyhedralGravity {
         auto [vertex3_begin, vertex3_end] = transformIterator(boundTriangles.cbegin(), boundTriangles.cend(), splitParam.vertices, splitParam.faces);
         std::for_each(vertex3_begin, vertex3_end, [&splitParam, &events](const auto &indexAndTriplet) {
             const auto [index, triplet] = indexAndTriplet;
-            //calculate the bounding box of the face using its vertices. The edges of the box are used as candidate planes.
-            const auto [minPoint, maxPoint] = Box::getBoundingBox<std::array<Array3, 3>>(triplet);
-            //clip plane coordinates to voxel
-            const auto [minAxisCoordinate, maxAxisCoordinate] = PlaneSelectionAlgorithm::clipToVoxel(splitParam.boundingBox, splitParam.splitDirection, minPoint, maxPoint);
+            //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
+            const auto [minPoint, maxPoint] = Box::getBoundingBox<std::array<Array3, 3>>(clipToVoxel(splitParam.boundingBox, triplet));
             // if the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
-            if (minAxisCoordinate == maxAxisCoordinate) {
+            if (minPoint == maxPoint) {
                 events.emplace_back(
                         PlaneEventType::planar,
                         Plane{
-                                .axisCoordinate = minAxisCoordinate,
+                                .axisCoordinate = minPoint,
                                 .orientation = splitParam.splitDirection},
                         index);
                 return;
@@ -100,13 +98,13 @@ namespace polyhedralGravity {
             events.emplace_back(
                     PlaneEventType::starting,
                     Plane{
-                            .axisCoordinate = minAxisCoordinate,
+                            .axisCoordinate = minPoint,
                             .orientation = splitParam.splitDirection},
                     index);
             events.emplace_back(
                     PlaneEventType::ending,
                     Plane{
-                            .axisCoordinate = maxAxisCoordinate,
+                            .axisCoordinate = maxPoint,
                             .orientation = splitParam.splitDirection},
                     index);
         });
