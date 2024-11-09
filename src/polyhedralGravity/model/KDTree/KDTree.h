@@ -67,5 +67,11 @@ namespace polyhedralGravity {
        * Parameters for lazily building the root node {@link SplitParam}
        */
         std::unique_ptr<SplitParam> _splitParam;
+
+        void printTree() const { //TODO: remove
+            if (_rootNode != nullptr) {
+                _rootNode->printTree();
+            }
+        }
     };
 }// namespace polyhedralGravity

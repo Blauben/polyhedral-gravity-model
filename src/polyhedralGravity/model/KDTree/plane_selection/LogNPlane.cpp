@@ -1,7 +1,5 @@
 #include "polyhedralGravity/model/KDTree/plane_selection/LogNPlane.h"
 
-#include <thrust/detail/minmax.h>
-
 namespace polyhedralGravity {
     // O(N*log^2(N)) implementation
     std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> LogNPlane::findPlane(const SplitParam &splitParam) {
@@ -28,6 +26,7 @@ namespace polyhedralGravity {
             Plane &candidatePlane = events[i].plane;
             //for each plane calculate the faces whose vertices lie in the plane. Differentiate between the face starting in the plane, ending in the plane or all vertices lying in the plane
             size_t p_start{0}, p_end{0}, p_planar{0};
+            auto debug = std::count_if(events.cbegin(), events.cend(), [](const auto& event){return event.plane.orientation == Direction::Y;}); //TODO: remove
             //count all faces that end in the plane, this works because the PlaneEvents are sorted by position and then by PlaneEventType
             while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::ending) {
                 p_end++;
@@ -74,9 +73,10 @@ namespace polyhedralGravity {
 
     PlaneEventList LogNPlane::generatePlaneEventsFromFaces(const SplitParam &splitParam) {
         PlaneEventList events{};
-        events.reserve(countFaces(splitParam.boundFaces) * 2);
+        //each face generates six planes, two anchor points from the bounding box * three dimensions
+        events.reserve(countFaces(splitParam.boundFaces) * 6);
         if (std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
-            return {};
+            return std::get<PlaneEventList>(splitParam.boundFaces);
         }
         const auto &boundTriangles{std::get<TriangleIndexList>(splitParam.boundFaces)};
         //transform the faces into vertices
@@ -85,23 +85,26 @@ namespace polyhedralGravity {
             const auto [index, triplet] = indexAndTriplet;
             //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
             const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3>>(splitParam.boundingBox.clipToVoxel(triplet));
-            // if the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
-            if (minPoint == maxPoint) {
+            //generate events for each dimension
+            for(const auto& direction : {Direction::X, Direction::Y, Direction::Z}) {
+                // if the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
+                if (minPoint == maxPoint) {
+                    events.emplace_back(
+                            PlaneEventType::planar,
+                            Plane(minPoint, direction),
+                            index);
+                    return;
+                }
+                //else create a starting and ending event consisting of the planes defined by the min and max points of the face's bounding box.
                 events.emplace_back(
-                        PlaneEventType::planar,
-                        Plane(minPoint, splitParam.splitDirection),
+                        PlaneEventType::starting,
+                        Plane(minPoint, direction),
                         index);
-                return;
+                events.emplace_back(
+                        PlaneEventType::ending,
+                        Plane(maxPoint, direction),
+                        index);
             }
-            //else create a starting and ending event consisting of the planes defined by the min and max points of the face's bounding box.
-            events.emplace_back(
-                    PlaneEventType::starting,
-                    Plane(minPoint, splitParam.splitDirection),
-                    index);
-            events.emplace_back(
-                    PlaneEventType::ending,
-                    Plane(maxPoint, splitParam.splitDirection),
-                    index);
         });
         //sort the events by plane position and then by PlaneEventType. Refer to {@link PlaneEventType} for the specific order
         std::sort(events.begin(), events.end());
@@ -110,11 +113,11 @@ namespace polyhedralGravity {
 
     PlaneEventLists<2> LogNPlane::generatePlaneEventSubsets(const SplitParam &splitParam, const PlaneEventList &planeEvents, const Plane &plane, const bool minSide) {
         const auto faceClassification{classifyTrianglesRelativeToPlane(planeEvents, plane, minSide)};
-        auto planeEventsMin = std::make_unique<PlaneEventList>();
-        auto planeEventsMax = std::make_unique<PlaneEventList>();
+        PlaneEventList planeEventsMin{};
+        PlaneEventList planeEventsMax{};
         TriangleIndexList facesIndexBoth{};
-        planeEventsMin->reserve(planeEvents.size() / 2);
-        planeEventsMax->reserve(planeEvents.size() / 2);
+        planeEventsMin.reserve(planeEvents.size() / 2);
+        planeEventsMax.reserve(planeEvents.size() / 2);
         //value estimation taken from source paper
         facesIndexBoth.reserve(std::ceil(std::sqrt(planeEvents.size())));
 
@@ -123,11 +126,11 @@ namespace polyhedralGravity {
             switch (faceClassification.at(event.faceIndex)) {
                 //face of event only contributes to min side event can be added to side without clipping because no overlap with split plane
                 case Locale::MIN_ONLY:
-                    planeEventsMin->push_back(event);
+                    planeEventsMin.push_back(event);
                     break;
                 //face of event only contributes to max side event can be added to side without clipping because no overlap with split plane
                 case Locale::MAX_ONLY:
-                    planeEventsMax->push_back(event);
+                    planeEventsMax.push_back(event);
                     break;
                 //face has area on both sides -> event has to be discarded and scheduled for separate event generation
                 case Locale::BOTH:
@@ -136,8 +139,10 @@ namespace polyhedralGravity {
             }
         });
 
+        //generate new plane events for straddling faces that were discarded previously in Step 2
         auto [newMinEvents, newMaxEvents] = generatePlaneEventsForClippedFaces(splitParam, facesIndexBoth, plane);
-        return {std::move(planeEventsMin), std::move(planeEventsMax)};
+        //merge the new events into the existing sorted lists and return
+        return {std::move(mergePlaneEventLists(planeEventsMin, newMinEvents)), std::move(mergePlaneEventLists(planeEventsMax, newMaxEvents))};
     }
 
     //Step 1
@@ -209,5 +214,25 @@ namespace polyhedralGravity {
 
         return {minEvents, maxEvents};
     }
+
+    //Step 4
+    std::unique_ptr<PlaneEventList> LogNPlane::mergePlaneEventLists(const PlaneEventList& first, const PlaneEventList& second) {
+        auto first_it{first.cbegin()};
+        auto second_it{second.cbegin()};
+        auto result{std::make_unique<PlaneEventList>()};
+        result->reserve(first.size() + second.size());
+
+        while(first_it != first.cend() && second_it != second.cend()) {
+            if(first_it == first.cend() || second_it == second.cend()) {
+                result->push_back(first_it == first.cend() ? *second_it : *first_it);
+            } else if(*first_it < *second_it) {
+                result->push_back(*first_it++);
+            } else {
+                result->push_back(*second_it++);
+            }
+        }
+        return result;
+    }
+
 
 }// namespace polyhedralGravity

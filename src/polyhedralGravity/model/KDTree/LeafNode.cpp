@@ -2,8 +2,8 @@
 
 namespace polyhedralGravity {
 
-    LeafNode::LeafNode(const SplitParam &splitParam, const size_t currentRecursionDepth)
-        : TreeNode(splitParam, currentRecursionDepth) {
+    LeafNode::LeafNode(const SplitParam &splitParam, const size_t currentRecursionDepth, const size_t nodeId)
+        : TreeNode(splitParam, currentRecursionDepth, nodeId) {
     }
 
     void LeafNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) const {

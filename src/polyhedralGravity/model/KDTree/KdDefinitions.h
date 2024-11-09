@@ -302,10 +302,13 @@ namespace polyhedralGravity {
          * @return true if this should precede the other argument.
          */
         bool operator<(const PlaneEvent &other) const {
-            if (this->plane.axisCoordinate == other.plane.axisCoordinate) {
+            if (this->plane.axisCoordinate != other.plane.axisCoordinate) {
+                return this->plane.axisCoordinate < other.plane.axisCoordinate;
+            }
+            if(this->plane.orientation == other.plane.orientation) {
                 return this->type < other.type;
             }
-            return this->plane.axisCoordinate < other.plane.axisCoordinate;
+            return static_cast<unsigned>(this->plane.orientation) < static_cast<unsigned>(other.plane.orientation);
         }
     };
 

@@ -57,5 +57,13 @@ namespace polyhedralGravity {
         * @return Two new PlaneEventLists for the minimal and maximal bounding boxes respectively (unsorted!).
         */
         static std::array<PlaneEventList, 2> generatePlaneEventsForClippedFaces(const SplitParam &splitParam, const TriangleIndexList &faceIndices, const Plane &plane);
+
+        /**
+         * Takes two sorted PlaneEventLists and merges them in a single merge sort step.
+         * @param first The first PlaneEventList.
+         * @param second The second PlaneEventList
+         * @return A unique_ptr to a combined sorted PlaneEventList.
+         */
+        static std::unique_ptr<PlaneEventList> mergePlaneEventLists(const PlaneEventList& first, const PlaneEventList& second);
     };
 }// namespace polyhedralGravity

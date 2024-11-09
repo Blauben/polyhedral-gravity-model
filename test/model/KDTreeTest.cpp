@@ -123,5 +123,30 @@ namespace polyhedralGravity {
     INSTANTIATE_TEST_SUITE_P(LogSquaredPointsCube, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::cube_vertices, KDTreeTest::cube_faces, numberOfPoints, Algorithm::LOGSQUARED)));
     INSTANTIATE_TEST_SUITE_P(LogPointsCube, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::cube_vertices, KDTreeTest::cube_faces, numberOfPoints, Algorithm::LOG)));
 
+    TEST_F(KDTreeTest, debugLogSquared) {//TODO: remove
+        using namespace polyhedralGravity;
+        using namespace util;
+        KDTree tree{_big.getVertices(), _big.getFaces(), Algorithm::LOGSQUARED};
+        constexpr Array3 origin{200, 200, 200};
+        const Array3 point{0.47696049197143608, 0.15726201114874008, 0.20146690694962635};
+        const auto ray{(point - origin) / 10.0};
+        std::set<Array3> intersections;
+        tree.getFaceIntersections(origin, ray, intersections);
+        tree.printTree();
+        ASSERT_THAT(intersections, Contains(ElementsAre(DoubleNear(point[0], DELTA), DoubleNear(point[1], DELTA), DoubleNear(point[2], DELTA))));
+    }
+
+    TEST_F(KDTreeTest, debugLog) {//TODO: remove
+        using namespace polyhedralGravity;
+        using namespace util;
+        KDTree tree{_big.getVertices(), _big.getFaces(), Algorithm::LOG};
+        constexpr Array3 origin{200, 200, 200};
+        const Array3 point{0.47696049197143608, 0.15726201114874008, 0.20146690694962635};
+        const auto ray{(point - origin) / 10.0};
+        std::set<Array3> intersections;
+        tree.getFaceIntersections(origin, ray, intersections);
+        tree.printTree();
+        ASSERT_THAT(intersections, Contains(ElementsAre(DoubleNear(point[0], DELTA), DoubleNear(point[1], DELTA), DoubleNear(point[2], DELTA))));
+    }
 
 }// namespace polyhedralGravity

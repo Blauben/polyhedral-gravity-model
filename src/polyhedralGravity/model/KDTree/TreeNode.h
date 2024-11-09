@@ -11,11 +11,15 @@ namespace polyhedralGravity {
     public:
         virtual ~TreeNode() = default;
 
+        const size_t nodeId;
+
+        virtual void printTree() = 0; //TODO: remove
+
     protected:
         /**
     * Protected constructor intended only for child classes. Please use {@link TreeNodeFactory} instead.
 */
-        explicit TreeNode(const SplitParam &splitParam, size_t currentRecursionDepth);
+        explicit TreeNode(const SplitParam &splitParam, size_t currentRecursionDepth, size_t nodeId);
         /**
     * Stores parameters required for building child nodes lazily. Gets freed if the Node is an inner node and after both children are built.
     */

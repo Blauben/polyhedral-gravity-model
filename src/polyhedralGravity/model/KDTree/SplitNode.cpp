@@ -2,8 +2,8 @@
 
 namespace polyhedralGravity {
 
-    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, const size_t currentRecursionDepth)
-        : TreeNode(splitParam, currentRecursionDepth), _plane{plane}, _boundingBox{splitParam.boundingBox}, _triangleLists{std::move(triangleIndexLists)} {
+    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, const size_t currentRecursionDepth, const size_t nodeId)
+        : TreeNode(splitParam, currentRecursionDepth, nodeId), _plane{plane}, _boundingBox{splitParam.boundingBox}, _triangleLists{std::move(triangleIndexLists)} {
     }
 
     std::shared_ptr<TreeNode> SplitNode::getChildNode(const size_t index) {
@@ -49,9 +49,10 @@ namespace polyhedralGravity {
         if (!isParallel && planeIsHitInsideBox) {
             delegates.push_back(getChildNode(LESSER));
             delegates.push_back(getChildNode(GREATER));
+            return delegates;
         }
         // the split plane is behind the ray origin
-        else if (t_split < 0) {
+        if (t_split < 0) {
             //check in which point the origin lies in order to continue intersection in that box
             delegates.push_back(origin[static_cast<int>(_plane.orientation)] < _plane.axisCoordinate ? getChildNode(LESSER) : getChildNode(GREATER));
             return delegates;
