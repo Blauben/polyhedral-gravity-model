@@ -4,6 +4,10 @@ namespace polyhedralGravity {
 
     // O(N^2) implementation
     std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> SquaredPlane::findPlane(const SplitParam &splitParam) {
+        if(std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
+            throw std::invalid_argument("SquaredPlane does not support PlaneEventLists in SplitParam argument");
+        }
+        const auto& boundFaces = std::get<TriangleIndexList>(splitParam.boundFaces);
         //initialize the default plane and make it costly
         double cost = std::numeric_limits<double>::infinity();
         Plane optPlane{0, splitParam.splitDirection};
@@ -11,11 +15,11 @@ namespace polyhedralGravity {
         TriangleIndexLists<2> optTriangleIndexLists{};
         //each vertex proposes a split plane candidate: test for each of them, store them in buffer set to avoid duplicate testing
         std::unordered_set<double> testedPlaneCoordinates{};
-        auto [vertex3_begin, vertex3_end] = transformIterator(splitParam.indexBoundFaces.cbegin(), splitParam.indexBoundFaces.cend(), splitParam.vertices, splitParam.faces);
+        auto [vertex3_begin, vertex3_end] = transformIterator(boundFaces.cbegin(), boundFaces.cend(), splitParam.vertices, splitParam.faces);
         std::for_each(vertex3_begin, vertex3_end, [&splitParam, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates](const auto &indexAndTriplet) {
             const auto [index, triplet] = indexAndTriplet;
             //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
-            const auto [minPoint, maxPoint] = Box::getBoundingBox<std::array<Array3, 3>>(clipToVoxel(splitParam.boundingBox, triplet));
+            const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3>>(splitParam.boundingBox.clipToVoxel(triplet));
             for (const auto planeSurfacePoint: {minPoint, maxPoint}) {
                 //constructs the plane that goes through a vertex lying on the bounding box of the face to be checked and spans in a specified direction.
                 Plane candidatePlane{planeSurfacePoint[static_cast<int>(splitParam.splitDirection)], splitParam.splitDirection};
@@ -40,17 +44,21 @@ namespace polyhedralGravity {
         return std::make_tuple(optPlane, cost, std::move(optTriangleIndexLists));
     }
 
-    TriangleIndexLists<3> SquaredPlane::containedTriangles(const SplitParam &param, const Plane &split) {
+    TriangleIndexLists<3> SquaredPlane::containedTriangles(const SplitParam &splitParam, const Plane &split) {
         using namespace polyhedralGravity;
+        if(std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
+            throw std::invalid_argument("SquaredPlane does not support PlaneEventLists in SplitParam argument");
+        }
+        const auto& boundFaces = std::get<TriangleIndexList>(splitParam.boundFaces);
         //define three sets of triangles: closer to the origin, further away, in the plane
-        auto index_less = std::make_unique<TriangleIndexList>(param.indexBoundFaces.size() / 2);
-        auto index_greater = std::make_unique<TriangleIndexList>(param.indexBoundFaces.size() / 2);
+        auto index_less = std::make_unique<TriangleIndexList>(boundFaces.size() / 2);
+        auto index_greater = std::make_unique<TriangleIndexList>(boundFaces.size() / 2);
         auto index_equal = std::make_unique<TriangleIndexList>();
 
 
         //perform check for every triangle contained in this node's bounding box.
         //transform faceIndices into the vertices
-        auto [begin, end] = transformIterator(param.indexBoundFaces.cbegin(), param.indexBoundFaces.cend(), param.vertices, param.faces);
+        auto [begin, end] = transformIterator(boundFaces.cbegin(), boundFaces.cend(), splitParam.vertices, splitParam.faces);
         std::for_each(begin, end, [&split, &index_greater, &index_less, &index_equal](std::pair<unsigned long, Array3Triplet> pair) {
             auto [faceIndex, vertices] = pair;
             bool less{false}, greater{false};

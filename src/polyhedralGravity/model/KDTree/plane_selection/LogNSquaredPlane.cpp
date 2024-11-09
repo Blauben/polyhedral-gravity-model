@@ -83,29 +83,23 @@ namespace polyhedralGravity {
         std::for_each(vertex3_begin, vertex3_end, [&splitParam, &events](const auto &indexAndTriplet) {
             const auto [index, triplet] = indexAndTriplet;
             //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
-            const auto [minPoint, maxPoint] = Box::getBoundingBox<std::array<Array3, 3>>(clipToVoxel(splitParam.boundingBox, triplet));
+            const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3>>(splitParam.boundingBox.clipToVoxel(triplet));
             // if the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
             if (minPoint == maxPoint) {
                 events.emplace_back(
                         PlaneEventType::planar,
-                        Plane{
-                                .axisCoordinate = minPoint,
-                                .orientation = splitParam.splitDirection},
+                        Plane(minPoint, splitParam.splitDirection),
                         index);
                 return;
             }
             //else create a starting and ending event consisting of the planes defined by the min and max points of the face's bounding box.
             events.emplace_back(
                     PlaneEventType::starting,
-                    Plane{
-                            .axisCoordinate = minPoint,
-                            .orientation = splitParam.splitDirection},
+                    Plane(minPoint, splitParam.splitDirection),
                     index);
             events.emplace_back(
                     PlaneEventType::ending,
-                    Plane{
-                            .axisCoordinate = maxPoint,
-                            .orientation = splitParam.splitDirection},
+                    Plane(maxPoint, splitParam.splitDirection),
                     index);
         });
         //sort the events by plane position and then by PlaneEventType. Refer to {@link PlaneEventType} for the specific order

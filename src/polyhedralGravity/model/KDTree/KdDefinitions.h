@@ -185,13 +185,12 @@ namespace polyhedralGravity {
         }
 
         /**
-        * Takes points of a face of a polyhedron and clips them to a box. If all the points lie in the box no changes are made but if points lie outside of the box they are linearly interpolated onto the box.
+        * Takes points of a face of a polyhedron and clips them to this box. If all the points lie in the box no changes are made but if points lie outside of the box they are linearly interpolated onto the box.
         * Uses the Sutherland-Hodgman-Algorithm.
-        * @param box The box to clip the points to.
         * @param points The corner points of the face to be clipped.
         * @return The new corner points of the clipped face.
         */
-        static std::vector<Array3> clipToVoxel(const Box &box, const std::array<Array3, 3> &points) {
+        [[nodiscard]] std::vector<Array3> clipToVoxel(const std::array<Array3, 3> &points) const {
             using namespace util;
             //use clipped as the input vector because the inner for loop swaps input and clipped each iteration,
             //since each iteration needs the output of the previous iteration as input.
@@ -201,7 +200,7 @@ namespace polyhedralGravity {
             //every plane defined by the maxPoint has to flip its normal because the normals have to point inside the bounding box.
             bool flipPlane = false;
             for (const Direction direction: {Direction::X, Direction::Y, Direction::Z}) {
-                const auto directionPlanes = {Plane(box.minPoint, direction), Plane(box.maxPoint, direction)};
+                const auto directionPlanes = {Plane(minPoint, direction), Plane(maxPoint, direction)};
                 for (const auto &plane: directionPlanes) {
                     std::swap(input, clipped);
                     clipToVoxelPlane(plane, flipPlane, input, clipped);
@@ -236,7 +235,7 @@ namespace polyhedralGravity {
                 // solve for t in $ [(t * from + (1-t) * to ) - origin] * normal = 0 $
                 // equation explained: search for a point on the plane defined by $ (point - origin) * normal $, where point is linearly interpolated using vectors from and to.
                 const double t{distanceTo / (distanceTo - distanceFrom)};
-                return from * t + (1.0 - t) * to;
+                return from * t + to * (1.0 - t);
             };
             for (size_t i{0}; i < source.size(); i++) {
                 const Array3 &from{source[i]};
@@ -249,7 +248,7 @@ namespace polyhedralGravity {
                 } else if(isInside(distanceFrom) && !isInside(distanceTo)) {
                     dest.emplace_back(intersectionPoint(from, to, distanceFrom, distanceTo ));
                 } else if(!isInside(distanceTo) && isInside(distanceFrom)) {
-                    dest.emplace_back(intersectionPoint(from, to, distanceFrom, distanceTo))
+                    dest.emplace_back(intersectionPoint(from, to, distanceFrom, distanceTo));
                     dest.push_back(to);
                 } else if(!isInside(distanceFrom) && !isInside(distanceTo)) {
                     //do nothing
