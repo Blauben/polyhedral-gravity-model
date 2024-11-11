@@ -1,6 +1,7 @@
 #pragma once
 
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/SplitParam.h"
 #include "polyhedralGravity/model/KDTree/TreeNode.h"
 
 #include <optional>
@@ -27,7 +28,7 @@ namespace polyhedralGravity {
         */
         void getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) const;
 
-        void printTree() override { //TODO: remove
+        void printTree() override {//TODO: remove
             std::cout << "LeafNode ID: " << nodeId << ", Depth: " << _recursionDepth << std::endl;
         }
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/SplitParam.h"
+#include "polyhedralGravity/model/KDTree/TreeNode.h"
 #include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithmFactory.h"
 
@@ -68,7 +70,13 @@ namespace polyhedralGravity {
        */
         std::unique_ptr<SplitParam> _splitParam;
 
-        void printTree() const { //TODO: remove
+        /**
+         * The factory used when TreeNodes try to create child nodes here.
+         * The KDTree as a friend of TreeNodeFactory can set the parameters used during creation.
+         */
+        const std::shared_ptr<TreeNodeFactory> treeNodeFactory;
+
+        void printTree() const {//TODO: remove
             if (_rootNode != nullptr) {
                 _rootNode->printTree();
             }

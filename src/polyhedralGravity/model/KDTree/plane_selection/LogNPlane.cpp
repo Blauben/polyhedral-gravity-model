@@ -1,5 +1,7 @@
 #include "polyhedralGravity/model/KDTree/plane_selection/LogNPlane.h"
 
+#include <cassert>
+
 namespace polyhedralGravity {
     // O(N*log^2(N)) implementation
     std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> LogNPlane::findPlane(const SplitParam &splitParam) {
@@ -26,7 +28,7 @@ namespace polyhedralGravity {
             Plane &candidatePlane = events[i].plane;
             //for each plane calculate the faces whose vertices lie in the plane. Differentiate between the face starting in the plane, ending in the plane or all vertices lying in the plane
             size_t p_start{0}, p_end{0}, p_planar{0};
-            auto debug = std::count_if(events.cbegin(), events.cend(), [](const auto& event){return event.plane.orientation == Direction::Y;}); //TODO: remove
+            auto debug = std::count_if(events.cbegin(), events.cend(), [](const auto &event) { return event.plane.orientation == Direction::Y; });//TODO: remove
             //count all faces that end in the plane, this works because the PlaneEvents are sorted by position and then by PlaneEventType
             while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::ending) {
                 p_end++;
@@ -86,7 +88,7 @@ namespace polyhedralGravity {
             //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
             const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3>>(splitParam.boundingBox.clipToVoxel(triplet));
             //generate events for each dimension
-            for(const auto& direction : {Direction::X, Direction::Y, Direction::Z}) {
+            for (const auto &direction: {Direction::X, Direction::Y, Direction::Z}) {
                 // if the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
                 if (minPoint == maxPoint) {
                     events.emplace_back(
@@ -189,11 +191,11 @@ namespace polyhedralGravity {
             const auto [minPoint, maxPoint] = Box::getBoundingBox(clipped);
             //associate parameters for PlaneEvent creation
             std::array<std::pair<const Array3, PlaneEventType>, 2> planeEventParam{
-                std::make_pair(minPoint, PlaneEventType::starting),
-                std::make_pair(maxPoint, PlaneEventType::ending)};
+                    std::make_pair(minPoint, PlaneEventType::starting),
+                    std::make_pair(maxPoint, PlaneEventType::ending)};
             //create planes in each dimension, be careful to cluster similar anchor points together.
-            for (const auto& [point, eventType]: planeEventParam) {
-                for (const auto& direction: {Direction::X, Direction::Y, Direction::Z}) {
+            for (const auto &[point, eventType]: planeEventParam) {
+                for (const auto &direction: {Direction::X, Direction::Y, Direction::Z}) {
                     dest.emplace_back(eventType, Plane(point, direction), faceIndex);
                 }
             }
@@ -216,16 +218,16 @@ namespace polyhedralGravity {
     }
 
     //Step 4
-    std::unique_ptr<PlaneEventList> LogNPlane::mergePlaneEventLists(const PlaneEventList& first, const PlaneEventList& second) {
+    std::unique_ptr<PlaneEventList> LogNPlane::mergePlaneEventLists(const PlaneEventList &first, const PlaneEventList &second) {
         auto first_it{first.cbegin()};
         auto second_it{second.cbegin()};
         auto result{std::make_unique<PlaneEventList>()};
         result->reserve(first.size() + second.size());
 
-        while(first_it != first.cend() && second_it != second.cend()) {
-            if(first_it == first.cend() || second_it == second.cend()) {
+        while (first_it != first.cend() && second_it != second.cend()) {
+            if (first_it == first.cend() || second_it == second.cend()) {
                 result->push_back(first_it == first.cend() ? *second_it : *first_it);
-            } else if(*first_it < *second_it) {
+            } else if (*first_it < *second_it) {
                 result->push_back(*first_it++);
             } else {
                 result->push_back(*second_it++);

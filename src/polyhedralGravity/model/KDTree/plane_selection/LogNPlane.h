@@ -1,5 +1,6 @@
 #pragma once
 
+#include "polyhedralGravity/model/KDTree/SplitParam.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
 
 #include <unordered_set>
@@ -32,7 +33,7 @@ namespace polyhedralGravity {
         * @param minSide Whether to include planar faces to the bounding box closer to the origin.
         * @returns The PlaneEventLists for the bounding boxes closer and further away from the origin.
         */
-        static PlaneEventLists<2> generatePlaneEventSubsets(const SplitParam& splitParam, const PlaneEventList &planeEvents, const Plane &plane, bool minSide);
+        static PlaneEventLists<2> generatePlaneEventSubsets(const SplitParam &splitParam, const PlaneEventList &planeEvents, const Plane &plane, bool minSide);
 
         enum class Locale {
             MIN_ONLY,
@@ -64,6 +65,6 @@ namespace polyhedralGravity {
          * @param second The second PlaneEventList
          * @return A unique_ptr to a combined sorted PlaneEventList.
          */
-        static std::unique_ptr<PlaneEventList> mergePlaneEventLists(const PlaneEventList& first, const PlaneEventList& second);
+        static std::unique_ptr<PlaneEventList> mergePlaneEventLists(const PlaneEventList &first, const PlaneEventList &second);
     };
 }// namespace polyhedralGravity

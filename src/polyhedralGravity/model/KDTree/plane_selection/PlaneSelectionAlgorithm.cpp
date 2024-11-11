@@ -2,8 +2,6 @@
 
 namespace polyhedralGravity {
 
-    std::unique_ptr<PlaneSelectionAlgorithm> PlaneSelectionAlgorithm::planeSelectionStrategy{};
-
     std::pair<const double, bool> PlaneSelectionAlgorithm::costForPlane(const Box &boundingBox, const Plane &plane, const size_t trianglesMin, const size_t trianglesMax, const size_t trianglesPlanar) {
         //Checks if the split plane is one of the faces of the bounding box, if so the split is useless
         if (plane.axisCoordinate == boundingBox.minPoint[static_cast<int>(plane.orientation)] || plane.axisCoordinate == boundingBox.maxPoint[static_cast<int>(plane.orientation)]) {

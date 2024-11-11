@@ -1,7 +1,5 @@
 #include "polyhedralGravity/model/KDTree/plane_selection/LogNSquaredPlane.h"
 
-#include <oneapi/tbb/detail/_range_common.h>
-
 namespace polyhedralGravity {
     // O(N*log^2(N)) implementation
     std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> LogNSquaredPlane::findPlane(const SplitParam &splitParam) {
@@ -75,7 +73,7 @@ namespace polyhedralGravity {
         PlaneEventList events{};
         events.reserve(countFaces(splitParam.boundFaces) * 2);
         if (std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
-            return {};
+            return std::get<PlaneEventList>(splitParam.boundFaces);
         }
         const auto &boundTriangles{std::get<TriangleIndexList>(splitParam.boundFaces)};
         //transform the faces into vertices

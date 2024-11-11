@@ -4,6 +4,9 @@
 
 namespace polyhedralGravity {
 
+    //forward declaration
+    struct SplitParam;
+
     class PlaneSelectionAlgorithm {
     public:
         virtual ~PlaneSelectionAlgorithm() = default;
@@ -31,11 +34,6 @@ namespace polyhedralGravity {
         * Constant that describes the cost of intersecting a ray and a single object.
         */
         constexpr static double triangleIntersectionCost{1.0};
-
-        /**
-        * The algorithm used to find optimal split planes.
-        */
-        static std::unique_ptr<PlaneSelectionAlgorithm> planeSelectionStrategy;
 
     protected:
         /**

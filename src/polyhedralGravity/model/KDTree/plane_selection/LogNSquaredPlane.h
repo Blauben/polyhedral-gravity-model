@@ -1,5 +1,6 @@
 #pragma once
 
+#include "polyhedralGravity/model/KDTree/SplitParam.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
 
 #include <unordered_set>
@@ -9,12 +10,7 @@ namespace polyhedralGravity {
     public:
         std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> findPlane(const SplitParam &splitParam) override;
 
-    private:
-        /**
-         * Generates the optimal split plane considering a single dimension.
-         * @param splitParam Specifies the parameters needed to perform the splits.
-         * @return the optimal plane, its cost, the events that were generated in the process, and whether to include planar triangles in the minimal bounding box.
-         */
+        //TODO: move to private
         static std::tuple<Plane, double, PlaneEventList, bool> findPlaneForSingleDimension(const SplitParam &splitParam);
         /**
         * Generates the vector of PlaneEvents comprising all the possible candidate planes. {@link PlaneEvent}
@@ -22,6 +18,14 @@ namespace polyhedralGravity {
         * @return The vector of PlaneEvents
         */
         static PlaneEventList generatePlaneEvents(const SplitParam &splitParam);
+
+    private:
+        /**
+         * Generates the optimal split plane considering a single dimension.
+         * @param splitParam Specifies the parameters needed to perform the splits.
+         * @return the optimal plane, its cost, the events that were generated in the process, and whether to include planar triangles in the minimal bounding box.
+         */
+
 
         /**
         * When an optimal plane has been found extract the index lists of faces for further subdivision through child nodes.

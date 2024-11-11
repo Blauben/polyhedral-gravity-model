@@ -1,7 +1,7 @@
 #pragma once
 
-#include "polyhedralGravity/model/KDTree/KDTree.h"
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/TreeNode.h"
 #include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
 
 #include <algorithm>
@@ -62,15 +62,20 @@ namespace polyhedralGravity {
          */
         [[nodiscard]] std::vector<std::shared_ptr<TreeNode>> getChildrenForIntersection(const Array3 &origin, const Array3 &ray);
 
-        void printTree() override { //TODO: remove
+        void printTree() override {//TODO: remove
             std::cout << "SplitNode ID:  " << nodeId << " , Depth: " << this->_recursionDepth << ", Plane Coordinate: " << std::to_string(_plane.axisCoordinate) << " Direction: " << std::to_string(static_cast<int>(_plane.orientation)) << std::endl;
             std::cout << "Children; Lesser: " << (_lesser != nullptr ? std::to_string(_lesser->nodeId) : "None") << "; Greater: " << (_greater != nullptr ? std::to_string(_greater->nodeId) : "None") << std::endl;
-            if(_lesser != nullptr) {
+            if (_lesser != nullptr) {
                 _lesser->printTree();
             }
-            if(_greater != nullptr) {
+            if (_greater != nullptr) {
                 _greater->printTree();
             }
+        }
+
+        //TODO: remove
+        auto getTriangleSplitSets() {
+            return std::move(_triangleLists);
         }
 
 

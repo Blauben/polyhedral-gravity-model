@@ -92,6 +92,13 @@ namespace polyhedralGravity {
             return point;
         }
 
+        /**
+        * Equality operator used for testing purposes
+        */
+        bool operator==(const Plane &other) const {
+            return axisCoordinate == other.axisCoordinate && orientation == other.orientation;
+        }
+
         Plane() = default;
         Plane(const Array3 &point, Direction direction)
             : axisCoordinate(point[static_cast<int>(direction)]), orientation(direction) {
@@ -245,12 +252,12 @@ namespace polyhedralGravity {
                 const double distanceTo{dot(to - plane.originPoint(), plane.normal(flipPlaneNormal))};
                 if (isInside(distanceFrom) && isInside(distanceTo)) {
                     dest.push_back(to);
-                } else if(isInside(distanceFrom) && !isInside(distanceTo)) {
-                    dest.emplace_back(intersectionPoint(from, to, distanceFrom, distanceTo ));
-                } else if(!isInside(distanceTo) && isInside(distanceFrom)) {
+                } else if (isInside(distanceFrom) && !isInside(distanceTo)) {
+                    dest.emplace_back(intersectionPoint(from, to, distanceFrom, distanceTo));
+                } else if (!isInside(distanceTo) && isInside(distanceFrom)) {
                     dest.emplace_back(intersectionPoint(from, to, distanceFrom, distanceTo));
                     dest.push_back(to);
-                } else if(!isInside(distanceFrom) && !isInside(distanceTo)) {
+                } else if (!isInside(distanceFrom) && !isInside(distanceTo)) {
                     //do nothing
                 }
             }
@@ -305,10 +312,17 @@ namespace polyhedralGravity {
             if (this->plane.axisCoordinate != other.plane.axisCoordinate) {
                 return this->plane.axisCoordinate < other.plane.axisCoordinate;
             }
-            if(this->plane.orientation == other.plane.orientation) {
+            if (this->plane.orientation == other.plane.orientation) {
                 return this->type < other.type;
             }
             return static_cast<unsigned>(this->plane.orientation) < static_cast<unsigned>(other.plane.orientation);
+        }
+
+        /**
+         *Equality operator used for testing purposes
+         */
+        bool operator==(const PlaneEvent &other) const {
+            return type == other.type && plane == other.plane && faceIndex == other.faceIndex;
         }
     };
 
@@ -368,42 +382,6 @@ namespace polyhedralGravity {
                           triangles);
     }
 
-    /**
-     * Helper struct to bundle important parameters required for splitting a Polyhedron for better readability.
-     */
-    struct SplitParam {
-        /**
-         * The vertices that compose the Polyhedron.
-         */
-        const std::vector<Array3> &vertices;
-        /**
-         * The faces that connect the vertices to render the Polyhedron.
-         */
-        const std::vector<IndexArray3> &faces;
-        /**
-         * Either an index list of faces that are included in the current bounding box of the KDTree or a list of PlaneEvents containing the information about thr bound faces. Important when building deeper levels of a KDTree.
-         */
-        std::variant<TriangleIndexList, PlaneEventList> boundFaces;
-        /**
-         * The current bounding box that should be divided further by the KDTree.
-         */
-        Box boundingBox;
-        /**
-         * The direction in which the current bounding box should be divided by further.
-         * Refer to {@link Plane} on how to interpret the Direction.
-         */
-        mutable Direction splitDirection;
-
-        /**
-         * Constructor that initializes all fields. Intended for the use with std::make_unique. See {@link SplitParam} fields for further information.
-         *
-         */
-        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const Box &boundingBox, const Direction splitDirection)
-            : vertices{vertices}, faces{faces}, boundFaces{TriangleIndexList(faces.size())}, boundingBox{boundingBox}, splitDirection{splitDirection} {
-            auto &indexList = std::get<TriangleIndexList>(boundFaces);
-            std::iota(indexList.begin(), indexList.end(), 0);
-        }
-    };
 
     /**
         * An iterator transforming face indices to vertices and returning both.

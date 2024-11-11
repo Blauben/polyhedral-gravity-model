@@ -1,6 +1,8 @@
 #pragma once
 
+#include "polyhedralGravity/model/KDTree/SplitParam.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
+
 
 namespace polyhedralGravity {
 

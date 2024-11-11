@@ -1,4 +1,4 @@
-#include "SquaredPlane.h"
+#include "polyhedralGravity/model/KDTree/plane_selection/SquaredPlane.h"
 
 namespace polyhedralGravity {
 

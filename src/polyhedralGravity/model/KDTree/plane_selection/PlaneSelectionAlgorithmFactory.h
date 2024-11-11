@@ -17,6 +17,6 @@ namespace polyhedralGravity {
          * @param algorithm Specifies which algorithm to return.
          * @return The algorithm which executes the requested strategy.
          */
-        static std::unique_ptr<PlaneSelectionAlgorithm> create(PlaneSelectionAlgorithm::Algorithm algorithm);
+        static std::shared_ptr<PlaneSelectionAlgorithm> create(PlaneSelectionAlgorithm::Algorithm algorithm);
     };
 }// namespace polyhedralGravity
