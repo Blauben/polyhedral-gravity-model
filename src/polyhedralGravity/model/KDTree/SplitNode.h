@@ -16,7 +16,6 @@ namespace polyhedralGravity {
      * A TreeNode contained in a KDTree that splits the spatial hierarchy into two new sub boxes. Intersection tests are delegated to the child nodes.
      */
     class SplitNode final : public TreeNode {
-
         /**
         * The SplitNode that contains the bounding box closer to the origin with respect to the split plane
         */

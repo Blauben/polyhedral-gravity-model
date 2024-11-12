@@ -254,7 +254,7 @@ namespace polyhedralGravity {
                     dest.push_back(to);
                 } else if (isInside(distanceFrom) && !isInside(distanceTo)) {
                     dest.emplace_back(intersectionPoint(from, to, distanceFrom, distanceTo));
-                } else if (!isInside(distanceTo) && isInside(distanceFrom)) {
+                } else if (!isInside(distanceFrom) && isInside(distanceTo)) {
                     dest.emplace_back(intersectionPoint(from, to, distanceFrom, distanceTo));
                     dest.push_back(to);
                 } else if (!isInside(distanceFrom) && !isInside(distanceTo)) {

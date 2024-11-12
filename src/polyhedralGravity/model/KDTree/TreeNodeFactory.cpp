@@ -10,15 +10,6 @@ namespace polyhedralGravity {
         const size_t numberOfFaces{countFaces(splitParam.boundFaces)};
         //find optimal plane splitting this node's bounding box
         auto [plane, planeCost, triangleLists] = splitParam.planeSelectionStrategy->findPlane(splitParam);
-        //TODO: remove
-        std::cout << typeid(splitParam.planeSelectionStrategy).name();
-        if (std::holds_alternative<PlaneEventLists<2>>(triangleLists)) {
-            std::cout << "PlaneEvent" << std::endl;
-        } else if (std::holds_alternative<TriangleIndexLists<2>>(triangleLists)) {
-            std::cout << "TriangleIndex" << std::endl;
-        } else {
-            std::cout << "Unknown" << std::endl;
-        }
         const double costWithoutSplit = static_cast<double>(numberOfFaces) * PlaneSelectionAlgorithm::triangleIntersectionCost;
 
         // Check if the boxes are divided into smaller regions
