@@ -69,11 +69,9 @@ namespace polyhedralGravity {
             auto [tx_2, ty_2, tz_2] = lambdaIntersectSlabPoint(maxPoint);
 
             //return the parameters in ordered by '<'
-            const auto lambdaMinMaxPair = [](const double first, const double second) -> std::pair<double, double> { return {std::min(first, second), std::max(first, second)}; };
-
-            auto [tx_enter, tx_exit] = lambdaMinMaxPair(tx_1, tx_2);
-            auto [ty_enter, ty_exit] = lambdaMinMaxPair(ty_1, ty_2);
-            auto [tz_enter, tz_exit] = lambdaMinMaxPair(tz_1, tz_2);
+            auto [tx_enter, tx_exit] = std::minmax(tx_1, tx_2);
+            auto [ty_enter, ty_exit] = std::minmax(ty_1, ty_2);
+            auto [tz_enter, tz_exit] = std::minmax(tz_1, tz_2);
 
             //calculate the point where all slabs have been entered: t_enter
             const double t_enter{std::max(tx_enter, std::max(ty_enter, tz_enter))};
@@ -135,6 +133,46 @@ namespace polyhedralGravity {
         SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, Box boundingBox, Direction splitDirection)
             : vertices{vertices}, faces{faces}, indexBoundFaces{TriangleIndexList(faces.size())}, boundingBox{std::move(boundingBox)}, splitDirection{splitDirection} {
             std::iota(indexBoundFaces.begin(), indexBoundFaces.end(), 0);
+        }
+    };
+
+    /**
+    * Used by {@link PlaneEvent} to position the face that generated the event relative to the generated plane.
+    */
+    enum class PlaneEventType {
+        ending = 0,
+        planar = 1,
+        starting = 2,
+    };
+
+    /**
+     * Generated when traversing the vector of faces and building their candidate planes.
+     */
+    struct PlaneEvent {
+        PlaneEventType type;
+        /**
+         * The candidate plane suggested by the face included in this struct.
+         */
+        Plane plane;
+        /**
+         * The index of the face that generated this candidate plane.
+         */
+        unsigned int faceIndex;
+
+        PlaneEvent(const PlaneEventType type, const Plane plane, const unsigned faceIndex)
+            : type{type}, plane{plane}, faceIndex{faceIndex} {
+        }
+
+        /**
+         * Less operator used for sorting an PlaneEvent vector.
+         * @param other the PlaneEvent to compare this to.
+         * @return true if this should precede the other argument.
+         */
+        bool operator<(const PlaneEvent &other) const {
+            if (this->plane.axisCoordinate == other.plane.axisCoordinate) {
+                return this->type < other.type;
+            }
+            return this->plane.axisCoordinate < other.plane.axisCoordinate;
         }
     };
 }// namespace polyhedralGravity
