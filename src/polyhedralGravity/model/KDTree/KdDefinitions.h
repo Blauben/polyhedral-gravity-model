@@ -5,6 +5,7 @@
 #include <array>
 #include <memory>
 #include <thrust/iterator/transform_iterator.h>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>

@@ -4,10 +4,10 @@ namespace polyhedralGravity {
 
     // O(N^2) implementation
     std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> SquaredPlane::findPlane(const SplitParam &splitParam) {
-        if(std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
+        if (std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
             throw std::invalid_argument("SquaredPlane does not support PlaneEventLists in SplitParam argument");
         }
-        const auto& boundFaces = std::get<TriangleIndexList>(splitParam.boundFaces);
+        const auto &boundFaces = std::get<TriangleIndexList>(splitParam.boundFaces);
         //initialize the default plane and make it costly
         double cost = std::numeric_limits<double>::infinity();
         Plane optPlane{0, splitParam.splitDirection};
@@ -46,10 +46,10 @@ namespace polyhedralGravity {
 
     TriangleIndexLists<3> SquaredPlane::containedTriangles(const SplitParam &splitParam, const Plane &split) {
         using namespace polyhedralGravity;
-        if(std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
+        if (std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
             throw std::invalid_argument("SquaredPlane does not support PlaneEventLists in SplitParam argument");
         }
-        const auto& boundFaces = std::get<TriangleIndexList>(splitParam.boundFaces);
+        const auto &boundFaces = std::get<TriangleIndexList>(splitParam.boundFaces);
         //define three sets of triangles: closer to the origin, further away, in the plane
         auto index_less = std::make_unique<TriangleIndexList>(boundFaces.size() / 2);
         auto index_greater = std::make_unique<TriangleIndexList>(boundFaces.size() / 2);
@@ -81,6 +81,6 @@ namespace polyhedralGravity {
                 index_equal->push_back(faceIndex);
             }
         });
-        return std::array{(std::move(index_less)), (std::move(index_greater)), (std::move(index_equal))};
+        return std::array{std::move(index_less), std::move(index_greater), std::move(index_equal)};
     }
 }// namespace polyhedralGravity

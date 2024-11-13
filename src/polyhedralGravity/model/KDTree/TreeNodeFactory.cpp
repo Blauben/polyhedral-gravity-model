@@ -13,20 +13,18 @@ namespace polyhedralGravity {
         const double costWithoutSplit = static_cast<double>(numberOfFaces) * PlaneSelectionAlgorithm::triangleIntersectionCost;
 
         // Check if the boxes are divided into smaller regions
-        bool splitFailsToReduceSize = std::visit([numberOfFaces](auto &typeLists) {
-            // Count faces in each split box
-            const size_t facesInMinimalBox = typeLists[0]->size();
-            const size_t facesInMaximalBox = typeLists[1]->size();
+        bool splitFailsToReduceSize = std::isinf(planeCost) || std::visit([numberOfFaces](auto &typeLists) {
+                                          // Count faces in each split box
+                                          const size_t facesInMinimalBox = typeLists[0]->size();
+                                          const size_t facesInMaximalBox = typeLists[1]->size();
 
-            // Ensure that the split meaningfully divides faces
-            return (numberOfFaces <= facesInMinimalBox + facesInMaximalBox) && (facesInMinimalBox == 0 || facesInMaximalBox == 0);
-        },
-                                                 triangleLists);
-        // Condition to avoid further splitting if plane cost is infinite (no plane found to be evaluated) or split is ineffective
-        const bool boxesNotDividedIntoSmaller = std::isinf(planeCost) || splitFailsToReduceSize;
+                                          // Ensure that the split meaningfully divides faces
+                                          return (numberOfFaces <= facesInMinimalBox + facesInMaximalBox) && (facesInMinimalBox == 0 || facesInMaximalBox == 0);
+                                      },
+                                                                          triangleLists);
 
-        //if the cost of splitting this node further is greater than just traversing the bound triangles, then don't split and return a LeafNode
-        if (planeCost > costWithoutSplit || boxesNotDividedIntoSmaller) {
+        //if the cost of splitting this node further is greater than just traversing the bound triangles or splitting does not reduce the amount of work in the resulting sub boxes, then don't split and return a LeafNode
+        if (planeCost > costWithoutSplit || splitFailsToReduceSize) {
             return std::make_unique<LeafNode>(splitParam, currentRecursionDepth, nodeId++);
         }
         //if not more costly, perform the split
