@@ -5,7 +5,6 @@
 #include <array>
 #include <memory>
 #include <thrust/iterator/transform_iterator.h>
-#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -296,8 +295,7 @@ namespace polyhedralGravity {
         /**
          * The index of the face that generated this candidate plane.
          */
-        unsigned faceIndex;
-
+        unsigned int faceIndex;
 
         PlaneEvent(const PlaneEventType type, const Plane plane, const unsigned faceIndex)
             : type{type}, plane{plane}, faceIndex{faceIndex} {
