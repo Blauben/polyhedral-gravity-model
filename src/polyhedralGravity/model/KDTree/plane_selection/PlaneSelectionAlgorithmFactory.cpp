@@ -8,9 +8,9 @@ namespace polyhedralGravity {
                 return std::make_shared<NoTreePlane>();
             case Algorithm::QUADRATIC:
                 return std::make_shared<SquaredPlane>();
+            default:
             case Algorithm::LOGSQUARED:
                 return std::make_shared<LogNSquaredPlane>();
-            default:
             case Algorithm::LOG:
                 return std::make_shared<LogNPlane>();
         }

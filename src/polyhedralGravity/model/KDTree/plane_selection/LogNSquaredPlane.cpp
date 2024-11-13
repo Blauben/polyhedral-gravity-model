@@ -27,7 +27,7 @@ namespace polyhedralGravity {
         Plane optPlane{};
         bool minSide{true};
         //each vertex proposes a split plane candidate: create an event and queue it in the buffer
-        PlaneEventList events{std::move(generatePlaneEvents(splitParam))};
+        PlaneEventList events{std::move(generatePlaneEventsFromFaces(splitParam, {splitParam.splitDirection}))};
         size_t trianglesMin{0}, trianglesMax{countFaces(splitParam.boundFaces)}, trianglesPlanar{0};
         //traverse all the events
         int i{0};
@@ -68,42 +68,6 @@ namespace polyhedralGravity {
         return {optPlane, cost, events, minSide};
     }
 
-
-    PlaneEventList LogNSquaredPlane::generatePlaneEvents(const SplitParam &splitParam) {
-        PlaneEventList events{};
-        events.reserve(countFaces(splitParam.boundFaces) * 2);
-        if (std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
-            return std::get<PlaneEventList>(splitParam.boundFaces);
-        }
-        const auto &boundTriangles{std::get<TriangleIndexList>(splitParam.boundFaces)};
-        //transform the faces into vertices
-        auto [vertex3_begin, vertex3_end] = transformIterator(boundTriangles.cbegin(), boundTriangles.cend(), splitParam.vertices, splitParam.faces);
-        std::for_each(vertex3_begin, vertex3_end, [&splitParam, &events](const auto &indexAndTriplet) {
-            const auto [index, triplet] = indexAndTriplet;
-            //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
-            const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3>>(splitParam.boundingBox.clipToVoxel(triplet));
-            // if the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
-            if (minPoint == maxPoint) {
-                events.emplace_back(
-                        PlaneEventType::planar,
-                        Plane(minPoint, splitParam.splitDirection),
-                        index);
-                return;
-            }
-            //else create a starting and ending event consisting of the planes defined by the min and max points of the face's bounding box.
-            events.emplace_back(
-                    PlaneEventType::starting,
-                    Plane(minPoint, splitParam.splitDirection),
-                    index);
-            events.emplace_back(
-                    PlaneEventType::ending,
-                    Plane(maxPoint, splitParam.splitDirection),
-                    index);
-        });
-        //sort the events by plane position and then by PlaneEventType. Refer to {@link PlaneEventType} for the specific order
-        std::sort(events.begin(), events.end());
-        return events;
-    }
 
     TriangleIndexLists<2> LogNSquaredPlane::generateTriangleSubsets(const PlaneEventList &planeEvents, const Plane &plane, const bool minSide) {
         auto facesMin = std::make_unique<TriangleIndexList>();

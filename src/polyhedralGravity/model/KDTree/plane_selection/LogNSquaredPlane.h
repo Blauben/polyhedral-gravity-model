@@ -1,24 +1,17 @@
 #pragma once
 
 #include "polyhedralGravity/model/KDTree/SplitParam.h"
-#include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
+#include "polyhedralGravity/model/KDTree/plane_selection/PlaneEventAlgorithm.h"
 
 #include <unordered_set>
 
 namespace polyhedralGravity {
-    class LogNSquaredPlane final : public PlaneSelectionAlgorithm {
+    class LogNSquaredPlane final : public PlaneEventAlgorithm {
     public:
         std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> findPlane(const SplitParam &splitParam) override;
 
         //TODO: move to private
         static std::tuple<Plane, double, PlaneEventList, bool> findPlaneForSingleDimension(const SplitParam &splitParam);
-        /**
-        * Generates the vector of PlaneEvents comprising all the possible candidate planes. {@link PlaneEvent}
-        * @param splitParam Contains the parameters of the scene to find candidate planes for. {@link SplitParam}
-        * @return The vector of PlaneEvents
-        */
-        static PlaneEventList generatePlaneEvents(const SplitParam &splitParam);
-
     private:
         /**
          * Generates the optimal split plane considering a single dimension.
