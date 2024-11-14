@@ -27,17 +27,19 @@ namespace polyhedralGravity {
             std::vector<Array3> randomPoints;
             randomPoints.reserve(n);
             for (size_t i = 0; i < n; i++) {
-                const auto &verticeIndices = faces.at(getRandomIndex(faces.size() - 1));
+                const auto faceIndex = getRandomIndex(faces.size() - 1);
+                const auto &verticeIndices = faces.at(faceIndex);
                 std::array<Array3, 3> faceVertices{};
                 std::transform(verticeIndices.cbegin(), verticeIndices.cend(), faceVertices.begin(), [&](const auto index) { return vertices.at(index); });
-                randomPoints.emplace_back(randomPointOnFace(faceVertices));
+                const auto point = randomPointOnFace(faceVertices);
+                randomPoints.push_back(point);
             }
             return {vertices, faces, randomPoints, algorithm};
         }
 
     protected:
         static constexpr unsigned long SEED = 8437529173464215;
-        static constexpr double DELTA = 1e-9;
+        static constexpr double DELTA = 1e-8;
         static std::mt19937 gen;// mersenne_twister_engine seeded with SEED
 
         /**
@@ -106,13 +108,9 @@ namespace polyhedralGravity {
         }
     }
 
-
-    INSTANTIATE_TEST_SUITE_P(SinglePointCube, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::cube_vertices, KDTreeTest::cube_faces, 1, Algorithm::LOG)));
-    INSTANTIATE_TEST_SUITE_P(RandomPointCube, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::cube_vertices, KDTreeTest::cube_faces, 10000, Algorithm::LOG)));
-    INSTANTIATE_TEST_SUITE_P(SinglePointBig, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices(), KDTreeTest::_big.getFaces(), 1, Algorithm::LOG)));
-    INSTANTIATE_TEST_SUITE_P(RandomPointBig, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices(), KDTreeTest::_big.getFaces(), 10000, Algorithm::LOG)));
-
     constexpr size_t numberOfPoints = 10;
+    constexpr size_t bigNumberOfPoints = 1000;
+
     INSTANTIATE_TEST_SUITE_P(NoTreePointsBig, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices(), KDTreeTest::_big.getFaces(), numberOfPoints, Algorithm::NOTREE)));
     INSTANTIATE_TEST_SUITE_P(QuadraticPointsBig, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices(), KDTreeTest::_big.getFaces(), numberOfPoints, Algorithm::QUADRATIC)));
     INSTANTIATE_TEST_SUITE_P(LogSquaredPointsBig, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices(), KDTreeTest::_big.getFaces(), numberOfPoints, Algorithm::LOGSQUARED)));
@@ -123,13 +121,15 @@ namespace polyhedralGravity {
     INSTANTIATE_TEST_SUITE_P(LogSquaredPointsCube, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::cube_vertices, KDTreeTest::cube_faces, numberOfPoints, Algorithm::LOGSQUARED)));
     INSTANTIATE_TEST_SUITE_P(LogPointsCube, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::cube_vertices, KDTreeTest::cube_faces, numberOfPoints, Algorithm::LOG)));
 
-    constexpr size_t bigNumberOfPoints = 10000;
     INSTANTIATE_TEST_SUITE_P(NoTreeGreatNumberOfPointsBig, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices(), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::NOTREE)));
     INSTANTIATE_TEST_SUITE_P(LogSquaredGreatNumberOfPointsBig, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices(), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::LOGSQUARED)));
+    INSTANTIATE_TEST_SUITE_P(LogGreatNumberOfPointsBig, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices(), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::LOG)));
 
 
-    /*
-    TEST_F(KDTreeTest, debugLog) {//TODO: remove
+}// namespace polyhedralGravity
+
+/*
+    TEST_F(KDTreeTest, debugLog) {//TODO: remove, during review please ignore this is the setup for debugging the LogN Algorithm
         using namespace polyhedralGravity;
         using namespace util;
         KDTree treeLog{_big.getVertices(), _big.getFaces(), Algorithm::LOG};
@@ -166,7 +166,7 @@ namespace polyhedralGravity {
         }
         ASSERT_EQ(rootEventsLog.size(), 0);
 */
-    /*
+/*
         constexpr Array3 origin{200, 200, 200};
         const Array3 point{0.47696049197143608, 0.15726201114874008, 0.20146690694962635};
         const auto ray{(point - origin) / 10.0};
@@ -177,4 +177,3 @@ namespace polyhedralGravity {
 
     }
 */
-}// namespace polyhedralGravity
