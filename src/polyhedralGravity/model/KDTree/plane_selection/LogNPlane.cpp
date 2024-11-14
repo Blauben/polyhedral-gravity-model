@@ -28,7 +28,6 @@ namespace polyhedralGravity {
             Plane &candidatePlane = events[i].plane;
             //for each plane calculate the faces whose vertices lie in the plane. Differentiate between the face starting in the plane, ending in the plane or all vertices lying in the plane
             size_t p_start{0}, p_end{0}, p_planar{0};
-            auto debug = std::count_if(events.cbegin(), events.cend(), [](const auto &event) { return event.plane.orientation == Direction::Y; });//TODO: remove
             //count all faces that end in the plane, this works because the PlaneEvents are sorted by position and then by PlaneEventType
             while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::ending) {
                 p_end++;

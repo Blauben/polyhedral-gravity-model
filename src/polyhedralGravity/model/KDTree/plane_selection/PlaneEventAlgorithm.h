@@ -6,8 +6,7 @@
 
 namespace polyhedralGravity {
     class PlaneEventAlgorithm : public PlaneSelectionAlgorithm {
-    public:
-        //TODO: move to protected after testing
+    protected:
         /**
         * Generates the vector of PlaneEvents comprising all the possible candidate planes using an index list of faces. {@link PlaneEvent}
         * @param splitParam Contains the parameters of the scene to find candidate planes for. {@link SplitParam}

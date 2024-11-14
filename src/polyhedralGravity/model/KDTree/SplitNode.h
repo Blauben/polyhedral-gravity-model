@@ -72,12 +72,6 @@ namespace polyhedralGravity {
             }
         }
 
-        //TODO: remove
-        auto getTriangleSplitSets() {
-            return std::move(_triangleLists);
-        }
-
-
     private:
         /**
         * Intersects a ray with the splitPlane.
