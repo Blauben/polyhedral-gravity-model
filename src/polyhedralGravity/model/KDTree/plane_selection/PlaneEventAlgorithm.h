@@ -4,8 +4,12 @@
 #include "polyhedralGravity/model/KDTree/SplitParam.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
 
+#include <gtest/gtest_prod.h>//TODO: remove
+
+
 namespace polyhedralGravity {
     class PlaneEventAlgorithm : public PlaneSelectionAlgorithm {
+        FRIEND_TEST(KDTreeTest, debugLog);//TODO: remove
     protected:
         /**
         * Generates the vector of PlaneEvents comprising all the possible candidate planes using an index list of faces. {@link PlaneEvent}

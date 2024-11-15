@@ -183,9 +183,9 @@ namespace polyhedralGravity {
         auto result{std::make_unique<PlaneEventList>()};
         result->reserve(first.size() + second.size());
 
-        while (first_it != first.cend() && second_it != second.cend()) {
+        while (first_it != first.cend() || second_it != second.cend()) {
             if (first_it == first.cend() || second_it == second.cend()) {
-                result->push_back(first_it == first.cend() ? *second_it : *first_it);
+                result->push_back(first_it == first.cend() ? *second_it++ : *first_it++);
             } else if (*first_it < *second_it) {
                 result->push_back(*first_it++);
             } else {
