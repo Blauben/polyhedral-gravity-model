@@ -12,6 +12,10 @@ namespace polyhedralGravity {
     public:
         virtual ~TreeNode() = default;
 
+        /**
+        * The current node's id. Follows the convention that the left child gets the id 2 * <current_id> + 1 and
+        * the right child 2 * <currrent_id> + 2. Starts with 0 at the root node.
+         */
         const size_t nodeId;
 
         virtual void printTree() = 0;//TODO: remove
@@ -20,15 +24,11 @@ namespace polyhedralGravity {
         /**
         * Protected constructor intended only for child classes. Please use {@link TreeNodeFactory} instead.
         */
-        explicit TreeNode(const SplitParam &splitParam, size_t currentRecursionDepth, size_t nodeId);
+        explicit TreeNode(const SplitParam &splitParam, size_t nodeId);
         /**
         * Stores parameters required for building child nodes lazily. Gets freed if the Node is an inner node and after both children are built.
         */
         std::unique_ptr<SplitParam> _splitParam;
-        /**
-         * the distance to the tree's root from this node. Used to limit the depth and the size of the tree.
-         */
-        unsigned long _recursionDepth;
     };
 
 }// namespace polyhedralGravity

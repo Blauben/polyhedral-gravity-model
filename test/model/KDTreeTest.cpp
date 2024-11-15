@@ -125,55 +125,19 @@ namespace polyhedralGravity {
     INSTANTIATE_TEST_SUITE_P(LogSquaredGreatNumberOfPointsBig, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices(), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::LOGSQUARED)));
     INSTANTIATE_TEST_SUITE_P(LogGreatNumberOfPointsBig, KDTreeTest, ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices(), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::LOG)));
 
-
-}// namespace polyhedralGravity
-
-/*
-    TEST_F(KDTreeTest, debugLog) {//TODO: remove, during review please ignore this is the setup for debugging the LogN Algorithm
+    TEST_F(KDTreeTest, debugLog) {
+        //TODO: remove, during review please ignore this is the setup for debugging the LogN Algorithm
         using namespace polyhedralGravity;
         using namespace util;
+        const Array3 origin{200, 200, 200};
+        const Array3 point{-0.72248252103197086, 0.25536135525457371, -0.038018900709157172};
+        const Array3 ray{(point - origin) / 10.0};
         KDTree treeLog{_big.getVertices(), _big.getFaces(), Algorithm::LOG};
         KDTree treeLogSquared{_big.getVertices(), _big.getFaces(), Algorithm::LOGSQUARED};
-        auto variantLog = std::dynamic_pointer_cast<SplitNode>(treeLog.getRootNode())->getTriangleSplitSets();
-        auto variantLogSquared = std::dynamic_pointer_cast<SplitNode>(treeLogSquared.getRootNode())->getTriangleSplitSets();
-        ASSERT_TRUE(std::holds_alternative<PlaneEventLists<2>>(variantLog));
-        ASSERT_TRUE(std::holds_alternative<TriangleIndexLists<2>>(variantLogSquared));
-        const auto rootEventsLog3D = std::get<PlaneEventLists<2>>(std::move(variantLog));
-        const auto rootTrianglesLogSquared = std::get<TriangleIndexLists<2>>(std::move(variantLogSquared));
-        PlaneEventLists<2> rootEventsLogSquared{};
-        std::transform(rootTrianglesLogSquared.cbegin(), rootTrianglesLogSquared.cend(), rootEventsLogSquared.begin(), [&treeLogSquared](const auto &list) {
-            const SplitParam splitParam(_big.getVertices(), _big.getFaces(), *list, Box::getBoundingBox(_big.getVertices()).splitBox(Plane(0.059034641527489787, Direction::X)).first, Direction::Y, PlaneSelectionAlgorithmFactory::create(Algorithm::LOGSQUARED));
-            return std::make_unique<PlaneEventList>(PlaneEventAlgorithm::generatePlaneEventsFromFaces(splitParam, {Direction::X, Direction::Y, Direction::Z}));
-        });
-        std::vector<PlaneEvent> event1294{};
-        std::copy_if(rootEventsLog3D[0]->cbegin(), rootEventsLog3D[0]->cend(), std::back_inserter(event1294), [](const auto &event) { return event.faceIndex == 1294; });
-        std::sort(event1294.begin(), event1294.end());
-        //all plane events of logNSquared are contained in logN
-        PlaneEventList errors{};
-        for (const auto &planeEvent: *(rootEventsLogSquared[0])) {
-            auto it = std::find(rootEventsLog3D[0]->cbegin(), rootEventsLog3D[0]->cend(), planeEvent);
-            if (it == rootEventsLog3D[0]->cend()) {
-                errors.push_back(planeEvent);
-            }
-        }
-        ASSERT_EQ(errors.size(), 0);
-        /*
-        std::vector<PlaneEvent> result{};
-        for (auto i = 0; i < 2; i++) {
-            for (const PlaneEvent &event: *(rootEventsLogSquared[i])) {
-                std::copy_if(root)
-            }
-        }
-        ASSERT_EQ(rootEventsLog.size(), 0);
-*/
-/*
-        constexpr Array3 origin{200, 200, 200};
-        const Array3 point{0.47696049197143608, 0.15726201114874008, 0.20146690694962635};
-        const auto ray{(point - origin) / 10.0};
-        std::set<Array3> intersections;
-        tree.getFaceIntersections(origin, ray, intersections);
-        tree.printTree();
-        ASSERT_THAT(intersections, Contains(ElementsAre(DoubleNear(point[0], DELTA), DoubleNear(point[1], DELTA), DoubleNear(point[2], DELTA))));
-
+        std::set<Array3> intersections{};
+        treeLog.getFaceIntersections(origin, ray, intersections);
+        treeLogSquared.getFaceIntersections(origin, ray, intersections);
+        treeLog.printTree();
+        treeLogSquared.printTree();
     }
-*/
+}// namespace polyhedralGravity

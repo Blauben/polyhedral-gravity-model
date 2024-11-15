@@ -2,18 +2,18 @@
 
 namespace polyhedralGravity {
 
-    LeafNode::LeafNode(const SplitParam &splitParam, const size_t currentRecursionDepth, const size_t nodeId)
-        : TreeNode(splitParam, currentRecursionDepth, nodeId) {
+    LeafNode::LeafNode(const SplitParam &splitParam, const size_t nodeId)
+        : TreeNode(splitParam, nodeId) {
     }
 
     void LeafNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) const {
-        if (std::holds_alternative<PlaneEventList>(this->_splitParam->boundFaces)) {
-            this->_splitParam->boundFaces = convertEventsToFaces(std::get<PlaneEventList>(this->_splitParam->boundFaces));
+        if (std::holds_alternative<PlaneEventList>(_splitParam->boundFaces)) {
+            _splitParam->boundFaces = convertEventsToFaces(std::get<PlaneEventList>(_splitParam->boundFaces));
         }
-        const TriangleIndexList &boundTriangles{std::get<TriangleIndexList>(this->_splitParam->boundFaces)};
+        const TriangleIndexList &boundTriangles{std::get<TriangleIndexList>(_splitParam->boundFaces)};
         //traverses all contained faces and performs intersection tests with them -> store results in the buffer passed in the arguments
         std::for_each(boundTriangles.cbegin(), boundTriangles.cend(), [this, &ray, &origin, &intersections](const size_t faceIndex) {
-            const std::optional<Array3> intersection = rayIntersectsTriangle(origin, ray, this->_splitParam->faces[faceIndex]);
+            const std::optional<Array3> intersection = rayIntersectsTriangle(origin, ray, _splitParam->faces[faceIndex]);
             if (intersection.has_value()) {
                 intersections.insert(intersection.value());
             }
@@ -24,7 +24,7 @@ namespace polyhedralGravity {
         Array3Triplet edgeVertices{};
         //transforms a face to its vertices
         std::transform(triangleVertexIndex.cbegin(), triangleVertexIndex.cend(), edgeVertices.begin(), [this](const size_t vertexIndex) {
-            return this->_splitParam->vertices[vertexIndex];
+            return _splitParam->vertices[vertexIndex];
         });
         return rayIntersectsTriangle(rayOrigin, rayVector, edgeVertices);
     }

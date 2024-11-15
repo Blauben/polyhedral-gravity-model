@@ -1,11 +1,11 @@
 #include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
 
 namespace polyhedralGravity {
-    std::unique_ptr<TreeNode> TreeNodeFactory::createTreeNode(const SplitParam &splitParam, size_t currentRecursionDepth) {
-        static size_t nodeId{0};
+
+    std::unique_ptr<TreeNode> TreeNodeFactory::createTreeNode(const SplitParam &splitParam, size_t nodeId) {
         //avoid splitting after certain tree depth
-        if (currentRecursionDepth >= MAX_RECURSION_DEPTH) {
-            return std::make_unique<LeafNode>(splitParam, currentRecursionDepth, nodeId++);
+        if (recursionDepth(nodeId) >= MAX_RECURSION_DEPTH) {
+            return std::make_unique<LeafNode>(splitParam, nodeId);
         }
         const size_t numberOfFaces{countFaces(splitParam.boundFaces)};
         //find optimal plane splitting this node's bounding box
@@ -25,10 +25,10 @@ namespace polyhedralGravity {
 
         //if the cost of splitting this node further is greater than just traversing the bound triangles or splitting does not reduce the amount of work in the resulting sub boxes, then don't split and return a LeafNode
         if (planeCost > costWithoutSplit || splitFailsToReduceSize) {
-            return std::make_unique<LeafNode>(splitParam, currentRecursionDepth, nodeId++);
+            return std::make_unique<LeafNode>(splitParam, nodeId);
         }
         //if not more costly, perform the split
-        return std::make_unique<SplitNode>(splitParam, plane, triangleLists, currentRecursionDepth, nodeId++);
+        return std::make_unique<SplitNode>(splitParam, plane, triangleLists, nodeId);
     }
 
 }// namespace polyhedralGravity

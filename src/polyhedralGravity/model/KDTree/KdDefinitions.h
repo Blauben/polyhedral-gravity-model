@@ -408,4 +408,14 @@ namespace polyhedralGravity {
         return std::make_pair(first, last);
     }
 
+    /**
+    * The distance to the tree's root from this node. Used to limit the depth and the size of the tree.
+    * @param nodeId The id of the node to determine the depth (distance to root node) of.
+    */
+    inline size_t recursionDepth(const size_t nodeId) {
+        //t: depth of the current node, N: amount of nodes in the tree if tree is complete
+        // $ N = 2^(t+1)-1 $ (geometric series formula for partial sums), assume $ N >= idx + 1 $
+        return static_cast<size_t>(std::ceil(std::log2(nodeId + 2))) - 1;
+    }
+
 }// namespace polyhedralGravity

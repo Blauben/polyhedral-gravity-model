@@ -16,10 +16,9 @@ namespace polyhedralGravity {
         /**
          * Takes parameters from the parent node and stores them for later intersection tests.
          * @param splitParam Parameters produced during the split that resulted in the creation of this node.
-         * @param currentRecursionDepth the tree depth of the current node. Used to limit the size of the tree.
          * @param nodeId Unique Id given by the TreeNodeFactory.
          */
-        explicit LeafNode(const SplitParam &splitParam, size_t currentRecursionDepth, size_t nodeId);
+        explicit LeafNode(const SplitParam &splitParam, size_t nodeId);
         /**
         * Used to calculated intersections of a ray and the polyhedron's faces contained in this node.
         * @param origin The point where the ray originates from.
@@ -29,7 +28,7 @@ namespace polyhedralGravity {
         void getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) const;
 
         void printTree() override {//TODO: remove
-            std::cout << "LeafNode ID: " << nodeId << ", Depth: " << _recursionDepth << std::endl;
+            std::cout << "LeafNode ID: " << nodeId << ", Depth: " << recursionDepth(nodeId) << std::endl;
         }
 
 

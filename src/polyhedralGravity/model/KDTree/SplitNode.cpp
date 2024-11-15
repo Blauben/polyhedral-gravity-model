@@ -2,8 +2,8 @@
 
 namespace polyhedralGravity {
 
-    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, const size_t currentRecursionDepth, const size_t nodeId)
-        : TreeNode(splitParam, currentRecursionDepth, nodeId), _plane{plane}, _boundingBox{splitParam.boundingBox}, _triangleLists{std::move(triangleIndexLists)} {
+    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, const size_t nodeId)
+        : TreeNode(splitParam, nodeId), _plane{plane}, _boundingBox{splitParam.boundingBox}, _triangleLists{std::move(triangleIndexLists)} {
     }
 
     std::shared_ptr<TreeNode> SplitNode::getChildNode(const size_t index) {
@@ -12,15 +12,15 @@ namespace polyhedralGravity {
         //node is not yet built
         if (node == nullptr) {
             //copy parent param and modify to fit new node
-            SplitParam childParam{*this->_splitParam};
+            SplitParam childParam{*_splitParam};
             //get the bounding box after splitting;
             auto [lesserBox, greaterBox] = this->_boundingBox.splitBox(this->_plane);
             childParam.boundingBox = index == 0 ? lesserBox : greaterBox;
             //get the triangles of the box
             std::visit([&childParam, index](auto &typeLists) -> void { childParam.boundFaces = *std::move(typeLists[index]); }, _triangleLists);
-            childParam.splitDirection = static_cast<Direction>((static_cast<int>(this->_splitParam->splitDirection) + 1) % DIMENSIONS);
+            childParam.splitDirection = static_cast<Direction>((static_cast<int>(_splitParam->splitDirection) + 1) % DIMENSIONS);
             //increase the recursion depth of the direct child by 1
-            node = TreeNodeFactory::createTreeNode(childParam, _recursionDepth + 1);
+            node = TreeNodeFactory::createTreeNode(childParam, 2 * nodeId + 1 + index);
             if (_lesser != nullptr && _greater != nullptr) {
                 _splitParam.reset();
             }

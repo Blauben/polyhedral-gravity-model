@@ -20,10 +20,11 @@ namespace polyhedralGravity {
         /**
         * Builds a new TreeNode for a KDTree. {@link KDTree}
         * @param splitParam Parameters for intersection testing and child node creation. {@link SplitParam}
-        * @param currentRecursionDepth The tree depth of the new node requested to be built.
+        * @param nodeId The unique id to be assigned to the newly created node. Follows the convention that the left child gets the id 2 * <current_id> + 1 and
+        * the right child 2 * <currrent_id> + 2.
         * @return A unique pointer to the new TreeNode.
          */
-        static std::unique_ptr<TreeNode> createTreeNode(const SplitParam &splitParam, size_t currentRecursionDepth);
+        static std::unique_ptr<TreeNode> createTreeNode(const SplitParam &splitParam, size_t nodeId);
     };
 
 }// namespace polyhedralGravity

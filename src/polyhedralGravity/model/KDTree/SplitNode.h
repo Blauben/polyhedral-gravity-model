@@ -43,10 +43,9 @@ namespace polyhedralGravity {
          * @param splitParam Parameters produced during the split that resulted in the creation of this node.
          * @param plane The plane that splits this node's bounding box into two sub boxes. The child nodes are created based on these boxes.
          * @param triangleIndexLists Index sets of the triangles contained in the lesser and greater child nodes. {@link TriangleIndexList}
-         * @param currentRecursionDepth the tree depth of the current node. Used to limit the size of the tree.
          * @param nodeId Unique Id given by the TreeNodeFactory.
          */
-        SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, size_t currentRecursionDepth, size_t nodeId);
+        SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, size_t nodeId);
         /**
          * Computes the child node decided by the given index (0 for lesser, 1 for greater) if not present already and returns it to the caller.
          * @param index Specifies which node to build. 0 or LESSER for _lesser, 1 or GREATER for _greater.
@@ -62,7 +61,7 @@ namespace polyhedralGravity {
         [[nodiscard]] std::vector<std::shared_ptr<TreeNode>> getChildrenForIntersection(const Array3 &origin, const Array3 &ray);
 
         void printTree() override {//TODO: remove
-            std::cout << "SplitNode ID:  " << nodeId << " , Depth: " << this->_recursionDepth << ", Plane Coordinate: " << std::to_string(_plane.axisCoordinate) << " Direction: " << std::to_string(static_cast<int>(_plane.orientation)) << std::endl;
+            std::cout << "SplitNode ID:  " << nodeId << " , Depth: " << recursionDepth(nodeId) << ", Plane Coordinate: " << std::to_string(_plane.axisCoordinate) << " Direction: " << std::to_string(static_cast<int>(_plane.orientation)) << std::endl;
             std::cout << "Children; Lesser: " << (_lesser != nullptr ? std::to_string(_lesser->nodeId) : "None") << "; Greater: " << (_greater != nullptr ? std::to_string(_greater->nodeId) : "None") << std::endl;
             if (_lesser != nullptr) {
                 _lesser->printTree();

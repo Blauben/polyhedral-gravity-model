@@ -10,7 +10,7 @@ namespace polyhedralGravity {
     std::shared_ptr<TreeNode> KDTree::getRootNode() {
         //if the node has already been generated, don't do it again. Instead let the factory determine the TreeNode subclass based on the optimal split.
         if (!this->_rootNode) {
-            this->_rootNode = TreeNodeFactory::createTreeNode(*std::move(this->_splitParam), 0);
+            this->_rootNode = TreeNodeFactory::createTreeNode(*std::move(_splitParam), 0);
         }
         return this->_rootNode;
     }
