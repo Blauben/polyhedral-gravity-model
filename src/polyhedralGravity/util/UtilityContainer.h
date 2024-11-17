@@ -7,7 +7,6 @@
 #include <array>
 #include <cmath>
 #include <functional>
-#include <gtest/internal/gtest-param-util.h>
 #include <iostream>
 #include <numeric>
 #include <set>

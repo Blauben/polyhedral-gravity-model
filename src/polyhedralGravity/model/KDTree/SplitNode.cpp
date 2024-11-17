@@ -2,24 +2,25 @@
 
 namespace polyhedralGravity {
 
-    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, TriangleIndexLists<2> &triangleIndexLists, size_t currentRecursionDepth)
-        : TreeNode(splitParam, currentRecursionDepth), _plane{plane}, _triangleIndexLists{std::move(triangleIndexLists)}, _boundingBox{splitParam.boundingBox} {}
+    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, const size_t nodeId)
+        : TreeNode(splitParam, nodeId), _plane{plane}, _boundingBox{splitParam.boundingBox}, _triangleLists{std::move(triangleIndexLists)} {
+    }
 
     std::shared_ptr<TreeNode> SplitNode::getChildNode(const size_t index) {
         //create a reference to store the built node in
-        std::shared_ptr<TreeNode>& node = index == LESSER ? _lesser : _greater;
+        std::shared_ptr<TreeNode> &node = index == LESSER ? _lesser : _greater;
         //node is not yet built
         if (node == nullptr) {
             //copy parent param and modify to fit new node
-            SplitParam childParam{*this->_splitParam};
+            SplitParam childParam{*_splitParam};
             //get the bounding box after splitting;
-            auto [lesserBox, greaterBox] = KDTree::splitBox(this->_boundingBox, this->_plane);
+            auto [lesserBox, greaterBox] = this->_boundingBox.splitBox(this->_plane);
             childParam.boundingBox = index == 0 ? lesserBox : greaterBox;
             //get the triangles of the box
-            childParam.indexBoundFaces = *std::move(_triangleIndexLists[index]);
-            childParam.splitDirection = static_cast<Direction>((static_cast<int>(this->_splitParam->splitDirection) + 1) % DIMENSIONS);
+            std::visit([&childParam, index](auto &typeLists) -> void { childParam.boundFaces = *std::move(typeLists[index]); }, _triangleLists);
+            childParam.splitDirection = static_cast<Direction>((static_cast<int>(_splitParam->splitDirection) + 1) % DIMENSIONS);
             //increase the recursion depth of the direct child by 1
-            node = TreeNodeFactory::treeNodeFactory(childParam, _recursionDepth + 1);
+            node = TreeNodeFactory::createTreeNode(childParam, 2 * nodeId + 1 + index);
             if (_lesser != nullptr && _greater != nullptr) {
                 _splitParam.reset();
             }
@@ -48,14 +49,15 @@ namespace polyhedralGravity {
         if (!isParallel && planeIsHitInsideBox) {
             delegates.push_back(getChildNode(LESSER));
             delegates.push_back(getChildNode(GREATER));
+            return delegates;
         }
         // the split plane is behind the ray origin
-        else if (t_split < 0) {
+        if (t_split < 0) {
             //check in which point the origin lies in order to continue intersection in that box
             delegates.push_back(origin[static_cast<int>(_plane.orientation)] < _plane.axisCoordinate ? getChildNode(LESSER) : getChildNode(GREATER));
             return delegates;
         }
-        //intersection point of the ray and the split plane
+        //intersection point of the ray and the bounding box
         const double intersectionCoord{ray[static_cast<int>(_plane.orientation)] * t_enter + origin[static_cast<int>(_plane.orientation)]};
         // the entry point of the ray to the bounding box is nearer to the origin than the split plane -> ray hits lesser box
         if (intersectionCoord < _plane.axisCoordinate) {
