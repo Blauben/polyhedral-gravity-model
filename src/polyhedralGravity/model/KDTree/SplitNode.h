@@ -5,7 +5,6 @@
 #include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
 
 #include <algorithm>
-#include <gtest/gtest_prod.h>//TODO: remove
 #include <memory>
 
 constexpr uint8_t LESSER{0};
@@ -17,7 +16,6 @@ namespace polyhedralGravity {
      * A TreeNode contained in a KDTree that splits the spatial hierarchy into two new sub boxes. Intersection tests are delegated to the child nodes.
      */
     class SplitNode final : public TreeNode {
-        FRIEND_TEST(KDTreeTest, debugLog);//TODO:remove
         /**
         * The SplitNode that contains the bounding box closer to the origin with respect to the split plane
         */

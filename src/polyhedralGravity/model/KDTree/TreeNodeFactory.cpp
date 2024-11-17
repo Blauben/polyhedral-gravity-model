@@ -15,8 +15,8 @@ namespace polyhedralGravity {
         // Check if the boxes are divided into smaller regions
         bool splitFailsToReduceSize = std::isinf(planeCost) || std::visit([numberOfFaces](auto &typeLists) {
                                           // Count faces in each split box
-                                          const size_t facesInMinimalBox = typeLists[0]->size();
-                                          const size_t facesInMaximalBox = typeLists[1]->size();
+                                          const size_t facesInMinimalBox = countFaces(*typeLists[0]);
+                                          const size_t facesInMaximalBox = countFaces(*typeLists[1]);
 
                                           // Ensure that the split meaningfully divides faces
                                           return (numberOfFaces <= facesInMinimalBox + facesInMaximalBox) && (facesInMinimalBox == 0 || facesInMaximalBox == 0);

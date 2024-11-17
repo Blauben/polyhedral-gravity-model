@@ -1,7 +1,5 @@
 #include "polyhedralGravity/model/KDTree/plane_selection/LogNPlane.h"
 
-#include <cassert>
-
 namespace polyhedralGravity {
     // O(N*log^2(N)) implementation
     std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> LogNPlane::findPlane(const SplitParam &splitParam) {
@@ -56,7 +54,6 @@ namespace polyhedralGravity {
                 minSide = minSideChosen;
             }
             //shift the plane to the next candidate and prepare next iteration
-            //TODO: review; paper incoherent here
             currentDimensionCounter[MIN] += p_planar + p_start;
             currentDimensionCounter[PLANAR] = 0;
         }
@@ -76,14 +73,22 @@ namespace polyhedralGravity {
         const auto faceClassification{classifyTrianglesRelativeToPlane(planeEvents, plane, minSide)};
         PlaneEventList planeEventsMin{};
         PlaneEventList planeEventsMax{};
-        TriangleIndexList facesIndexBoth{};
+        std::vector<unsigned long> facesIndexBoth{};
         planeEventsMin.reserve(planeEvents.size() / 2);
         planeEventsMax.reserve(planeEvents.size() / 2);
         //value estimation taken from source paper
         facesIndexBoth.reserve(std::ceil(std::sqrt(planeEvents.size())));
+        std::unordered_set<unsigned long> processedIndices{};
+
+        auto insertToBothIfAbsent = [&facesIndexBoth, &processedIndices](const auto faceIndex) {
+            if (processedIndices.find(faceIndex) == processedIndices.end()) {
+                processedIndices.insert(faceIndex);
+                facesIndexBoth.push_back(faceIndex);
+            }
+        };
 
         //Step 2
-        std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&faceClassification, &planeEventsMin, &planeEventsMax, &facesIndexBoth](const auto &event) {
+        std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&faceClassification, &planeEventsMin, &planeEventsMax, &insertToBothIfAbsent](const auto &event) {
             switch (faceClassification.at(event.faceIndex)) {
                 //face of event only contributes to min side event can be added to side without clipping because no overlap with split plane
                 case Locale::MIN_ONLY:
@@ -96,7 +101,7 @@ namespace polyhedralGravity {
                 //face has area on both sides -> event has to be discarded and scheduled for separate event generation
                 case Locale::BOTH:
                 default:
-                    facesIndexBoth.push_back(event.faceIndex);
+                    insertToBothIfAbsent(event.faceIndex);
             }
         });
 
