@@ -1,18 +1,28 @@
 #include "time_executable.h"
 
-#include <cmath>
+#include "polyhedralGravity/input/TetgenAdapter.h"
 
-int main() {
-    //TODO: fill with Functions and Param from KDTree and Polyhedron
-    const std::vector<std::shared_ptr<IFunction>> functions{
-        std::make_shared<Function<int, int>>("TestFunc", [](const int a) {return std::pow(a, 5200);}, 200),
-        std::make_shared<Function<std::string, std::string>>("TestFunc", [](const std::string& a) {return a;}, "Hallo")
-    };
+namespace polyhedralGravity {
+    void measureTreePerformance() {
+        TetgenAdapter adapter{std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}};
+        auto [vertices, faces] = adapter.getPolyhedralSource();
+        auto createBigPolyhedron = [&vertices, &faces](const PlaneSelectionAlgorithm::Algorithm &algorithm) {
+            return Polyhedron{vertices, faces,
+                              1.0,
+                              NormalOrientation::OUTWARDS,
+                              PolyhedronIntegrity::HEAL,
+                              algorithm};
+        };
 
-    std::for_each(functions.begin(), functions.end(), [](const auto funcStructPtr) {
-        const auto duration_ms = funcStructPtr->measureTimeMs();
-        std::cout << funcStructPtr->name << " execution time: " << duration_ms << " ms" << std::endl;
-    });
+        const std::vector<std::shared_ptr<IFunction>> functions{
+                std::make_shared<Function<Polyhedron, PlaneSelectionAlgorithm::Algorithm>>("BigPolyhedronNoTree", createBigPolyhedron, PlaneSelectionAlgorithm::Algorithm::NOTREE),
+                std::make_shared<Function<Polyhedron, PlaneSelectionAlgorithm::Algorithm>>("BigPolyhedronQuadratic", createBigPolyhedron, PlaneSelectionAlgorithm::Algorithm::QUADRATIC),
+                std::make_shared<Function<Polyhedron, PlaneSelectionAlgorithm::Algorithm>>("BigPolyhedronLogSquared", createBigPolyhedron, PlaneSelectionAlgorithm::Algorithm::LOGSQUARED),
+                std::make_shared<Function<Polyhedron, PlaneSelectionAlgorithm::Algorithm>>("BigPolyhedronLog", createBigPolyhedron, PlaneSelectionAlgorithm::Algorithm::LOG)};
 
-    return EXIT_SUCCESS;
-}
+        std::for_each(functions.begin(), functions.end(), [](const auto funcStructPtr) {
+            const auto duration_ms = funcStructPtr->measureTimeMs();
+            std::cout << funcStructPtr->name << " execution time: " << duration_ms << " ms" << std::endl;
+        });
+    }
+}// namespace polyhedralGravity
