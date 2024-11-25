@@ -66,7 +66,9 @@ namespace polyhedralGravity {
     };
 
     /**
-     * Measures how long integrity checks on the EROS polyhedron take using different KDTree algorithms.
+     * Measures how long integrity checks on a constructed polyhedron take using different KDTree algorithms.
+     * @param vertices The vertices to use in the polyhedron
+     * @param faces The faces to use in the polyhedron.
      */
-    void measureTreePerformance();
+    void measureTreePerformance(std::vector<Array3> vertices, std::vector<IndexArray3> faces);
 }// namespace polyhedralGravity

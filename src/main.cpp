@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
                                "No output filename was specified!");
         }
 
-        measureTreePerformance();
+        measureTreePerformance(std::get<0>(polyhedralSource), std::get<1>(polyhedralSource));
 
         return 0;
 

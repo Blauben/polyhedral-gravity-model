@@ -3,9 +3,7 @@
 #include "polyhedralGravity/input/TetgenAdapter.h"
 
 namespace polyhedralGravity {
-    void measureTreePerformance() {
-        TetgenAdapter adapter{std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}};
-        auto [vertices, faces] = adapter.getPolyhedralSource();
+    void measureTreePerformance(std::vector<Array3> vertices, std::vector<IndexArray3> faces) {
         auto createBigPolyhedron = [&vertices, &faces](const PlaneSelectionAlgorithm::Algorithm &algorithm) {
             return Polyhedron{vertices, faces,
                               1.0,
@@ -21,8 +19,9 @@ namespace polyhedralGravity {
                 std::make_shared<Function<Polyhedron, PlaneSelectionAlgorithm::Algorithm>>("BigPolyhedronLog", createBigPolyhedron, PlaneSelectionAlgorithm::Algorithm::LOG)};
 
         std::for_each(functions.begin(), functions.end(), [](const auto funcStructPtr) {
+            SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Function {} execution started", funcStructPtr->name);
             const auto duration_ms = funcStructPtr->measureTimeMs();
-            std::cout << funcStructPtr->name << " execution time: " << duration_ms << " ms" << std::endl;
+            SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "{} execution time: {} ms", funcStructPtr->name, duration_ms);
         });
     }
 }// namespace polyhedralGravity
