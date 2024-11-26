@@ -1,6 +1,4 @@
-#include "time_executable.h"
-
-#include "polyhedralGravity/input/TetgenAdapter.h"
+#include "polyhedralGravity/model/KDTree/time_measurement/TimeExecutable.h"
 
 namespace polyhedralGravity {
     void measureTreePerformance(std::vector<Array3> vertices, std::vector<IndexArray3> faces) {
@@ -18,7 +16,7 @@ namespace polyhedralGravity {
                 std::make_shared<Function<Polyhedron, PlaneSelectionAlgorithm::Algorithm>>("BigPolyhedronLogSquared", createBigPolyhedron, PlaneSelectionAlgorithm::Algorithm::LOGSQUARED),
                 std::make_shared<Function<Polyhedron, PlaneSelectionAlgorithm::Algorithm>>("BigPolyhedronLog", createBigPolyhedron, PlaneSelectionAlgorithm::Algorithm::LOG)};
 
-        std::for_each(functions.begin(), functions.end(), [](const auto funcStructPtr) {
+        std::for_each(functions.begin(), functions.end(), [](const auto &funcStructPtr) {
             SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "Function {} execution started", funcStructPtr->name);
             const auto duration_ms = funcStructPtr->measureTimeMs();
             SPDLOG_LOGGER_INFO(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "{} execution time: {} ms", funcStructPtr->name, duration_ms);
