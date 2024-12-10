@@ -9,9 +9,10 @@ namespace polyhedralGravity {
         return Polyhedron(polyhedralSource, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL, algorithm);
     }
 
-    void BM_Polyhedron_Tree(benchmark::State &state, const polyhedralGravity::PlaneSelectionAlgorithm::Algorithm &algorithm) {
+    void BM_Polyhedron_Tree(benchmark::State &state, const PlaneSelectionAlgorithm::Algorithm &algorithm) {
         for (auto _: state) {
-            createBigPolyhedron(algorithm);
+            Polyhedron polyhedron = createBigPolyhedron(algorithm);
+            benchmark::ClobberMemory();
         }
     }
 
