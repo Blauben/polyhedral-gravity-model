@@ -72,11 +72,14 @@ endif ()
 if (BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT)
     message(STATUS "Building the Polyhedral Gravity Executable")
 
+    include(gtest)
+    include(benchmark)
+
     # Building the standalone Executable
     add_executable(${PROJECT_NAME}_time kd_time_main.cpp)
 
     # Link executable with library
-    target_link_libraries(${PROJECT_NAME}_time PUBLIC ${PROJECT_NAME}_lib)
+    target_link_libraries(${PROJECT_NAME}_time PUBLIC ${PROJECT_NAME}_lib benchmark)
 
     # Place the executable in the top level directory
     set_target_properties(${PROJECT_NAME}_time PROPERTIES
