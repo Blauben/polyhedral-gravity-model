@@ -3,33 +3,26 @@
 
 namespace polyhedralGravity {
 
-    PolyhedralSource polyhedralSource{};
-
-    Polyhedron createBigPolyhedron(const PlaneSelectionAlgorithm::Algorithm &algorithm) {
-        return Polyhedron(polyhedralSource, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL, algorithm);
+    Polyhedron createBigPolyhedron(const PolyhedralSource &source, const PlaneSelectionAlgorithm::Algorithm &algorithm) {
+        return Polyhedron(source, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL, algorithm);
     }
 
     void BM_Polyhedron_Tree(benchmark::State &state, const PlaneSelectionAlgorithm::Algorithm &algorithm) {
+        const std::vector<std::string> configPaths{"../example-config/example_eros.yaml", "../example-config/example_eros_scaled_1.yaml", "../example-config/example_eros_scaled_2.yaml", "../example-config/example_eros_scaled_3.yaml", "../example-config/example_eros_scaled_4.yaml"};
+        const std::shared_ptr<ConfigSource> config = std::make_shared<YAMLConfigReader>(configPaths.at(state.range(0)));
+        const PolyhedralSource source = config->getDataSource()->getPolyhedralSource();
         for (auto _: state) {
-            Polyhedron polyhedron = createBigPolyhedron(algorithm);
+            Polyhedron polyhedron = createBigPolyhedron(source, algorithm);
             benchmark::ClobberMemory();
         }
+        state.SetComplexityN(static_cast<benchmark::ComplexityN>(std::get<1>(source).size()));
     }
 
-    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronNoTree", PlaneSelectionAlgorithm::Algorithm::NOTREE);
-    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronQuadratic", PlaneSelectionAlgorithm::Algorithm::QUADRATIC);
-    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronLogSquared", PlaneSelectionAlgorithm::Algorithm::LOGSQUARED);
-    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronLog", PlaneSelectionAlgorithm::Algorithm::LOG);
+
+    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronNoTree", PlaneSelectionAlgorithm::Algorithm::NOTREE)->Arg(0);
+    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronQuadratic", PlaneSelectionAlgorithm::Algorithm::QUADRATIC)->Arg(0);
+    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronLogSquared", PlaneSelectionAlgorithm::Algorithm::LOGSQUARED)->Range(0, 1);
+    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronLog", PlaneSelectionAlgorithm::Algorithm::LOG)->Range(0, 4);
 }// namespace polyhedralGravity
 
-int main(int argc, char **argv) {
-    using namespace polyhedralGravity;
-    if (argc < 2) {
-        std::cout << "Error: Please supply a config yaml argument!" << std::endl;
-        return EXIT_FAILURE;
-    }
-    const std::shared_ptr<ConfigSource> config = std::make_shared<YAMLConfigReader>(argv[1]);
-    polyhedralSource = config->getDataSource()->getPolyhedralSource();
-    ::benchmark::Initialize(&argc, argv);
-    ::benchmark::RunSpecifiedBenchmarks();
-}
+BENCHMARK_MAIN();
