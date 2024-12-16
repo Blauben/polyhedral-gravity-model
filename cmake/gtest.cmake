@@ -6,7 +6,7 @@ set(GOOGLE_TEST_VERSION 1.15.2)
 find_package(GTest ${GOOGLE_TEST_VERSION} QUIET)
 
 
-if(${GTest_FOUND})
+if(${GTest_FOUND} AND NOT GTest_DIR STREQUAL "GTest_DIR-NOTFOUND")
         message(STATUS "Found existing Google Test: ${GTest_DIR}")
 else()
         message(STATUS "Using Google Test from GitHub Release ${GOOGLE_TEST_VERSION}")
