@@ -3,16 +3,16 @@
 namespace polyhedralGravity {
 
     // O(N^2) implementation
-    std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> SquaredPlane::findPlane(const SplitParam &splitParam) {
-        if (std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
+    std::tuple<Plane, double, std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2>>> SquaredPlane::findPlane(const SplitParam &splitParam) {
+        if (std::holds_alternative<PlaneEventVector>(splitParam.boundFaces)) {
             throw std::invalid_argument("SquaredPlane does not support PlaneEventLists in SplitParam argument");
         }
-        const auto &boundFaces = std::get<TriangleIndexList>(splitParam.boundFaces);
+        const auto &boundFaces = std::get<TriangleIndexVector>(splitParam.boundFaces);
         //initialize the default plane and make it costly
         double cost = std::numeric_limits<double>::infinity();
         Plane optPlane{0, splitParam.splitDirection};
         //store the triangleSets that are implicitly generated during plane testing for later use.
-        TriangleIndexLists<2> optTriangleIndexLists{};
+        TriangleIndexVectors<2> optTriangleIndexLists{};
         //each vertex proposes a split plane candidate: test for each of them, store them in buffer set to avoid duplicate testing
         std::unordered_set<double> testedPlaneCoordinates{};
         auto [vertex3_begin, vertex3_end] = transformIterator(boundFaces.cbegin(), boundFaces.cend(), splitParam.vertices, splitParam.faces);
@@ -44,16 +44,16 @@ namespace polyhedralGravity {
         return std::make_tuple(optPlane, cost, std::move(optTriangleIndexLists));
     }
 
-    TriangleIndexLists<3> SquaredPlane::containedTriangles(const SplitParam &splitParam, const Plane &split) {
+    TriangleIndexVectors<3> SquaredPlane::containedTriangles(const SplitParam &splitParam, const Plane &split) {
         using namespace polyhedralGravity;
-        if (std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
+        if (std::holds_alternative<PlaneEventVector>(splitParam.boundFaces)) {
             throw std::invalid_argument("SquaredPlane does not support PlaneEventLists in SplitParam argument");
         }
-        const auto &boundFaces = std::get<TriangleIndexList>(splitParam.boundFaces);
+        const auto &boundFaces = std::get<TriangleIndexVector>(splitParam.boundFaces);
         //define three sets of triangles: closer to the origin, further away, in the plane
-        auto index_less = std::make_unique<TriangleIndexList>(boundFaces.size() / 2);
-        auto index_greater = std::make_unique<TriangleIndexList>(boundFaces.size() / 2);
-        auto index_equal = std::make_unique<TriangleIndexList>();
+        auto index_less = std::make_unique<TriangleIndexVector>(boundFaces.size() / 2);
+        auto index_greater = std::make_unique<TriangleIndexVector>(boundFaces.size() / 2);
+        auto index_equal = std::make_unique<TriangleIndexVector>();
 
 
         //perform check for every triangle contained in this node's bounding box.

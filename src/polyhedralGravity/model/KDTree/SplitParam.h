@@ -22,7 +22,7 @@ namespace polyhedralGravity {
         /**
          * Either an index list of faces that are included in the current bounding box of the KDTree or a list of PlaneEvents containing the information about thr bound faces. Important when building deeper levels of a KDTree.
          */
-        std::variant<TriangleIndexList, PlaneEventList> boundFaces;
+        std::variant<TriangleIndexVector, PlaneEventVector> boundFaces;
         /**
          * The current bounding box that should be divided further by the KDTree.
          */
@@ -42,15 +42,15 @@ namespace polyhedralGravity {
          *
          */
         SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const Box &boundingBox, const Direction splitDirection, const std::shared_ptr<PlaneSelectionAlgorithm> &planeSelectionStrategy)
-            : vertices{vertices}, faces{faces}, boundFaces{TriangleIndexList(faces.size())}, boundingBox{boundingBox}, splitDirection{splitDirection}, planeSelectionStrategy{planeSelectionStrategy} {
-            auto &indexList = std::get<TriangleIndexList>(boundFaces);
+            : vertices{vertices}, faces{faces}, boundFaces{TriangleIndexVector(faces.size())}, boundingBox{boundingBox}, splitDirection{splitDirection}, planeSelectionStrategy{planeSelectionStrategy} {
+            auto &indexList = std::get<TriangleIndexVector>(boundFaces);
             std::iota(indexList.begin(), indexList.end(), 0);
         }
 
         /**
          * Constructor manually initializing boundFaces, used for testing.
          */
-        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const std::variant<TriangleIndexList, PlaneEventList> &boundFaces, const Box &boundingBox, const Direction splitDirection, const std::shared_ptr<PlaneSelectionAlgorithm> &planeSelectionStrategy)
+        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const std::variant<TriangleIndexVector, PlaneEventVector> &boundFaces, const Box &boundingBox, const Direction splitDirection, const std::shared_ptr<PlaneSelectionAlgorithm> &planeSelectionStrategy)
             : vertices{vertices}, faces{faces}, boundFaces{boundFaces}, boundingBox{boundingBox}, splitDirection{splitDirection}, planeSelectionStrategy{planeSelectionStrategy} {
         }
     };

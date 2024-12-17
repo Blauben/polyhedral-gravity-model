@@ -2,12 +2,12 @@
 
 namespace polyhedralGravity {
     // O(N*log^2(N)) implementation
-    std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> LogNSquaredPlane::findPlane(const SplitParam &splitParam) {
+    std::tuple<Plane, double, std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2>>> LogNSquaredPlane::findPlane(const SplitParam &splitParam) {
         Plane optPlane{};
         double cost{std::numeric_limits<double>::infinity()};
-        PlaneEventList optimalEvents{};
+        PlaneEventVector optimalEvents{};
         bool minSide{true};
-        for (const auto dimension: {Direction::X, Direction::Y, Direction::Z}) {
+        for (const auto dimension: ALL_DIRECTIONS) {
             splitParam.splitDirection = dimension;
             auto [candidatePlane, candidateCost, events, minSideChosen] = findPlaneForSingleDimension(splitParam);
             if (candidateCost < cost) {
@@ -21,13 +21,13 @@ namespace polyhedralGravity {
         return {optPlane, cost, generateTriangleSubsets(optimalEvents, optPlane, minSide)};
     }
 
-    std::tuple<Plane, double, PlaneEventList, bool> LogNSquaredPlane::findPlaneForSingleDimension(const SplitParam &splitParam) {
+    std::tuple<Plane, double, PlaneEventVector, bool> LogNSquaredPlane::findPlaneForSingleDimension(const SplitParam &splitParam) {
         //initialize the default plane and make it costly
         double cost{std::numeric_limits<double>::infinity()};
         Plane optPlane{};
         bool minSide{true};
         //each vertex proposes a split plane candidate: create an event and queue it in the buffer
-        PlaneEventList events{std::move(generatePlaneEventsFromFaces(splitParam, {splitParam.splitDirection}))};
+        PlaneEventVector events{std::move(generatePlaneEventsFromFaces(splitParam, {splitParam.splitDirection}))};
         size_t trianglesMin{0}, trianglesMax{countFaces(splitParam.boundFaces)}, trianglesPlanar{0};
         //traverse all the events
         int i{0};
@@ -69,9 +69,9 @@ namespace polyhedralGravity {
     }
 
 
-    TriangleIndexLists<2> LogNSquaredPlane::generateTriangleSubsets(const PlaneEventList &planeEvents, const Plane &plane, const bool minSide) {
-        auto facesMin = std::make_unique<TriangleIndexList>();
-        auto facesMax = std::make_unique<TriangleIndexList>();
+    TriangleIndexVectors<2> LogNSquaredPlane::generateTriangleSubsets(const PlaneEventVector &planeEvents, const Plane &plane, const bool minSide) {
+        auto facesMin = std::make_unique<TriangleIndexVector>();
+        auto facesMax = std::make_unique<TriangleIndexVector>();
         //set data structure to avoid processing faces twice -> introduces O(1) lookup instead of O(n) lookup using the vectors directly
         std::unordered_set<size_t> facesMinLookup{};
         std::unordered_set<size_t> facesMaxLookup{};

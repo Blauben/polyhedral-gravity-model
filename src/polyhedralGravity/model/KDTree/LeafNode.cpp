@@ -7,10 +7,10 @@ namespace polyhedralGravity {
     }
 
     void LeafNode::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) const {
-        if (std::holds_alternative<PlaneEventList>(_splitParam->boundFaces)) {
-            _splitParam->boundFaces = convertEventsToFaces(std::get<PlaneEventList>(_splitParam->boundFaces));
+        if (std::holds_alternative<PlaneEventVector>(_splitParam->boundFaces)) {
+            _splitParam->boundFaces = convertEventsToFaces(std::get<PlaneEventVector>(_splitParam->boundFaces));
         }
-        const TriangleIndexList &boundTriangles{std::get<TriangleIndexList>(_splitParam->boundFaces)};
+        const TriangleIndexVector &boundTriangles{std::get<TriangleIndexVector>(_splitParam->boundFaces)};
         //traverses all contained faces and performs intersection tests with them -> store results in the buffer passed in the arguments
         std::for_each(boundTriangles.cbegin(), boundTriangles.cend(), [this, &ray, &origin, &intersections](const size_t faceIndex) {
             const std::optional<Array3> intersection = rayIntersectsTriangle(origin, ray, _splitParam->faces[faceIndex]);

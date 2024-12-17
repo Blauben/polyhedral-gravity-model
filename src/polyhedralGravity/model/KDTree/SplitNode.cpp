@@ -2,7 +2,7 @@
 
 namespace polyhedralGravity {
 
-    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, const size_t nodeId)
+    SplitNode::SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2>> &triangleIndexLists, const size_t nodeId)
         : TreeNode(splitParam, nodeId), _plane{plane}, _boundingBox{splitParam.boundingBox}, _triangleLists{std::move(triangleIndexLists)} {
     }
 
