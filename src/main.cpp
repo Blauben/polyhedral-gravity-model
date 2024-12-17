@@ -1,9 +1,9 @@
-#include <chrono>
 #include "polyhedralGravity/input/ConfigSource.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
 #include "polyhedralGravity/model/GravityModel.h"
-#include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/output/CSVWriter.h"
+#include "polyhedralGravity/output/Logging.h"
+#include <chrono>
 
 int main(int argc, char *argv[]) {
     using namespace polyhedralGravity;
@@ -51,6 +51,7 @@ int main(int argc, char *argv[]) {
         return 0;
 
     } catch (const std::exception &e) {
+
         SPDLOG_LOGGER_ERROR(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), "{}", e.what());
         return -1;
     }

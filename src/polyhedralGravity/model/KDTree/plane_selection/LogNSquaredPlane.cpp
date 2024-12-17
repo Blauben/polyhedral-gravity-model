@@ -73,8 +73,8 @@ namespace polyhedralGravity {
         auto facesMin = std::make_unique<TriangleIndexList>();
         auto facesMax = std::make_unique<TriangleIndexList>();
         //set data structure to avoid processing faces twice -> introduces O(1) lookup instead of O(n) lookup using the vectors directly
-        std::unordered_set<unsigned long> facesMinLookup{};
-        std::unordered_set<unsigned long> facesMaxLookup{};
+        std::unordered_set<size_t> facesMinLookup{};
+        std::unordered_set<size_t> facesMaxLookup{};
         //each face will most of the time generate two events, the split plane will try to distribute the faces evenly
         //Thus reserving 0.5 * 0.5 * planeEvents.size() for each vector
         facesMin->reserve(planeEvents.size() / 4);
@@ -83,7 +83,7 @@ namespace polyhedralGravity {
         facesMaxLookup.reserve(planeEvents.size() / 4);
         std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&facesMin, &facesMax, &plane, minSide, &facesMinLookup, &facesMaxLookup](const auto &event) {
             //lambda function to combine lookup and insertion into one place
-            auto insertIfAbsent = [&facesMin, &facesMinLookup, &facesMax, &facesMaxLookup](const unsigned long faceIndex, const u_int8_t index) {
+            auto insertIfAbsent = [&facesMin, &facesMinLookup, &facesMax, &facesMaxLookup](const size_t faceIndex, const uint8_t index) {
                 const auto &vector = index == MIN ? facesMin : facesMax;
                 auto &lookup = index == MIN ? facesMinLookup : facesMaxLookup;
                 if (lookup.find(faceIndex) == lookup.end()) {

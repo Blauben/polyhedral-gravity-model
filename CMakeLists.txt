@@ -46,9 +46,12 @@ message(STATUS "BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE = ${BUILD_POLYHEDRAL_P
 # Option to build tests or not
 option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (Default: ON)" ON)
 message(STATUS "BUILD_POLYHEDRAL_GRAVITY_TESTS = ${BUILD_POLYHEDRAL_GRAVITY_TESTS}")
+# Option to build time measurement executable for KDTrees
+option(BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT "Set on if the time measurement executable should be build. (Not usable with BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE) (Default: ON)" ON)
+message(STATUS "BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT = ${BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT}")
 
 
-IF(_LIBCPP_DISABLE_AVAILABILITY)
+IF (_LIBCPP_DISABLE_AVAILABILITY)
     message(STATUS "Disabling availability macros for libc++")
     add_definitions(-D_LIBCPP_DISABLE_AVAILABILITY)
 endif ()

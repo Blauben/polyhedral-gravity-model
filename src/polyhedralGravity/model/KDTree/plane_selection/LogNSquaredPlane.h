@@ -3,6 +3,7 @@
 #include "polyhedralGravity/model/KDTree/SplitParam.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneEventAlgorithm.h"
 
+#include <cstdint>
 #include <unordered_set>
 
 namespace polyhedralGravity {

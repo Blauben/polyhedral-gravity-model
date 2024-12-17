@@ -59,7 +59,7 @@ namespace polyhedralGravity {
         //perform check for every triangle contained in this node's bounding box.
         //transform faceIndices into the vertices
         auto [begin, end] = transformIterator(boundFaces.cbegin(), boundFaces.cend(), splitParam.vertices, splitParam.faces);
-        std::for_each(begin, end, [&split, &index_greater, &index_less, &index_equal](std::pair<unsigned long, Array3Triplet> pair) {
+        std::for_each(begin, end, [&split, &index_greater, &index_less, &index_equal](std::pair<size_t, Array3Triplet> pair) {
             auto [faceIndex, vertices] = pair;
             bool less{false}, greater{false};
             for (const Array3 vertex: vertices) {
