@@ -5,14 +5,15 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <algorithm>
+#include <variant>
 
-#include "spdlog/spdlog.h"
-#include "thrust/execution_policy.h"
-#include "thrust/iterator/counting_iterator.h"
-#include "thrust/iterator/transform_iterator.h"
 #include "thrust/iterator/zip_iterator.h"
+#include "thrust/iterator/transform_iterator.h"
+#include "thrust/iterator/counting_iterator.h"
 #include "thrust/transform.h"
 #include "thrust/transform_reduce.h"
+#include "thrust/execution_policy.h"
 #include "xsimd/xsimd.hpp"
 
 #include "GravityModelData.h"
@@ -204,4 +205,4 @@ namespace polyhedralGravity::GravityModel::detail {
     computeNormsOfProjectionPointAndVertices(const Array3 &orthogonalProjectionPointOnPlane, const Array3Triplet &face);
 
 
-}// namespace polyhedralGravity::GravityModel::detail
+} // namespace polyhedralGravity::GravityModel::detail
