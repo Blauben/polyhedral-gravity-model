@@ -2,13 +2,13 @@
 
 namespace polyhedralGravity {
     // O(N*log^2(N)) implementation
-    std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> LogNPlane::findPlane(const SplitParam &splitParam) {
+    std::tuple<Plane, double, std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2>>> LogNPlane::findPlane(const SplitParam &splitParam) {
         //initialize the default plane and make it costly
         double cost{std::numeric_limits<double>::infinity()};
         Plane optPlane{};
         bool minSide{true};
         //each vertex proposes a split plane candidate: create an event and queue it in the buffer
-        PlaneEventList events{std::move(generatePlaneEvents(splitParam))};
+        PlaneEventVector events{std::move(generatePlaneEvents(splitParam))};
         //records the array of Triangles MIN, MAX and PLANAR for each dimension.
         using TriangleCounter = std::array<size_t, 3>;
         using TriangleDimensionCounter = std::unordered_map<Direction, TriangleCounter>;
@@ -62,18 +62,18 @@ namespace polyhedralGravity {
     }
 
 
-    PlaneEventList LogNPlane::generatePlaneEvents(const SplitParam &splitParam) {
-        if (std::holds_alternative<TriangleIndexList>(splitParam.boundFaces)) {
-            return generatePlaneEventsFromFaces(splitParam, {Direction::X, Direction::Y, Direction::Z});
+    PlaneEventVector LogNPlane::generatePlaneEvents(const SplitParam &splitParam) {
+        if (std::holds_alternative<TriangleIndexVector>(splitParam.boundFaces)) {
+            return generatePlaneEventsFromFaces(splitParam, ALL_DIRECTIONS);
         }
-        return std::get<PlaneEventList>(splitParam.boundFaces);
+        return std::get<PlaneEventVector>(splitParam.boundFaces);
     }
 
-    PlaneEventLists<2> LogNPlane::generatePlaneEventSubsets(const SplitParam &splitParam, const PlaneEventList &planeEvents, const Plane &plane, const bool minSide) {
+    PlaneEventVectors<2> LogNPlane::generatePlaneEventSubsets(const SplitParam &splitParam, const PlaneEventVector &planeEvents, const Plane &plane, const bool minSide) {
         const auto faceClassification{classifyTrianglesRelativeToPlane(planeEvents, plane, minSide)};
-        PlaneEventList planeEventsMin{};
-        PlaneEventList planeEventsMax{};
-        TriangleIndexList facesIndexBoth{};
+        PlaneEventVector planeEventsMin{};
+        PlaneEventVector planeEventsMax{};
+        TriangleIndexVector facesIndexBoth{};
         planeEventsMin.reserve(planeEvents.size() / 2);
         planeEventsMax.reserve(planeEvents.size() / 2);
         //value estimation taken from source paper
@@ -112,7 +112,7 @@ namespace polyhedralGravity {
     }
 
     //Step 1
-    std::unordered_map<size_t, LogNPlane::Locale> LogNPlane::classifyTrianglesRelativeToPlane(const PlaneEventList &events, const Plane &plane, const bool minSide) {
+    std::unordered_map<size_t, LogNPlane::Locale> LogNPlane::classifyTrianglesRelativeToPlane(const PlaneEventVector &events, const Plane &plane, const bool minSide) {
         std::unordered_map<size_t, Locale> result{};
         //each face generates 6 plane events on average, thus the amount of faces can be roughly estimated.
         result.reserve(events.size() / 6);
@@ -139,10 +139,10 @@ namespace polyhedralGravity {
     }
 
     //Step 3
-    std::array<PlaneEventList, 2> LogNPlane::generatePlaneEventsForClippedFaces(const SplitParam &splitParam, const TriangleIndexList &faceIndices, const Plane &plane) {
+    std::array<PlaneEventVector, 2> LogNPlane::generatePlaneEventsForClippedFaces(const SplitParam &splitParam, const TriangleIndexVector &faceIndices, const Plane &plane) {
         auto [minBox, maxBox] = splitParam.boundingBox.splitBox(plane);
-        PlaneEventList minEvents{};
-        PlaneEventList maxEvents{};
+        PlaneEventVector minEvents{};
+        PlaneEventVector maxEvents{};
         //each face generates six new PlaneEvents and each face has area in both boxes
         minEvents.reserve(faceIndices.size() * 6);
         maxEvents.reserve(faceIndices.size() * 6);
@@ -159,7 +159,7 @@ namespace polyhedralGravity {
                     std::make_pair(maxPoint, PlaneEventType::ending)};
             //create planes in each dimension, be careful to cluster similar anchor points together.
             for (const auto &[point, eventType]: planeEventParam) {
-                for (const auto &direction: {Direction::X, Direction::Y, Direction::Z}) {
+                for (const auto &direction: ALL_DIRECTIONS) {
                     dest.emplace_back(eventType, Plane(point, direction), faceIndex);
                 }
             }
@@ -182,10 +182,10 @@ namespace polyhedralGravity {
     }
 
     //Step 4
-    std::unique_ptr<PlaneEventList> LogNPlane::mergePlaneEventLists(const PlaneEventList &first, const PlaneEventList &second) {
+    std::unique_ptr<PlaneEventVector> LogNPlane::mergePlaneEventLists(const PlaneEventVector &first, const PlaneEventVector &second) {
         auto first_it{first.cbegin()};
         auto second_it{second.cbegin()};
-        auto result{std::make_unique<PlaneEventList>()};
+        auto result{std::make_unique<PlaneEventVector>()};
         result->reserve(first.size() + second.size());
 
         while (first_it != first.cend() || second_it != second.cend()) {

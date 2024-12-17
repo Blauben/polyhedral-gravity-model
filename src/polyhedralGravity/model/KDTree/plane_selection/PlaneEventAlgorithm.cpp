@@ -1,13 +1,13 @@
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneEventAlgorithm.h"
 
 namespace polyhedralGravity {
-    PlaneEventList PlaneEventAlgorithm::generatePlaneEventsFromFaces(const SplitParam &splitParam, std::vector<Direction> directions) {
-        PlaneEventList events{};
+    PlaneEventVector PlaneEventAlgorithm::generatePlaneEventsFromFaces(const SplitParam &splitParam, std::vector<Direction> directions) {
+        PlaneEventVector events{};
         events.reserve(countFaces(splitParam.boundFaces) * 2);
-        if (std::holds_alternative<PlaneEventList>(splitParam.boundFaces)) {
-            return std::get<PlaneEventList>(splitParam.boundFaces);
+        if (std::holds_alternative<PlaneEventVector>(splitParam.boundFaces)) {
+            return std::get<PlaneEventVector>(splitParam.boundFaces);
         }
-        const auto &boundTriangles{std::get<TriangleIndexList>(splitParam.boundFaces)};
+        const auto &boundTriangles{std::get<TriangleIndexVector>(splitParam.boundFaces)};
         //transform the faces into vertices
         auto [vertex3_begin, vertex3_end] = transformIterator(boundTriangles.cbegin(), boundTriangles.cend(), splitParam.vertices, splitParam.faces);
         std::for_each(vertex3_begin, vertex3_end, [&splitParam, &events, &directions](const auto &indexAndTriplet) {

@@ -33,19 +33,19 @@ namespace polyhedralGravity {
          */
         Box _boundingBox;
         /**
-         * Contains the triangle lists for the lesser and greater bounding boxes. {@link TriangleIndexLists}
+         * Contains the triangle lists for the lesser and greater bounding boxes. {@link TriangleIndexVectors}
         */
-        std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> _triangleLists;
+        std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2>> _triangleLists;
 
     public:
         /**
          * Takes parameters from the parent node and stores them for lazy child node creation.
          * @param splitParam Parameters produced during the split that resulted in the creation of this node.
          * @param plane The plane that splits this node's bounding box into two sub boxes. The child nodes are created based on these boxes.
-         * @param triangleIndexLists Index sets of the triangles contained in the lesser and greater child nodes. {@link TriangleIndexList}
+         * @param triangleIndexLists Index sets of the triangles contained in the lesser and greater child nodes. {@link TriangleIndexVector}
          * @param nodeId Unique Id given by the TreeNodeFactory.
          */
-        SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>> &triangleIndexLists, size_t nodeId);
+        SplitNode(const SplitParam &splitParam, const Plane &plane, std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2>> &triangleIndexLists, size_t nodeId);
         /**
          * Computes the child node decided by the given index (0 for lesser, 1 for greater) if not present already and returns it to the caller.
          * @param index Specifies which node to build. 0 or LESSER for _lesser, 1 or GREATER for _greater.

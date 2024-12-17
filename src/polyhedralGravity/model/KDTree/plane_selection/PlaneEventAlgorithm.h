@@ -13,6 +13,6 @@ namespace polyhedralGravity {
         * @param directions For which directions to generate the events for.
         * @return The vector of PlaneEvents.
         */
-        static PlaneEventList generatePlaneEventsFromFaces(const SplitParam &splitParam, std::vector<Direction> directions);
+        static PlaneEventVector generatePlaneEventsFromFaces(const SplitParam &splitParam, std::vector<Direction> directions);
     };
 }// namespace polyhedralGravity

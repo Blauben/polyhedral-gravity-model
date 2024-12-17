@@ -47,7 +47,7 @@ namespace polyhedralGravity {
             case Direction::Z:
                 return Array3{0, 0, 1};
             default:
-                return Array3{0, 0, 0};
+                throw std::invalid_argument{"Unknown Direction enum value used during normal fetching."};
         }
     }
 
@@ -87,8 +87,7 @@ namespace polyhedralGravity {
          * @return The origin point.
          */
         [[nodiscard]] Array3 originPoint() const {
-            Array3 point{};
-            point.fill(0);
+            Array3 point{0.0, 0.0, 0.0};
             point[static_cast<int>(orientation)] = axisCoordinate;
             return point;
         }
@@ -192,6 +191,8 @@ namespace polyhedralGravity {
             return Box(findMinMaxCoordinates<Container, Array3>(vertices));
         }
 
+        constexpr std::array<Direction, 3> ALL_DIRECTIONS{Direction::X, Direction::Y, Direction::Z};
+
         /**
         * Takes points of a face of a polyhedron and clips them to this box. If all the points lie in the box no changes are made but if points lie outside of the box they are linearly interpolated onto the box.
         * Uses the Sutherland-Hodgman-Algorithm.
@@ -207,7 +208,7 @@ namespace polyhedralGravity {
             input.reserve(points.size());
             //every plane defined by the maxPoint has to flip its normal because the normals have to point inside the bounding box.
             bool flipPlane = false;
-            for (const Direction direction: {Direction::X, Direction::Y, Direction::Z}) {
+            for (const Direction direction: ALL_DIRECTIONS) {
                 const auto directionPlanes = {Plane(minPoint, direction), Plane(maxPoint, direction)};
                 for (const auto &plane: directionPlanes) {
                     std::swap(input, clipped);
@@ -268,13 +269,13 @@ namespace polyhedralGravity {
     /**
      * A set that stores indices of the faces vector in the KDTree. This effectively corresponds to a set of triangles. For performance purposes a std::vector is used instead of a std::set.
      */
-    using TriangleIndexList = std::vector<size_t>;
+    using TriangleIndexVector = std::vector<size_t>;
 
     /**
     * Triangle sets contained in an array. Used by the KDTree to divide a bounding boxes included triangles into smaller subsets. For the semantic purpose of the contained sets please refer to the comments in the usage context.
      */
     template<size_t Number>
-    using TriangleIndexLists = std::array<std::unique_ptr<TriangleIndexList>, Number>;
+    using TriangleIndexVectors = std::array<std::unique_ptr<TriangleIndexVector>, Number>;
 
     /**
     * Used by {@link PlaneEvent} to position the face that generated the event relative to the generated plane.
@@ -329,25 +330,25 @@ namespace polyhedralGravity {
     /**
      * A list of PlaneEvents.
     */
-    using PlaneEventList = std::vector<PlaneEvent>;
+    using PlaneEventVector = std::vector<PlaneEvent>;
 
     /**
     * An array of PlaneEventLists.
     */
     template<size_t Number>
-    using PlaneEventLists = std::array<std::unique_ptr<PlaneEventList>, Number>;
+    using PlaneEventVectors = std::array<std::unique_ptr<PlaneEventVector>, Number>;
 
     /**
      * Extracts the indices of the triangle faces that are referenced by the given PlaneEvents.
      * @param events The PlaneEvents containing information about the faces.
      * @return A list of face indices.
      */
-    static TriangleIndexList convertEventsToFaces(const std::variant<TriangleIndexList, PlaneEventList> &events) {
-        if (std::holds_alternative<TriangleIndexList>(events)) {
-            return std::get<TriangleIndexList>(events);
+    static TriangleIndexVector convertEventsToFaces(const std::variant<TriangleIndexVector, PlaneEventVector> &events) {
+        if (std::holds_alternative<TriangleIndexVector>(events)) {
+            return std::get<TriangleIndexVector>(events);
         }
-        const auto &eventList{std::get<PlaneEventList>(events)};
-        TriangleIndexList triangles{};
+        const auto &eventList{std::get<PlaneEventVector>(events)};
+        TriangleIndexVector triangles{};
         triangles.reserve(eventList.size());
         //used to avoid duplication
         std::unordered_set<size_t> processedFaces{};
@@ -363,12 +364,12 @@ namespace polyhedralGravity {
         return triangles;
     }
 
-    static size_t countFaces(const std::variant<TriangleIndexList, PlaneEventList> &triangles) {
+    static size_t countFaces(const std::variant<TriangleIndexVector, PlaneEventVector> &triangles) {
         return std::visit(util::overloaded{
-                                  [](const TriangleIndexList &indexList) {
+                                  [](const TriangleIndexVector &indexList) {
                                       return indexList.size();
                                   },
-                                  [](const PlaneEventList &eventList) {
+                                  [](const PlaneEventVector &eventList) {
                                       size_t count{0};
                                       std::unordered_set<size_t> processedFaces{};
                                       std::for_each(eventList.cbegin(), eventList.cend(), [&processedFaces, &count](const auto &planeEvent) {
