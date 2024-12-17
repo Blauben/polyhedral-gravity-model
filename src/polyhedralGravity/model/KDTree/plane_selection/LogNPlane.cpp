@@ -73,12 +73,12 @@ namespace polyhedralGravity {
         const auto faceClassification{classifyTrianglesRelativeToPlane(planeEvents, plane, minSide)};
         PlaneEventList planeEventsMin{};
         PlaneEventList planeEventsMax{};
-        std::vector<unsigned long> facesIndexBoth{};
+        TriangleIndexList facesIndexBoth{};
         planeEventsMin.reserve(planeEvents.size() / 2);
         planeEventsMax.reserve(planeEvents.size() / 2);
         //value estimation taken from source paper
         facesIndexBoth.reserve(std::ceil(std::sqrt(planeEvents.size())));
-        std::unordered_set<unsigned long> processedIndices{};
+        std::unordered_set<size_t> processedIndices{};
 
         auto insertToBothIfAbsent = [&facesIndexBoth, &processedIndices](const auto faceIndex) {
             if (processedIndices.find(faceIndex) == processedIndices.end()) {

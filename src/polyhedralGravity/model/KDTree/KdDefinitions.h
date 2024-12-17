@@ -3,6 +3,7 @@
 #include "polyhedralGravity/model/GravityModelData.h"
 
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <thrust/iterator/transform_iterator.h>
 #include <unordered_set>
@@ -349,7 +350,7 @@ namespace polyhedralGravity {
         TriangleIndexList triangles{};
         triangles.reserve(eventList.size());
         //used to avoid duplication
-        std::unordered_set<unsigned long> processedFaces{};
+        std::unordered_set<size_t> processedFaces{};
         auto insertIfAbsent = [&triangles, &processedFaces](const auto &planeEvent) {
             const auto faceIndex{planeEvent.faceIndex};
             if (processedFaces.find(faceIndex) == processedFaces.end()) {
@@ -369,7 +370,7 @@ namespace polyhedralGravity {
                                   },
                                   [](const PlaneEventList &eventList) {
                                       size_t count{0};
-                                      std::unordered_set<unsigned long> processedFaces{};
+                                      std::unordered_set<size_t> processedFaces{};
                                       std::for_each(eventList.cbegin(), eventList.cend(), [&processedFaces, &count](const auto &planeEvent) {
                                           if (processedFaces.find(planeEvent.faceIndex) == processedFaces.end()) {
                                               processedFaces.insert(planeEvent.faceIndex);
@@ -391,9 +392,9 @@ namespace polyhedralGravity {
         * @param faces the faces vector to lookup face indices.
         * @return pair of transform iterators.
         */
-    [[nodiscard]] static auto transformIterator(const std::vector<unsigned long>::const_iterator begin, const std::vector<unsigned long>::const_iterator end, const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces) {
+    [[nodiscard]] static auto transformIterator(const std::vector<size_t>::const_iterator begin, const std::vector<size_t>::const_iterator end, const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces) {
         //The offset must be captured by value to ensure its lifetime!
-        const auto lambdaApplication = [&vertices, &faces](unsigned long faceIndex) {
+        const auto lambdaApplication = [&vertices, &faces](size_t faceIndex) {
             const auto &face = faces[faceIndex];
             Array3Triplet vertexTriplet = {
                     vertices[face[0]],

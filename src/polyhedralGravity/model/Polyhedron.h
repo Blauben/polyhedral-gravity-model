@@ -1,7 +1,7 @@
 #pragma once
 
-#include "polyhedralGravity/model/KDTree/KDTree.h"
 #include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/KDTree/KDTree.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
@@ -155,6 +155,7 @@ namespace polyhedralGravity {
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         * @param treeAlgorithm which KDTree plane selection algorithm to use for integrity checks.
          *
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
@@ -165,7 +166,8 @@ namespace polyhedralGravity {
                 const std::vector<IndexArray3> &faces,
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
-                const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC);
+                const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
+                const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm = PlaneSelectionAlgorithm::Algorithm::LOG);
 
         /**
          * Generates a polyhedron from nodes and faces.
@@ -173,6 +175,7 @@ namespace polyhedralGravity {
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (defaults: to OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         * @param treeAlgorithm which KDTree plane selection algorithm to use for integrity checks.
          *
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
@@ -182,7 +185,8 @@ namespace polyhedralGravity {
                 const PolyhedralSource &polyhedralSource,
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
-                const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC);
+                const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
+                const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm = PlaneSelectionAlgorithm::Algorithm::LOG);
 
         /**
          * Generates a polyhedron from nodes and faces.
@@ -190,6 +194,7 @@ namespace polyhedralGravity {
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (defaults: too OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         * @param treeAlgorithm which KDTree plane selection algorithm to use for integrity checks.
          *
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
@@ -197,7 +202,8 @@ namespace polyhedralGravity {
          */
         Polyhedron(const PolyhedralFiles &polyhedralFiles, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
-                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC);
+                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
+                   const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm = PlaneSelectionAlgorithm::Algorithm::LOG);
 
         /**
          * Generates a polyhedron from nodes and faces.
@@ -206,6 +212,7 @@ namespace polyhedralGravity {
          * @param density the density of the polyhedron (it must match the unit of the mesh, e.g., mesh in @f$[m]@f$ requires density in @f$[kg/m^3]@f$)
          * @param orientation specify if the plane unit normals point outwards or inwards (defaults: tooo OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
+         * @param treeAlgorithm which KDTree plane selection algorithm to use for integrity checks.
          *
          * @note ASSERTS PRE-CONDITION that the in the indexing in the faces vector starts with zero!
          * @throws std::invalid_argument if no face contains the node zero indicating mathematical index
@@ -213,7 +220,8 @@ namespace polyhedralGravity {
          */
         Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
-                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC);
+                   const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
+                   const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm = PlaneSelectionAlgorithm::Algorithm::LOG);
 
         /**
          * Default destructor
@@ -367,4 +375,4 @@ namespace polyhedralGravity {
         [[nodiscard]] size_t countRayPolyhedronIntersections(const Array3Triplet &face) const;
     };
 
-}
+}// namespace polyhedralGravity
