@@ -7,9 +7,6 @@
 #include <algorithm>
 #include <memory>
 
-constexpr uint8_t LESSER{0};
-constexpr uint8_t GREATER{1};
-
 namespace polyhedralGravity {
 
     /**
@@ -60,16 +57,7 @@ namespace polyhedralGravity {
          */
         [[nodiscard]] std::vector<std::shared_ptr<TreeNode>> getChildrenForIntersection(const Array3 &origin, const Array3 &ray);
 
-        void printTree() override {//TODO: remove
-            std::cout << "SplitNode ID:  " << nodeId << " , Depth: " << recursionDepth(nodeId) << ", Plane Coordinate: " << std::to_string(_plane.axisCoordinate) << " Direction: " << std::to_string(static_cast<int>(_plane.orientation)) << std::endl;
-            std::cout << "Children; Lesser: " << (_lesser != nullptr ? std::to_string(_lesser->nodeId) : "None") << "; Greater: " << (_greater != nullptr ? std::to_string(_greater->nodeId) : "None") << std::endl;
-            if (_lesser != nullptr) {
-                _lesser->printTree();
-            }
-            if (_greater != nullptr) {
-                _greater->printTree();
-            }
-        }
+        friend std::ostream &operator<<(std::ostream &os, const SplitNode &node);
 
     private:
         /**

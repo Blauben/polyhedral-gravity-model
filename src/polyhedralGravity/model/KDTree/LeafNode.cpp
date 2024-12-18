@@ -61,6 +61,11 @@ namespace polyhedralGravity {
         } else {
             return std::nullopt;
         }
-}
+    }
+
+    std::ostream &operator<<(std::ostream &os, const LeafNode &node) {
+        os << "LeafNode ID: " << node.nodeId << ", Depth: " << recursionDepth(node.nodeId) << std::endl;
+        return os;
+    }
 
 }

@@ -26,10 +26,13 @@ namespace polyhedralGravity {
         * @param intersections The set intersection points are added to.
         */
         void getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) const;
-
-        void printTree() override {//TODO: remove
-            std::cout << "LeafNode ID: " << nodeId << ", Depth: " << recursionDepth(nodeId) << std::endl;
-        }
+        /**
+         * Prints the current leaf node's information.
+         * @param os Where to stream to.
+         * @param node The node to retrieve data from.
+         * @return The ostream after streaming has been completed.
+         */
+        friend std::ostream &operator<<(std::ostream &os, const LeafNode &node);
 
 
     private:

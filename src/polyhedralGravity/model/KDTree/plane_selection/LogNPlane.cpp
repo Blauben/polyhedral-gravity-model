@@ -3,64 +3,12 @@
 namespace polyhedralGravity {
     // O(N*log^2(N)) implementation
     std::tuple<Plane, double, std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2>>> LogNPlane::findPlane(const SplitParam &splitParam) {
-        //initialize the default plane and make it costly
-        double cost{std::numeric_limits<double>::infinity()};
-        Plane optPlane{};
-        bool minSide{true};
-        //each vertex proposes a split plane candidate: create an event and queue it in the buffer
-        PlaneEventVector events{std::move(generatePlaneEvents(splitParam))};
-        //records the array of Triangles MIN, MAX and PLANAR for each dimension.
-        using TriangleCounter = std::array<size_t, 3>;
-        using TriangleDimensionCounter = std::unordered_map<Direction, TriangleCounter>;
-        //values correspond to MIN, MAX and PLANAR values in the loop for the triangle counter of a single dimension
-        TriangleCounter triangleCount{0, countFaces(splitParam.boundFaces), 0};
-        //initialize for all dimensions
-        TriangleDimensionCounter triangleDimPosCount{{Direction::X, triangleCount}, {Direction::Y, triangleCount}, {Direction::Z, triangleCount}};
-        //traverse all the events
-        int i{0};
-        while (i < events.size()) {
-            constexpr uint8_t MIN = 0;
-            constexpr uint8_t MAX = 1;
-            constexpr uint8_t PLANAR = 2;
-            //poll a plane to test
-            Plane &candidatePlane = events[i].plane;
-            //for each plane calculate the faces whose vertices lie in the plane. Differentiate between the face starting in the plane, ending in the plane or all vertices lying in the plane
-            size_t p_start{0}, p_end{0}, p_planar{0};
-            //count all faces that end in the plane, this works because the PlaneEvents are sorted by position and then by PlaneEventType
-            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::ending) {
-                p_end++;
-                i++;
-            }
-            //count all the faces that lie in the plane
-            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::planar) {
-                p_planar++;
-                i++;
-            }
-            //count all the faces that start in the plane
-            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::starting) {
-                p_start++;
-                i++;
-            }
-            //reference to the triangle counter of the current dimension -> better readability
-            TriangleCounter &currentDimensionCounter{triangleDimPosCount[candidatePlane.orientation]};
-            //update the absolute triangle amounts relative to the current plane using the values of the new plane
-            currentDimensionCounter[PLANAR] = p_planar;
-            currentDimensionCounter[MAX] -= p_planar + p_end;
-            //evaluate plane and update should the new plane be more efficient
-            auto [candidateCost, minSideChosen] = costForPlane(splitParam.boundingBox, candidatePlane, currentDimensionCounter[MIN], currentDimensionCounter[MAX], currentDimensionCounter[PLANAR]);
-            if (candidateCost < cost) {
-                cost = candidateCost;
-                optPlane = candidatePlane;
-                minSide = minSideChosen;
-            }
-            //shift the plane to the next candidate and prepare next iteration
-            currentDimensionCounter[MIN] += p_planar + p_start;
-            currentDimensionCounter[PLANAR] = 0;
-        }
+        const PlaneEventVector events{std::move(generatePlaneEvents(splitParam))};
+        TriangleCounter triangleCounter{3, {0, countFaces(splitParam.boundFaces), 0}};
+        auto [optPlane, cost, minSide] = traversePlaneEvents(events, triangleCounter, splitParam.boundingBox);
         //generate the triangle index lists for the child bounding boxes and return them along with the optimal plane and the plane's cost.
         return {optPlane, cost, generatePlaneEventSubsets(splitParam, events, optPlane, minSide)};
     }
-
 
     PlaneEventVector LogNPlane::generatePlaneEvents(const SplitParam &splitParam) {
         if (std::holds_alternative<TriangleIndexVector>(splitParam.boundFaces)) {
