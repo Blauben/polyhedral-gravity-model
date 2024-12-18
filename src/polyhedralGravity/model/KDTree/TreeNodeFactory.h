@@ -23,7 +23,7 @@ namespace polyhedralGravity {
         * the right child 2 * <currrent_id> + 2.
         * @return A unique pointer to the new TreeNode.
          */
-        static std::unique_ptr<TreeNode> createTreeNode(const SplitParam &splitParam, size_t nodeId);
+        std::unique_ptr<TreeNode> createTreeNode(const SplitParam &splitParam, size_t nodeId);
     }// namespace TreeNodeFactory
 
 }// namespace polyhedralGravity

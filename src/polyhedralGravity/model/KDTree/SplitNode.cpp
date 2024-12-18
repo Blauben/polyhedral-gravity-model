@@ -8,7 +8,7 @@ namespace polyhedralGravity {
 
     std::shared_ptr<TreeNode> SplitNode::getChildNode(const size_t index) {
         //create a reference to store the built node in
-        std::shared_ptr<TreeNode> &node = index == LESSER ? _lesser : _greater;
+        std::shared_ptr<TreeNode> &node = index == 0 ? _lesser : _greater;
         //node is not yet built
         if (node == nullptr) {
             //copy parent param and modify to fit new node
@@ -47,27 +47,39 @@ namespace polyhedralGravity {
         const bool isParallel = std::isinf(t_split);
         bool planeIsHitInsideBox = 0 <= t_split && t_enter <= t_split && t_split <= t_exit;
         if (!isParallel && planeIsHitInsideBox) {
-            delegates.push_back(getChildNode(LESSER));
-            delegates.push_back(getChildNode(GREATER));
+            delegates.push_back(getChildNode(0));
+            delegates.push_back(getChildNode(1));
             return delegates;
         }
         // the split plane is behind the ray origin
         if (t_split < 0) {
             //check in which point the origin lies in order to continue intersection in that box
-            delegates.push_back(origin[static_cast<int>(_plane.orientation)] < _plane.axisCoordinate ? getChildNode(LESSER) : getChildNode(GREATER));
+            delegates.push_back(origin[static_cast<int>(_plane.orientation)] < _plane.axisCoordinate ? getChildNode(0) : getChildNode(1));
             return delegates;
         }
         //intersection point of the ray and the bounding box
         const double intersectionCoord{ray[static_cast<int>(_plane.orientation)] * t_enter + origin[static_cast<int>(_plane.orientation)]};
         // the entry point of the ray to the bounding box is nearer to the origin than the split plane -> ray hits lesser box
         if (intersectionCoord < _plane.axisCoordinate) {
-            delegates.push_back(getChildNode(LESSER));
+            delegates.push_back(getChildNode(0));
         }
         // only the greater box is hit by the ray
         else {
-            delegates.push_back(getChildNode(GREATER));
+            delegates.push_back(getChildNode(1));
         }
         return delegates;
+    }
+
+    std::ostream &operator<<(std::ostream &os, const SplitNode &node) {
+        std::cout << "SplitNode ID:  " << node.nodeId << " , Depth: " << recursionDepth(node.nodeId) << ", Plane Coordinate: " << std::to_string(node._plane.axisCoordinate) << " Direction: " << std::to_string(static_cast<int>(node._plane.orientation)) << std::endl;
+        std::cout << "Children; Lesser: " << (node._lesser != nullptr ? std::to_string(node._lesser->nodeId) : "None") << "; Greater: " << (node._greater != nullptr ? std::to_string(node._greater->nodeId) : "None") << std::endl;
+        if (node._lesser != nullptr) {
+            os << node._lesser;
+        }
+        if (node._greater != nullptr) {
+            os << node._greater;
+        }
+        return os;
     }
 
     double SplitNode::rayPlaneIntersection(const Array3 &origin, const Array3 &ray) const {
