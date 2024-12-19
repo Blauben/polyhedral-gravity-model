@@ -72,7 +72,6 @@ endif ()
 if (BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT)
     message(STATUS "Building the Polyhedral Gravity Executable")
 
-    include(gtest)
     include(benchmark)
 
     # Building the standalone Executable
