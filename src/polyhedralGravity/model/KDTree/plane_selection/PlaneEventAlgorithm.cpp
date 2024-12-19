@@ -4,26 +4,29 @@ namespace polyhedralGravity {
 
     TriangleCounter::TriangleCounter(const size_t dimensionCount, const std::array<size_t, 3> &initialValues)
         : dimensionTriangleValues(dimensionCount, initialValues) {
+        if (dimensionCount == 0) {
+            throw std::invalid_argument("Dimension count must be greater than zero");
+        }
     }
 
     void TriangleCounter::updateMax(Direction direction, const size_t p_planar, const size_t p_end) {
-        dimensionTriangleValues[static_cast<size_t>(direction)][1] -= p_planar + p_end;
+        dimensionTriangleValues.at(static_cast<size_t>(direction) % dimensionTriangleValues.size()).at(1) -= p_planar + p_end;
     }
 
     void TriangleCounter::updateMin(Direction direction, const size_t p_planar, const size_t p_start) {
-        dimensionTriangleValues[static_cast<size_t>(direction)][0] += p_planar + p_start;
+        dimensionTriangleValues.at(static_cast<size_t>(direction) % dimensionTriangleValues.size()).at(0) += p_planar + p_start;
     }
     void TriangleCounter::setPlanar(Direction direction, const size_t p_planar) {
-        dimensionTriangleValues[static_cast<size_t>(direction)][2] = p_planar;
+        dimensionTriangleValues.at(static_cast<size_t>(direction) % dimensionTriangleValues.size()).at(2) = p_planar;
     }
     size_t TriangleCounter::getMin(Direction direction) const {
-        return dimensionTriangleValues[static_cast<size_t>(direction)][0];
+        return dimensionTriangleValues.at(static_cast<size_t>(direction) % dimensionTriangleValues.size()).at(0);
     }
     size_t TriangleCounter::getMax(Direction direction) const {
-        return dimensionTriangleValues[static_cast<size_t>(direction)][1];
+        return dimensionTriangleValues.at(static_cast<size_t>(direction) % dimensionTriangleValues.size()).at(1);
     }
     size_t TriangleCounter::getPlanar(Direction direction) const {
-        return dimensionTriangleValues[static_cast<size_t>(direction)][2];
+        return dimensionTriangleValues.at(static_cast<size_t>(direction) % dimensionTriangleValues.size()).at(2);
     }
 
     PlaneEventVector PlaneEventAlgorithm::generatePlaneEventsFromFaces(const SplitParam &splitParam, std::vector<Direction> directions) {
@@ -77,17 +80,17 @@ namespace polyhedralGravity {
             //for each plane calculate the faces whose vertices lie in the plane. Differentiate between the face starting in the plane, ending in the plane or all vertices lying in the plane
             size_t p_start{0}, p_end{0}, p_planar{0};
             //count all faces that end in the plane, this works because the PlaneEvents are sorted by position and then by PlaneEventType
-            while (i < events.size() && events[i].plane.orientation != candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::ending) {
+            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::ending) {
                 p_end++;
                 i++;
             }
             //count all the faces that lie in the plane
-            while (i < events.size() && events[i].plane.orientation != candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::planar) {
+            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::planar) {
                 p_planar++;
                 i++;
             }
             //count all the faces that start in the plane
-            while (i < events.size() && events[i].plane.orientation != candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::starting) {
+            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::starting) {
                 p_start++;
                 i++;
             }
