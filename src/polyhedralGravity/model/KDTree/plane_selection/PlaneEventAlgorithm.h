@@ -35,19 +35,19 @@ namespace polyhedralGravity {
          * @param direction The dimension.
          * @return The min value.
          */
-        size_t getMin(Direction direction) const;
+        [[nodiscard]] size_t getMin(Direction direction) const;
         /**
          * Returns max value for a specific dimension.
          * @param direction The dimension.
          * @return The max value.
          */
-        size_t getMax(Direction direction) const;
+        [[nodiscard]] size_t getMax(Direction direction) const;
         /**
          * Returns the amount of planar faces for a specific dimension.
          * @param direction The dimension.
          * @return The planar face amount.
          */
-        size_t getPlanar(Direction direction) const;
+        [[nodiscard]] size_t getPlanar(Direction direction) const;
         TriangleCounter(size_t dimensionCount, const std::array<size_t, 3> &initialValues);
 
     private:
