@@ -3,7 +3,8 @@ include(FetchContent)
 message(STATUS "Setting up Google Benchmark")
 set(GOOGLE_BENCHMARK_VERSION 1.9.1)
 
-set(BENCHMARK_USE_BUNDLED_GTEST OFF)
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable benchmark testing" FORCE)
+include(gtest)
 
 # Try to find an existing installation of Google Benchmark
 find_package(benchmark ${GOOGLE_BENCHMARK_VERSION} QUIET)

@@ -70,15 +70,9 @@ namespace polyhedralGravity {
        */
         std::unique_ptr<SplitParam> _splitParam;
 
-        /**
-         * The factory used when TreeNodes try to create child nodes here.
-         * The KDTree as a friend of TreeNodeFactory can set the parameters used during creation.
-         */
-        const std::shared_ptr<TreeNodeFactory> treeNodeFactory;
-
-        void printTree() const {//TODO: remove
+        void printTree(std::ostream &os) const {
             if (_rootNode != nullptr) {
-                _rootNode->printTree();
+                os << _rootNode;
             }
         }
     };

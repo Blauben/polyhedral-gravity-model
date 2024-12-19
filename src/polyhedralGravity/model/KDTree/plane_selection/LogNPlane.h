@@ -8,7 +8,7 @@
 namespace polyhedralGravity {
     class LogNPlane final : public PlaneEventAlgorithm {
     public:
-        std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> findPlane(const SplitParam &splitParam) override;
+        std::tuple<Plane, double, std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2>>> findPlane(const SplitParam &splitParam) override;
 
     private:
         /**
@@ -16,7 +16,7 @@ namespace polyhedralGravity {
         * @param splitParam Contains the parameters of the scene to find candidate planes for. {@link SplitParam}
         * @return The vector of PlaneEvents
         */
-        static PlaneEventList generatePlaneEvents(const SplitParam &splitParam);
+        static PlaneEventVector generatePlaneEvents(const SplitParam &splitParam);
 
         /**
         * When an optimal plane has been found divide the used PlaneEvents for further subdivision through child nodes.
@@ -26,7 +26,7 @@ namespace polyhedralGravity {
         * @param minSide Whether to include planar faces to the bounding box closer to the origin.
         * @returns The PlaneEventLists for the bounding boxes closer and further away from the origin.
         */
-        static PlaneEventLists<2> generatePlaneEventSubsets(const SplitParam &splitParam, const PlaneEventList &planeEvents, const Plane &plane, bool minSide);
+        static PlaneEventVectors<2> generatePlaneEventSubsets(const SplitParam &splitParam, const PlaneEventVector &planeEvents, const Plane &plane, bool minSide);
 
         enum class Locale {
             MIN_ONLY,
@@ -41,7 +41,7 @@ namespace polyhedralGravity {
          * @param minSide
          * @return An unordered_map used for lookups of individual face locales.
          */
-        static std::unordered_map<size_t, Locale> classifyTrianglesRelativeToPlane(const PlaneEventList &events, const Plane &plane, bool minSide);
+        static std::unordered_map<size_t, Locale> classifyTrianglesRelativeToPlane(const PlaneEventVector &events, const Plane &plane, bool minSide);
 
         /**
         * Creates new events for two sub bounding boxes out of faces that overlap both of them.
@@ -50,7 +50,7 @@ namespace polyhedralGravity {
         * @param plane The plane that splits the scene's bounding box into two new sub boxes.
         * @return Two new PlaneEventLists for the minimal and maximal bounding boxes respectively (unsorted!).
         */
-        static std::array<PlaneEventList, 2> generatePlaneEventsForClippedFaces(const SplitParam &splitParam, const TriangleIndexList &faceIndices, const Plane &plane);
+        static std::array<PlaneEventVector, 2> generatePlaneEventsForClippedFaces(const SplitParam &splitParam, const TriangleIndexVector &faceIndices, const Plane &plane);
 
         /**
          * Takes two sorted PlaneEventLists and merges them in a single merge sort step.
@@ -58,6 +58,6 @@ namespace polyhedralGravity {
          * @param second The second PlaneEventList
          * @return A unique_ptr to a combined sorted PlaneEventList.
          */
-        static std::unique_ptr<PlaneEventList> mergePlaneEventLists(const PlaneEventList &first, const PlaneEventList &second);
+        static std::unique_ptr<PlaneEventVector> mergePlaneEventLists(const PlaneEventVector &first, const PlaneEventVector &second);
     };
 }// namespace polyhedralGravity

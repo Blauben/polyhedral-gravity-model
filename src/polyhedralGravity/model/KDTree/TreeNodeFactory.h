@@ -15,8 +15,7 @@ namespace polyhedralGravity {
     /**
      * Factory class for building TreeNodes. {@link TreeNode}
      */
-    class TreeNodeFactory {
-    public:
+    namespace TreeNodeFactory {
         /**
         * Builds a new TreeNode for a KDTree. {@link KDTree}
         * @param splitParam Parameters for intersection testing and child node creation. {@link SplitParam}
@@ -24,7 +23,7 @@ namespace polyhedralGravity {
         * the right child 2 * <currrent_id> + 2.
         * @return A unique pointer to the new TreeNode.
          */
-        static std::unique_ptr<TreeNode> createTreeNode(const SplitParam &splitParam, size_t nodeId);
-    };
+        std::unique_ptr<TreeNode> createTreeNode(const SplitParam &splitParam, size_t nodeId);
+    }// namespace TreeNodeFactory
 
 }// namespace polyhedralGravity

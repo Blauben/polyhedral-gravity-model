@@ -18,8 +18,6 @@ namespace polyhedralGravity {
          */
         const size_t nodeId;
 
-        virtual void printTree() = 0;//TODO: remove
-
     protected:
         /**
         * Protected constructor intended only for child classes. Please use {@link TreeNodeFactory} instead.
