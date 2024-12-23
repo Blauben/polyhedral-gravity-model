@@ -15,7 +15,7 @@ namespace polyhedralGravity {
             Polyhedron polyhedron = createBigPolyhedron(adapter.getPolyhedralSource(), algorithm);
             benchmark::ClobberMemory();
         }
-        state.SetComplexityN(static_cast<benchmark::ComplexityN>(std::get<1>(source).size()));
+        state.SetComplexityN(static_cast<benchmark::ComplexityN>(std::get<1>(adapter.getPolyhedralSource()).size()));
     }
 
 
