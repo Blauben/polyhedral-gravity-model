@@ -6,7 +6,7 @@ namespace polyhedralGravity {
     const std::vector<std::string> filePaths{"../example-config/data/Eros", "../example-config/data/Eros_scaled_1", "../example-config/data/Eros_scaled_2", "../example-config/data/Eros_scaled_3", "../example-config/data/Eros_scaled_4"};
 
     Polyhedron createBigPolyhedron(const PolyhedralSource &source, const PlaneSelectionAlgorithm::Algorithm &algorithm) {
-        return Polyhedron(source, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL, algorithm);
+        return {source, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL, algorithm};
     }
 
     void BM_Polyhedron_Tree(benchmark::State &state, const PlaneSelectionAlgorithm::Algorithm &algorithm) {
