@@ -10,12 +10,15 @@
 #include <array>
 #include <deque>
 #include <memory>
+#include <mutex>
+#include <thrust/execution_policy.h>
+#include <thrust/for_each.h>
 #include <utility>
 
 namespace polyhedralGravity {
 
     /**
-     * A KDTree for a given polyhedron to speed up ray intersections with the polyhedron
+     * A KDTree for a given polyhedron to speed up ray intersections with the polyhedron. It is thread safe.
      */
     class KDTree {
     private:
@@ -32,6 +35,11 @@ namespace polyhedralGravity {
          * The polyhedron's faces: A face is a triplet of vertex indices.
          */
         const std::vector<IndexArray3> _faces;
+
+        /**
+         * Set when the root node has been created.
+         */
+        std::once_flag rootNodeCreated;
 
     public:
         /**

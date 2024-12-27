@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 
 namespace polyhedralGravity {
 
@@ -21,6 +22,10 @@ namespace polyhedralGravity {
         * The SplitNode that contains the bounding box further away from the origin with respect to the split plane
         */
         std::shared_ptr<TreeNode> _greater;
+        /**
+         * Flags set when child node is created. Index 0 for lesser and 1 for greater.
+         */
+        std::array<std::once_flag, 2> childNodeCreated;
         /**
         * The plane splitting the two TreeNodes contained in this SplitNode
         */

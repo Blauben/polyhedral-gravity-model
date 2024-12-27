@@ -44,6 +44,8 @@ option(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE "Set this to on if the python i
 option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (Default: ON)" ON)
 # Option to build benchmarks or not
 option(BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT "Set to on if the benchmark executable should be built (Default: ON)" ON)
+# Option to enable Include-What-You-Use warnings during compilation
+option(ENABLE_IWYU "Set to on to enable Include-What-You-Use warnings (Default: OFF)" OFF)
 
 IF (_LIBCPP_DISABLE_AVAILABILITY)
     message(STATUS "Disabling availability macros for libc++")
@@ -79,7 +81,10 @@ include(spdlog)
 include(tetgen)
 include(xsimd)
 include(clang_format)
-include(include-what-you-use)
+
+if(${ENABLE_IWYU})
+    include(include-what-you-use)
+endif()
 
 ###############################
 # Thrust Parallelization Set-Up

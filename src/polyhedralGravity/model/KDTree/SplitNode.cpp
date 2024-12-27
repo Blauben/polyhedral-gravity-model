@@ -10,7 +10,7 @@ namespace polyhedralGravity {
         //create a reference to store the built node in
         std::shared_ptr<TreeNode> &node = index == 0 ? _lesser : _greater;
         //node is not yet built
-        if (node == nullptr) {
+        std::call_once(childNodeCreated[index], [this, &node, &index]() {
             //copy parent param and modify to fit new node
             SplitParam childParam{*_splitParam};
             //get the bounding box after splitting;
@@ -24,7 +24,7 @@ namespace polyhedralGravity {
             if (_lesser != nullptr && _greater != nullptr) {
                 _splitParam.reset();
             }
-        }
+        });
         return node;
     }
 
@@ -35,14 +35,13 @@ namespace polyhedralGravity {
         delegates.reserve(2);
         //calculate entry and exit points of the ray hitting the bounding box
         auto [t_enter, t_exit] = _boundingBox.rayBoxIntersection(origin, ray);
-        // bounding box was not hit because the ray passed the box or is moving into the opposite direction of it, TODO: consider moving to root node because only called there
+        // bounding box was not hit because the ray passed the box or is moving into the opposite direction of it,
         if (t_exit < t_enter || t_exit < 0) {
             //empty
             return delegates;
         }
         //calculate point where plane was hit
         const double t_split{rayPlaneIntersection(origin, ray)};
-        //TODO: consider optimizing: t_param stay the same in sub boxes
         //the split plane is hit inside of the bounding box -> both child boxes need to be checked
         const bool isParallel = std::isinf(t_split);
         bool planeIsHitInsideBox = 0 <= t_split && t_enter <= t_split && t_split <= t_exit;

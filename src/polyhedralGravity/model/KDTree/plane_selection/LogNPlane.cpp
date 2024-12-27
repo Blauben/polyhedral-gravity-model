@@ -36,7 +36,7 @@ namespace polyhedralGravity {
         };
 
         //Step 2
-        std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&faceClassification, &planeEventsMin, &planeEventsMax, &insertToBothIfAbsent](const auto &event) {
+        thrust::for_each(thrust::host, planeEvents.cbegin(), planeEvents.cend(), [&faceClassification, &planeEventsMin, &planeEventsMax, &insertToBothIfAbsent](const auto &event) {
             switch (faceClassification.at(event.faceIndex)) {
                 //face of event only contributes to min side event can be added to side without clipping because no overlap with split plane
                 case Locale::MIN_ONLY:
@@ -65,11 +65,11 @@ namespace polyhedralGravity {
         //each face generates 6 plane events on average, thus the amount of faces can be roughly estimated.
         result.reserve(events.size() / 6);
         //preparing the map by initializing all faces with them having area in both sub bounding boxes
-        std::for_each(events.cbegin(), events.cend(), [&result](const auto &event) {
+        thrust::for_each(thrust::host, events.cbegin(), events.cend(), [&result](const auto &event) {
             result[event.faceIndex] = Locale::BOTH;
         });
         //now search for conditions proving that the faces DO NOT have area in both boxes
-        std::for_each(events.begin(), events.end(), [minSide, &result, &plane](const auto &event) {
+        thrust::for_each(thrust::host, events.begin(), events.end(), [minSide, &result, &plane](const auto &event) {
             if (event.type == PlaneEventType::ending && event.plane.orientation == plane.orientation && event.plane.axisCoordinate <= plane.axisCoordinate) {
                 result[event.faceIndex] = Locale::MIN_ONLY;
             } else if (event.type == PlaneEventType::starting && event.plane.orientation == plane.orientation && event.plane.axisCoordinate >= plane.axisCoordinate) {
@@ -116,7 +116,7 @@ namespace polyhedralGravity {
         //transform faces to vertices
         auto [begin_it, end_it] = transformIterator(faceIndices.cbegin(), faceIndices.cend(), splitParam.vertices, splitParam.faces);
         //create new events for each face in both sub boxes
-        std::for_each(begin_it, end_it, [&minBox, maxBox, &minEvents, &maxEvents, &createPlaneEvents](const auto &indexAndTriplet) {
+        thrust::for_each(thrust::host, begin_it, end_it, [&minBox, maxBox, &minEvents, &maxEvents, &createPlaneEvents](const auto &indexAndTriplet) {
             const auto &[index, vertexTriplet] = indexAndTriplet;
             createPlaneEvents(vertexTriplet, minBox, index, minEvents);
             createPlaneEvents(vertexTriplet, maxBox, index, maxEvents);

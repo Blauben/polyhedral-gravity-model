@@ -9,9 +9,9 @@ namespace polyhedralGravity {
 
     std::shared_ptr<TreeNode> KDTree::getRootNode() {
         //if the node has already been generated, don't do it again. Instead let the factory determine the TreeNode subclass based on the optimal split.
-        if (!this->_rootNode) {
+        std::call_once(rootNodeCreated, [this]() {
             this->_rootNode = TreeNodeFactory::createTreeNode(*std::move(_splitParam), 0);
-        }
+        });
         return this->_rootNode;
     }
 
@@ -33,7 +33,7 @@ namespace polyhedralGravity {
             //if node is SplitNode perform intersection checks on the children and queue them accordingly
             if (const auto split = std::dynamic_pointer_cast<SplitNode>(node)) {
                 const auto children = split->getChildrenForIntersection(origin, ray);
-                std::for_each(std::begin(children), std::end(children), [&queue](auto child) { queue.push_back(child); });
+                thrust::for_each(thrust::host, std::begin(children), std::end(children), [&queue](auto child) { queue.push_back(child); });
             }
             //if node is leaf then perform intersections with the triangles contained
             else if (const auto leaf = std::dynamic_pointer_cast<LeafNode>(node)) {

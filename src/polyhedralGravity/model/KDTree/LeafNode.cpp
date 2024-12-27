@@ -12,7 +12,7 @@ namespace polyhedralGravity {
         }
         const TriangleIndexVector &boundTriangles{std::get<TriangleIndexVector>(_splitParam->boundFaces)};
         //traverses all contained faces and performs intersection tests with them -> store results in the buffer passed in the arguments
-        std::for_each(boundTriangles.cbegin(), boundTriangles.cend(), [this, &ray, &origin, &intersections](const size_t faceIndex) {
+        thrust::for_each(thrust::host, boundTriangles.cbegin(), boundTriangles.cend(), [this, &ray, &origin, &intersections](const size_t faceIndex) {
             const std::optional<Array3> intersection = rayIntersectsTriangle(origin, ray, _splitParam->faces[faceIndex]);
             if (intersection.has_value()) {
                 intersections.insert(intersection.value());
