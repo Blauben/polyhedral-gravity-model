@@ -96,10 +96,10 @@ namespace polyhedralGravity {
         /**
          * Calculates the intersection points of a ray and a box.
          * @param origin The origin of the ray.
-         * @param ray The ray direction vector.
+         * @param inverseRay The inverse ray direction vector of the ray to be intersected (used for faster calculations).
          * @return Parameters t of the equation $ intersection_point = origin + t * ray $ for the entry and exit intersection points.
          */
-        [[nodiscard]] std::pair<double, double> rayBoxIntersection(const Array3 &origin, const Array3 &ray) const;
+        [[nodiscard]] std::pair<double, double> rayBoxIntersection(const Array3 &origin, const Array3 &inverseRay) const;
 
         /**
         * Calculates the surface area of a box.

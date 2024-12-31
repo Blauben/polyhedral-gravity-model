@@ -26,14 +26,16 @@ namespace polyhedralGravity {
         //iterative approach to avoid stack and heap overflows
         //queue for children of processed nodes
         std::deque<std::shared_ptr<TreeNode>> queue{};
+        //calculate inverse ray direction
+        const Array3 inverseRay{1./ray[0], 1./ray[1], 1./ray[2]};
         //init with tree root
         queue.push_back(getRootNode());
         while (!queue.empty()) {
             auto node = queue.front();
             //if node is SplitNode perform intersection checks on the children and queue them accordingly
             if (const auto split = std::dynamic_pointer_cast<SplitNode>(node)) {
-                const auto children = split->getChildrenForIntersection(origin, ray);
-                thrust::for_each(thrust::host, std::begin(children), std::end(children), [&queue](auto child) { queue.push_back(child); });
+                const auto children = split->getChildrenForIntersection(origin, ray, inverseRay);
+                thrust::for_each(thrust::host, std::begin(children), std::end(children), [&queue](const auto& child) { queue.push_back(child); });
             }
             //if node is leaf then perform intersections with the triangles contained
             else if (const auto leaf = std::dynamic_pointer_cast<LeafNode>(node)) {

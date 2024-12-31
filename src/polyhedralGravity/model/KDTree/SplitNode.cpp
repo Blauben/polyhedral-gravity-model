@@ -28,20 +28,20 @@ namespace polyhedralGravity {
         return node;
     }
 
-    std::vector<std::shared_ptr<TreeNode>> SplitNode::getChildrenForIntersection(const Array3 &origin, const Array3 &ray) {
+    std::vector<std::shared_ptr<TreeNode>> SplitNode::getChildrenForIntersection(const Array3 &origin, const Array3 &ray, const Array3 &inverseRay) {
         using namespace polyhedralGravity::util;
         std::vector<std::shared_ptr<TreeNode>> delegates{};
         //a SplitNode has max two children, so no more space needed.
         delegates.reserve(2);
         //calculate entry and exit points of the ray hitting the bounding box
-        auto [t_enter, t_exit] = _boundingBox.rayBoxIntersection(origin, ray);
+        auto [t_enter, t_exit] = _boundingBox.rayBoxIntersection(origin, inverseRay);
         // bounding box was not hit because the ray passed the box or is moving into the opposite direction of it,
         if (t_exit < t_enter || t_exit < 0) {
             //empty
             return delegates;
         }
         //calculate point where plane was hit
-        const double t_split{rayPlaneIntersection(origin, ray)};
+        const double t_split{rayPlaneIntersection(origin, inverseRay)};
         //the split plane is hit inside of the bounding box -> both child boxes need to be checked
         const bool isParallel = std::isinf(t_split);
         bool planeIsHitInsideBox = 0 <= t_split && t_enter <= t_split && t_split <= t_exit;
@@ -81,8 +81,8 @@ namespace polyhedralGravity {
         return os;
     }
 
-    double SplitNode::rayPlaneIntersection(const Array3 &origin, const Array3 &ray) const {
-        return (this->_plane.axisCoordinate - origin[static_cast<int>(this->_plane.orientation)]) / ray[static_cast<int>(this->_plane.orientation)];
+    double SplitNode::rayPlaneIntersection(const Array3 &origin, const Array3 &inverseRay) const {
+        return (this->_plane.axisCoordinate - origin[static_cast<int>(this->_plane.orientation)]) * inverseRay[static_cast<int>(this->_plane.orientation)];
     }
 
 }// namespace polyhedralGravity

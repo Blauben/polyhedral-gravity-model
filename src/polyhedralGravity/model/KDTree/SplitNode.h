@@ -58,9 +58,10 @@ namespace polyhedralGravity {
          * Gets the children of this node whose bounding boxes are hit by the ray.
          * @param origin The point where the ray originates from.
          * @param ray Specifies the ray direction.
+         * @param inverseRay The inverse of the ray (1/ray), used to speed up calculations where it is divided by ray. Instead, we multiply with inverseRay.
          * @return the child nodes that intersect with the ray
          */
-        [[nodiscard]] std::vector<std::shared_ptr<TreeNode>> getChildrenForIntersection(const Array3 &origin, const Array3 &ray);
+        [[nodiscard]] std::vector<std::shared_ptr<TreeNode>> getChildrenForIntersection(const Array3 &origin, const Array3 &ray, const Array3 &inverseRay);
 
         friend std::ostream &operator<<(std::ostream &os, const SplitNode &node);
 
@@ -68,10 +69,10 @@ namespace polyhedralGravity {
         /**
         * Intersects a ray with the splitPlane.
         * @param origin The point where the ray originates from.
-        * @param ray Specifies the ray direction.
+        * @param inverseRay The inverse ray direction vector of the ray to be intersected (used for faster calculations).
         * @return Returns the t parameter for the intersection point, with t being from the equation $intersection_point = orig + t * ray$. Check for NaN in case of parallel plane and ray.
         */
-        [[nodiscard]] double rayPlaneIntersection(const Array3 &origin, const Array3 &ray) const;
+        [[nodiscard]] double rayPlaneIntersection(const Array3 &origin, const Array3 &inverseRay) const;
     };
 
 }// namespace polyhedralGravity

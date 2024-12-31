@@ -45,13 +45,12 @@ namespace polyhedralGravity {
         : minPoint{0.0, 0.0, 0.0}, maxPoint{0.0, 0.0, 0.0} {
     }
 
-    std::pair<double, double> Box::rayBoxIntersection(const Array3 &origin, const Array3 &ray) const {
+    std::pair<double, double> Box::rayBoxIntersection(const Array3 &origin, const Array3 &inverseRay) const {
         //calculate the parameter t in $ origin + t * ray = point $
-        auto const lambdaIntersectSlabPoint = [&origin, &ray](const Array3 &point) {
-            return std::make_tuple(
-                    (point[0] - origin[0]) / ray[0],
-                    (point[1] - origin[1]) / ray[1],
-                    (point[2] - origin[2]) / ray[2]);
+        auto const lambdaIntersectSlabPoint = [&origin, &inverseRay](const Array3 &point) {
+            using namespace util;
+            //if original ray had 0 as coordinate then inverse ray coordinate is inf. TODO: check
+            return (point - origin) * inverseRay;
         };
         //intersections with slabs defined through minPoint
         auto [tx_1, ty_1, tz_1] = lambdaIntersectSlabPoint(minPoint);
