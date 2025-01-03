@@ -21,7 +21,6 @@ namespace polyhedralGravity {
      * A KDTree for a given polyhedron to speed up ray intersections with the polyhedron. It is thread safe.
      */
     class KDTree {
-    private:
         /**
         * The entry node of the KDTree. Only access using getter.
         */

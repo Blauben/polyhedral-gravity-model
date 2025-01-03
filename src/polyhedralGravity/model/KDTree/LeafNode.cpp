@@ -37,7 +37,7 @@ namespace polyhedralGravity {
         const Array3 edge1 = triangleVertices[1] - triangleVertices[0];
         const Array3 edge2 = triangleVertices[2] - triangleVertices[0];
         const Array3 h = cross(rayVector, edge2);
-        const double a = util::dot(edge1, h);
+        const double a = dot(edge1, h);
         if (a > -EPSILON_ZERO_OFFSET && a < EPSILON_ZERO_OFFSET) {
             return std::nullopt;
         }
@@ -58,9 +58,8 @@ namespace polyhedralGravity {
         const double t = f * dot(edge2, q);
         if (t > EPSILON_ZERO_OFFSET) {
             return rayOrigin + rayVector * t;
-        } else {
-            return std::nullopt;
         }
+        return std::nullopt;
     }
 
     std::ostream &operator<<(std::ostream &os, const LeafNode &node) {

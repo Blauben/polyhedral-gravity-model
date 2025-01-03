@@ -11,11 +11,12 @@ namespace polyhedralGravity {
 
     void BM_Polyhedron_Tree(benchmark::State &state, const PlaneSelectionAlgorithm::Algorithm &algorithm) {
         TetgenAdapter adapter{{filePaths.at(state.range(0)) + ".node", filePaths.at(state.range(0)) + ".face"}};
+        const auto polyhedralSource = adapter.getPolyhedralSource();
         for (auto _: state) {
-            Polyhedron polyhedron = createBigPolyhedron(adapter.getPolyhedralSource(), algorithm);
+            Polyhedron polyhedron = createBigPolyhedron(polyhedralSource, algorithm);
             benchmark::ClobberMemory();
         }
-        state.SetComplexityN(static_cast<benchmark::ComplexityN>(std::get<1>(adapter.getPolyhedralSource()).size()));
+        state.SetComplexityN(static_cast<benchmark::ComplexityN>(std::get<1>(polyhedralSource).size()));
     }
 
 

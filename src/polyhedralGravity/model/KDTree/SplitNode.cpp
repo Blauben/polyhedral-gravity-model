@@ -10,7 +10,7 @@ namespace polyhedralGravity {
         //create a reference to store the built node in
         std::shared_ptr<TreeNode> &node = index == 0 ? _lesser : _greater;
         //node is not yet built
-        std::call_once(childNodeCreated[index], [this, &node, &index]() {
+        std::call_once(childNodeCreated[index], [this, &node, &index] {
             //copy parent param and modify to fit new node
             SplitParam childParam{*_splitParam};
             //get the bounding box after splitting;

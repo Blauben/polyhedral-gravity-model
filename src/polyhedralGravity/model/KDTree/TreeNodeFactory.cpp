@@ -1,8 +1,6 @@
 #include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
 
-namespace polyhedralGravity {
-
-    namespace TreeNodeFactory {
+    namespace polyhedralGravity::TreeNodeFactory {
         std::unique_ptr<TreeNode> createTreeNode(const SplitParam &splitParam, size_t nodeId) {
             //avoid splitting after certain tree depth
             if (recursionDepth(nodeId) >= MAX_RECURSION_DEPTH) {
@@ -20,7 +18,7 @@ namespace polyhedralGravity {
                                               const size_t facesInMaximalBox = countFaces(*typeLists[1]);
 
                                               // Ensure that the split meaningfully divides faces
-                                              return (numberOfFaces <= facesInMinimalBox + facesInMaximalBox) && (facesInMinimalBox == 0 || facesInMaximalBox == 0);
+                                              return numberOfFaces <= facesInMinimalBox + facesInMaximalBox && (facesInMinimalBox == 0 || facesInMaximalBox == 0);
                                           },
                                                                               triangleLists);
 
@@ -31,6 +29,5 @@ namespace polyhedralGravity {
             //if not more costly, perform the split
             return std::make_unique<SplitNode>(splitParam, plane, triangleLists, nodeId);
         }
-    }// namespace TreeNodeFactory
+    } // namespace polyhedralGravity::TreeNodeFactory
 
-}// namespace polyhedralGravity

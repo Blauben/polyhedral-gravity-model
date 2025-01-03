@@ -39,7 +39,7 @@ namespace polyhedralGravity {
 
         const auto t = (this->axisCoordinate - origin_coord) * inverseRay_coord;
         // NaN possible through 0./+-inf -> point lies on plane and ray is parallel to plane, t=0 should be returned
-        // inverseRay_coord ray is +inf (happens during inverse calculation by 1./0.) if ray is parallel to plane -> If origin additionally not on the plane then algorithm returns +-inf . The sign gives information in which halfspace defined by the plane the origin lies.
+        // inverseRay_coord ray is +inf (happens during inverse calculation by 1./0.) if ray is parallel to plane -> If origin additionally not on the plane then algorithm returns +-inf . The sign gives information in which half-space defined by the plane the origin lies.
         return std::isnan(t) ? 0.0 : t;
     }
 
@@ -113,7 +113,7 @@ namespace polyhedralGravity {
         using namespace util;
         //use clipped as the input vector because the inner for loop swaps input and clipped each iteration,
         //since each iteration needs the output of the previous iteration as input.
-        std::vector<Array3> clipped(points.cbegin(), points.cend());
+        std::vector clipped(points.cbegin(), points.cend());
         std::vector<Array3> input{};
         input.reserve(points.size());
         //every plane defined by the maxPoint has to flip its normal because the normals have to point inside the bounding box.

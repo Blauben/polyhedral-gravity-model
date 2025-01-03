@@ -10,12 +10,10 @@
 
 constexpr uint8_t MAX_RECURSION_DEPTH{64};
 
-namespace polyhedralGravity {
-
     /**
      * Factory class for building TreeNodes. {@link TreeNode}
      */
-    namespace TreeNodeFactory {
+    namespace polyhedralGravity::TreeNodeFactory {
         /**
         * Builds a new TreeNode for a KDTree. {@link KDTree}
         * @param splitParam Parameters for intersection testing and child node creation. {@link SplitParam}
@@ -24,6 +22,5 @@ namespace polyhedralGravity {
         * @return A unique pointer to the new TreeNode.
          */
         std::unique_ptr<TreeNode> createTreeNode(const SplitParam &splitParam, size_t nodeId);
-    }// namespace TreeNodeFactory
+    } // namespace polyhedralGravity::TreeNodeFactory
 
-}// namespace polyhedralGravity
