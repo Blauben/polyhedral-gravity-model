@@ -71,6 +71,14 @@ namespace polyhedralGravity {
         [[nodiscard]] Array3 originPoint() const;
 
         /**
+        * Intersects a ray with the splitPlane.
+        * @param origin The point where the ray originates from.
+        * @param inverseRay The inverse ray direction vector of the ray to be intersected (used for faster calculations).
+        * @return Returns the t parameter for the intersection point, with t being from the equation $intersection_point = orig + t * ray$. t is +-infinity if no intersection point is present.
+        */
+        [[nodiscard]] double rayPlaneIntersection(const Array3 &origin, const Array3 &inverseRay) const;
+
+        /**
         * Equality operator used for testing purposes
         */
         bool operator==(const Plane &other) const;

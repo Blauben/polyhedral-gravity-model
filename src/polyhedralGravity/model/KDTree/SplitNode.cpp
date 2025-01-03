@@ -41,7 +41,7 @@ namespace polyhedralGravity {
             return delegates;
         }
         //calculate point where plane was hit
-        const double t_split{rayPlaneIntersection(origin, inverseRay)};
+        const double t_split{_plane.rayPlaneIntersection(origin, inverseRay)};
         //the split plane is hit inside of the bounding box -> both child boxes need to be checked
         const bool isParallel = std::isinf(t_split);
         bool planeIsHitInsideBox = 0 <= t_split && t_enter <= t_split && t_split <= t_exit;
@@ -80,9 +80,4 @@ namespace polyhedralGravity {
         }
         return os;
     }
-
-    double SplitNode::rayPlaneIntersection(const Array3 &origin, const Array3 &inverseRay) const {
-        return (this->_plane.axisCoordinate - origin[static_cast<int>(this->_plane.orientation)]) * inverseRay[static_cast<int>(this->_plane.orientation)];
-    }
-
 }// namespace polyhedralGravity

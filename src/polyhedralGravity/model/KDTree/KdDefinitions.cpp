@@ -1,8 +1,7 @@
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 
 namespace polyhedralGravity {
-
-    Array3 normal(Direction direction) {
+    Array3 normal(const Direction direction) {
         switch (direction) {
             case Direction::X:
                 return Array3{1, 0, 0};
@@ -18,6 +17,7 @@ namespace polyhedralGravity {
     Plane::Plane(const Array3 &point, Direction direction)
         : axisCoordinate(point[static_cast<int>(direction)]), orientation(direction) {
     }
+
     Plane::Plane(const double point, const Direction direction)
         : axisCoordinate(point), orientation(direction) {
     }
@@ -33,6 +33,17 @@ namespace polyhedralGravity {
         return point;
     }
 
+    double Plane::rayPlaneIntersection(const Array3 &origin, const Array3 &inverseRay) const {
+        const auto &origin_coord = origin[static_cast<int>(orientation)];
+        const auto &inverseRay_coord = inverseRay[static_cast<int>(orientation)];
+
+        const auto t = (this->axisCoordinate - origin_coord) * inverseRay_coord;
+        // NaN possible through 0./+-inf -> point lies on plane and ray is parallel to plane, t=0 should be returned
+        // inverseRay_coord ray is +inf (happens during inverse calculation by 1./0.) if ray is parallel to plane -> If origin additionally not on the plane then algorithm returns +-inf . The sign gives information in which halfspace defined by the plane the origin lies.
+        return std::isnan(t) ? 0.0 : t;
+    }
+
+
     bool Plane::operator==(const Plane &other) const {
         return axisCoordinate == other.axisCoordinate && orientation == other.orientation;
     }
@@ -47,20 +58,30 @@ namespace polyhedralGravity {
 
     std::pair<double, double> Box::rayBoxIntersection(const Array3 &origin, const Array3 &inverseRay) const {
         //calculate the parameter t in $ origin + t * ray = point $
-        auto const lambdaIntersectSlabPoint = [&origin, &inverseRay](const Array3 &point) {
+        const auto lambdaIntersectSlabPoint = [&origin, &inverseRay](const Array3 &point) {
             using namespace util;
-            //if original ray had 0 as coordinate then inverse ray coordinate is inf. TODO: check
-            return (point - origin) * inverseRay;
+            std::array<double, 3> result{};
+            for (const auto &direction: ALL_DIRECTIONS) {
+                result[static_cast<size_t>(direction)] = Plane(point, direction).rayPlaneIntersection(
+                    origin, inverseRay);
+            }
+            return result;
         };
         //intersections with slabs defined through minPoint
-        auto [tx_1, ty_1, tz_1] = lambdaIntersectSlabPoint(minPoint);
+        auto [tx_min, ty_min, tz_min] = lambdaIntersectSlabPoint(minPoint);
         //intersections with slabs defined through maxPoint
-        auto [tx_2, ty_2, tz_2] = lambdaIntersectSlabPoint(maxPoint);
+        auto [tx_max, ty_max, tz_max] = lambdaIntersectSlabPoint(maxPoint);
 
+        const auto assignEnterExitValue = [](const auto t_min, const auto t_max,
+                                             const auto rayDir) -> std::pair<double, double> {
+            // if ray is shot in positive ray direction then minPoint slab is hit before max point slab -> min point slab holds the entry point and max point slab the exit point
+            // otherwise max point slab is hit first and then min point slab after
+            return rayDir < 0 ? std::make_pair(t_max, t_min) : std::make_pair(t_min, t_max);
+        };
         //return the parameters in ordered by '<'
-        auto [tx_enter, tx_exit] = std::minmax(tx_1, tx_2);
-        auto [ty_enter, ty_exit] = std::minmax(ty_1, ty_2);
-        auto [tz_enter, tz_exit] = std::minmax(tz_1, tz_2);
+        auto [tx_enter, tx_exit] = assignEnterExitValue(tx_min, tx_max, inverseRay[0]);
+        auto [ty_enter, ty_exit] = assignEnterExitValue(ty_min, ty_max, inverseRay[1]);
+        auto [tz_enter, tz_exit] = assignEnterExitValue(tz_min, tz_max, inverseRay[2]);
 
         //calculate the point where all slabs have been entered: t_enter
         const double t_enter{std::max(tx_enter, std::max(ty_enter, tz_enter))};
@@ -109,11 +130,13 @@ namespace polyhedralGravity {
         return clipped;
     }
 
-    void Box::clipToVoxelPlane(const Plane &plane, const bool flipPlaneNormal, const std::vector<Array3> &source, std::vector<Array3> &dest) {
+    void Box::clipToVoxelPlane(const Plane &plane, const bool flipPlaneNormal, const std::vector<Array3> &source,
+                               std::vector<Array3> &dest) {
         using namespace util;
         //the distance is interpreted in the normal direction, negative values are in opposite direction of the normal.
         static constexpr auto isInside = [](const double distance) { return distance >= 0.0; };
-        static constexpr auto intersectionPoint = [](const Array3 &from, const Array3 &to, const double distanceFrom, const double distanceTo) {
+        static constexpr auto intersectionPoint = [](const Array3 &from, const Array3 &to, const double distanceFrom,
+                                                     const double distanceTo) {
             // solve for t in $ [(t * from + (1-t) * to ) - origin] * normal = 0 $
             // equation explained: search for a point on the plane defined by $ (point - origin) * normal $, where point is linearly interpolated using vectors from and to.
             const double t{distanceTo / (distanceTo - distanceFrom)};
@@ -179,20 +202,24 @@ namespace polyhedralGravity {
     }
 
     size_t countFaces(const std::variant<TriangleIndexVector, PlaneEventVector> &triangles) {
-        return std::visit(util::overloaded{[](const TriangleIndexVector &indexList) {
-                                               return indexList.size();
-                                           },
-                                           [](const PlaneEventVector &eventList) {
-                                               size_t count{0};
-                                               std::unordered_set<size_t> processedFaces{};
-                                               thrust::for_each(thrust::host, eventList.cbegin(), eventList.cend(), [&processedFaces, &count](const auto &planeEvent) {
-                                                   if (processedFaces.find(planeEvent.faceIndex) == processedFaces.end()) {
-                                                       processedFaces.insert(planeEvent.faceIndex);
-                                                       count++;
-                                                   }
-                                               });
-                                               return count;
-                                           }},
+        return std::visit(util::overloaded{
+                              [](const TriangleIndexVector &indexList) {
+                                  return indexList.size();
+                              },
+                              [](const PlaneEventVector &eventList) {
+                                  size_t count{0};
+                                  std::unordered_set<size_t> processedFaces{};
+                                  thrust::for_each(thrust::host, eventList.cbegin(), eventList.cend(),
+                                                   [&processedFaces, &count](const auto &planeEvent) {
+                                                       if (processedFaces.find(planeEvent.faceIndex) == processedFaces.
+                                                           end()) {
+                                                           processedFaces.insert(planeEvent.faceIndex);
+                                                           count++;
+                                                       }
+                                                   });
+                                  return count;
+                              }
+                          },
                           triangles);
     }
 
@@ -201,5 +228,4 @@ namespace polyhedralGravity {
         // $ N = 2^(t+1)-1 $ (geometric series formula for partial sums), assume $ N >= idx + 1 $
         return static_cast<size_t>(std::ceil(std::log2(nodeId + 2))) - 1;
     }
-
-}// namespace polyhedralGravity
+} // namespace polyhedralGravity

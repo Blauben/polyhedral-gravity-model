@@ -14,7 +14,7 @@ namespace polyhedralGravity {
             const double costWithoutSplit = static_cast<double>(numberOfFaces) * PlaneSelectionAlgorithm::triangleIntersectionCost;
 
             // Check if the boxes are divided into smaller regions
-            bool splitFailsToReduceSize = std::isinf(planeCost) || std::visit([numberOfFaces](auto &typeLists) {
+            const bool splitFailsToReduceSize = std::isinf(planeCost) || std::visit([numberOfFaces](auto &typeLists) {
                                               // Count faces in each split box
                                               const size_t facesInMinimalBox = countFaces(*typeLists[0]);
                                               const size_t facesInMaximalBox = countFaces(*typeLists[1]);
