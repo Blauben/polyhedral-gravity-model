@@ -134,6 +134,13 @@ namespace polyhedralGravity {
                                std::vector<Array3> &dest) {
         using namespace util;
         //the distance is interpreted in the normal direction, negative values are in opposite direction of the normal.
+        auto distanceMeasures = [&plane, &flipPlaneNormal](
+            const Array3 &point) -> double {
+            // works for arbitrary plane orientations:
+            // return dot(point - plane.originPoint(), plane.normal(flipPlaneNormal));
+            // only works for axis aligned planes:
+            return (point[static_cast<int>(plane.orientation)] - plane.axisCoordinate) * (flipPlaneNormal ? -1. : 1.);
+        };
         static constexpr auto isInside = [](const double distance) { return distance >= 0.0; };
         static constexpr auto intersectionPoint = [](const Array3 &from, const Array3 &to, const double distanceFrom,
                                                      const double distanceTo) {
@@ -146,8 +153,8 @@ namespace polyhedralGravity {
             const Array3 &from{source[i]};
             const Array3 &to{source[(i + 1) % source.size()]};
             // $ (from - origin) * normal = cos alpha * |from - origin| * |normal| = cos alpha * |from - origin| * 1 $ ^= distance of from to the plane in the direction of the normal.
-            const double distanceFrom{dot(from - plane.originPoint(), plane.normal(flipPlaneNormal))};
-            const double distanceTo{dot(to - plane.originPoint(), plane.normal(flipPlaneNormal))};
+            const auto distanceFrom = distanceMeasures(from);
+            const auto distanceTo = distanceMeasures(to);
             if (isInside(distanceFrom) && isInside(distanceTo)) {
                 dest.push_back(to);
             } else if (isInside(distanceFrom) && !isInside(distanceTo)) {

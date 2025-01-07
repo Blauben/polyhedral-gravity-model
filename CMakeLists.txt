@@ -56,9 +56,6 @@ endif ()
 # Refer to https://github.com/gabime/spdlog/issues/660
 add_compile_definitions(FMT_HEADER_ONLY)
 
-# disable specific clang warnings
-add_compile_options(-Wno-can-be-moved-to-if-init)
-
 include(git)
 include(version.cmake)
 
