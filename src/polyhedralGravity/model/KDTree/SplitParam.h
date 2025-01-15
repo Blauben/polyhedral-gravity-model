@@ -3,7 +3,6 @@
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 
 namespace polyhedralGravity {
-
     //forward declaration
     class PlaneSelectionAlgorithm;
 
@@ -33,7 +32,7 @@ namespace polyhedralGravity {
          */
         mutable Direction splitDirection;
         /**
-         * The factory used to create new child TreeNodes after splitting the parent.
+         * The algorithm used to create new child TreeNodes after splitting the parent.
          */
         const std::shared_ptr<PlaneSelectionAlgorithm> planeSelectionStrategy;
 
@@ -41,8 +40,11 @@ namespace polyhedralGravity {
          * Constructor that initializes all fields. Intended for the use with std::make_unique. See {@link SplitParam} fields for further information.
          *
          */
-        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const Box &boundingBox, const Direction splitDirection, const std::shared_ptr<PlaneSelectionAlgorithm> &planeSelectionStrategy)
-            : vertices{vertices}, faces{faces}, boundFaces{TriangleIndexVector(faces.size())}, boundingBox{boundingBox}, splitDirection{splitDirection}, planeSelectionStrategy{planeSelectionStrategy} {
+        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const Box &boundingBox,
+                   const Direction splitDirection,
+                   const std::shared_ptr<PlaneSelectionAlgorithm> &planeSelectionStrategy)
+            : vertices{vertices}, faces{faces}, boundFaces{TriangleIndexVector(faces.size())}, boundingBox{boundingBox},
+              splitDirection{splitDirection}, planeSelectionStrategy{planeSelectionStrategy} {
             auto &indexList = std::get<TriangleIndexVector>(boundFaces);
             std::iota(indexList.begin(), indexList.end(), 0);
         }
@@ -50,8 +52,12 @@ namespace polyhedralGravity {
         /**
          * Constructor manually initializing boundFaces, used for testing.
          */
-        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const std::variant<TriangleIndexVector, PlaneEventVector> &boundFaces, const Box &boundingBox, const Direction splitDirection, const std::shared_ptr<PlaneSelectionAlgorithm> &planeSelectionStrategy)
-            : vertices{vertices}, faces{faces}, boundFaces{boundFaces}, boundingBox{boundingBox}, splitDirection{splitDirection}, planeSelectionStrategy{planeSelectionStrategy} {
+        SplitParam(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces,
+                   const std::variant<TriangleIndexVector, PlaneEventVector> &boundFaces, const Box &boundingBox,
+                   const Direction splitDirection,
+                   const std::shared_ptr<PlaneSelectionAlgorithm> &planeSelectionStrategy)
+            : vertices{vertices}, faces{faces}, boundFaces{boundFaces}, boundingBox{boundingBox},
+              splitDirection{splitDirection}, planeSelectionStrategy{planeSelectionStrategy} {
         }
     };
-}// namespace polyhedralGravity
+} // namespace polyhedralGravity
