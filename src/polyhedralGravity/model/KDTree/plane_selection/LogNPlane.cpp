@@ -36,7 +36,7 @@ namespace polyhedralGravity {
         };
 
         //Step 2
-        thrust::for_each(thrust::device, planeEvents.cbegin(), planeEvents.cend(), [&faceClassification, &planeEventsMin, &planeEventsMax, &insertToBothIfAbsent](const auto &event) {
+        std::for_each(planeEvents.cbegin(), planeEvents.cend(), [&faceClassification, &planeEventsMin, &planeEventsMax, &insertToBothIfAbsent](const auto &event) {
             switch (faceClassification.at(event.faceIndex)) {
                 //face of event only contributes to min side event can be added to side without clipping because no overlap with split plane
                 case Locale::MIN_ONLY:
@@ -65,11 +65,11 @@ namespace polyhedralGravity {
         //each face generates 6 plane events on average, thus the amount of faces can be roughly estimated.
         result.reserve(events.size() / 6);
         //preparing the map by initializing all faces with them having area in both sub bounding boxes
-        thrust::for_each(thrust::device, events.cbegin(), events.cend(), [&result](const auto &event) {
+        thrust::for_each(thrust::host, events.cbegin(), events.cend(), [&result](const auto &event) {
             result[event.faceIndex] = Locale::BOTH;
         });
         //now search for conditions proving that the faces DO NOT have area in both boxes
-        thrust::for_each(thrust::device, events.begin(), events.end(), [minSide, &result, &plane](const auto &event) {
+        thrust::for_each(thrust::host, events.begin(), events.end(), [minSide, &result, &plane](const auto &event) {
             if (event.type == PlaneEventType::ending && event.plane.orientation == plane.orientation && event.plane.axisCoordinate <= plane.axisCoordinate) {
                 result[event.faceIndex] = Locale::MIN_ONLY;
             } else if (event.type == PlaneEventType::starting && event.plane.orientation == plane.orientation && event.plane.axisCoordinate >= plane.axisCoordinate) {
@@ -92,11 +92,11 @@ namespace polyhedralGravity {
         PlaneEventVector minEvents{};
         PlaneEventVector maxEvents{};
         //each face generates six new PlaneEvents and each face has area in both boxes
-        minEvents.reserve(faceIndices.size() * 6);
-        maxEvents.reserve(faceIndices.size() * 6);
+        minEvents.resize(faceIndices.size() * 6);
+        maxEvents.resize(faceIndices.size() * 6);
 
         //lambda for creating PlaneEvents from a vertex triplet (face) in one of the two sub boxes
-        const auto createPlaneEvents = [](const auto &vertices, const auto &boundingBox, const size_t faceIndex, auto &dest) {
+        const auto createPlaneEvents = [](const auto &vertices, const auto &boundingBox, const size_t faceIndex, auto destIt) {
             //clip to the voxel
             auto clipped = boundingBox.clipToVoxel(vertices);
             //create split plane anchor points using the bounding box
@@ -106,20 +106,25 @@ namespace polyhedralGravity {
                     std::make_pair(minPoint, PlaneEventType::starting),
                     std::make_pair(maxPoint, PlaneEventType::ending)};
             //create planes in each dimension, be careful to cluster similar anchor points together.
+            size_t planeIndex = 0;
             for (const auto &[point, eventType]: planeEventParam) {
                 for (const auto &direction: ALL_DIRECTIONS) {
-                    dest.emplace_back(eventType, Plane(point, direction), faceIndex);
+                    //insert directly for paralellization
+                    *(destIt + planeIndex++) = PlaneEvent(eventType, Plane(point, direction), faceIndex);
                 }
             }
         };
 
         //transform faces to vertices
         auto [begin_it, end_it] = transformIterator(faceIndices.cbegin(), faceIndices.cend(), splitParam.vertices, splitParam.faces);
+        std::atomic_long minIndex{0};
+        std::atomic_long maxIndex{0};
         //create new events for each face in both sub boxes
-        thrust::for_each(thrust::device, begin_it, end_it, [&minBox, maxBox, &minEvents, &maxEvents, &createPlaneEvents](const auto &indexAndTriplet) {
+        thrust::for_each(thrust::device, begin_it, end_it, [&minBox, maxBox, &minEvents, &maxEvents, &createPlaneEvents, &minIndex, &maxIndex](const auto &indexAndTriplet) {
             const auto &[index, vertexTriplet] = indexAndTriplet;
-            createPlaneEvents(vertexTriplet, minBox, index, minEvents);
-            createPlaneEvents(vertexTriplet, maxBox, index, maxEvents);
+            //reserve slots of 6 for the threads using the atomic counters. Size fits because of earlier resize
+            createPlaneEvents(vertexTriplet, minBox, index, minEvents.begin() + (minIndex++ * 6));
+            createPlaneEvents(vertexTriplet, maxBox, index, maxEvents.begin() + (maxIndex++ * 6));
         });
 
         //sort the lists for later merge sort integration

@@ -192,6 +192,8 @@ namespace polyhedralGravity {
 
         PlaneEvent(PlaneEventType type, Plane plane, unsigned faceIndex);
 
+        PlaneEvent() = default;
+
         /**
          * Less operator used for sorting an PlaneEvent vector.
          * @param other the PlaneEvent to compare this to.

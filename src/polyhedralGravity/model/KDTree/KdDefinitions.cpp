@@ -1,5 +1,8 @@
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 
+#include <mutex>
+#include <unistd.h>
+
 namespace polyhedralGravity {
     Array3 normal(const Direction direction) {
         switch (direction) {
@@ -203,7 +206,7 @@ namespace polyhedralGravity {
                 triangles.push_back(faceIndex);
             }
         };
-        thrust::for_each(thrust::device, eventList.cbegin(), eventList.cend(), insertIfAbsent);
+        thrust::for_each(thrust::host, eventList.cbegin(), eventList.cend(), insertIfAbsent);
         triangles.shrink_to_fit();
         return triangles;
     }
@@ -214,10 +217,11 @@ namespace polyhedralGravity {
                                   return indexList.size();
                               },
                               [](const PlaneEventVector &eventList) {
+                                  std::mutex writeLock{};
                                   size_t count{0};
                                   std::unordered_set<size_t> processedFaces{};
-                                  thrust::for_each(thrust::device, eventList.cbegin(), eventList.cend(),
-                                                   [&processedFaces, &count](const auto &planeEvent) {
+                                  thrust::for_each(thrust::host, eventList.cbegin(), eventList.cend(),
+                                                   [&processedFaces, &count, &writeLock](const auto &planeEvent) {
                                                        if (processedFaces.find(planeEvent.faceIndex) == processedFaces.
                                                            end()) {
                                                            processedFaces.insert(planeEvent.faceIndex);

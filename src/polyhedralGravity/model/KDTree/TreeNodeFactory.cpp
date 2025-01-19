@@ -21,7 +21,6 @@
                                               return numberOfFaces <= facesInMinimalBox + facesInMaximalBox && (facesInMinimalBox == 0 || facesInMaximalBox == 0);
                                           },
                                                                               triangleLists);
-
             //if the cost of splitting this node further is greater than just traversing the bound triangles or splitting does not reduce the amount of work in the resulting sub boxes, then don't split and return a LeafNode
             if (planeCost > costWithoutSplit || splitFailsToReduceSize) {
                 return std::make_unique<LeafNode>(splitParam, nodeId);

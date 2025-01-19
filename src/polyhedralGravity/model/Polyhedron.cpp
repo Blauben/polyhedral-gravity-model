@@ -99,7 +99,7 @@ namespace polyhedralGravity {
         // Vector contains FALSE if the corresponding index FULFILLS the OUTWARDS criteria
         thrust::device_vector<bool> violatingBoolOutwards(n, false);
         thrust::transform(
-                thrust::device,
+                thrust::host,
                 polyBegin,
                 polyEnd,
                 violatingBoolOutwards.begin(),

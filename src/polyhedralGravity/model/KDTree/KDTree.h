@@ -38,7 +38,7 @@ namespace polyhedralGravity {
         /**
          * Set when the root node has been created.
          */
-        std::once_flag rootNodeCreated;
+        std::once_flag _rootNodeCreated;
 
     public:
         /**
