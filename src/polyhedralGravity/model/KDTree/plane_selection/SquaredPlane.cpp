@@ -16,7 +16,7 @@ namespace polyhedralGravity {
         //each vertex proposes a split plane candidate: test for each of them, store them in buffer set to avoid duplicate testing
         std::unordered_set<double> testedPlaneCoordinates{};
         auto [vertex3_begin, vertex3_end] = transformIterator(boundFaces.cbegin(), boundFaces.cend(), splitParam.vertices, splitParam.faces);
-        thrust::for_each(thrust::host, vertex3_begin, vertex3_end, [&splitParam, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates](const auto &indexAndTriplet) {
+        thrust::for_each(thrust::device, vertex3_begin, vertex3_end, [&splitParam, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates](const auto &indexAndTriplet) {
             const auto [index, triplet] = indexAndTriplet;
             //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
             const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3>>(splitParam.boundingBox.clipToVoxel(triplet));
@@ -59,7 +59,7 @@ namespace polyhedralGravity {
         //perform check for every triangle contained in this node's bounding box.
         //transform faceIndices into the vertices
         auto [begin, end] = transformIterator(boundFaces.cbegin(), boundFaces.cend(), splitParam.vertices, splitParam.faces);
-        thrust::for_each(thrust::host, begin, end, [&split, &index_greater, &index_less, &index_equal](std::pair<size_t, Array3Triplet> pair) {
+        thrust::for_each(thrust::device, begin, end, [&split, &index_greater, &index_less, &index_equal](std::pair<size_t, Array3Triplet> pair) {
             auto [faceIndex, vertices] = pair;
             bool less{false}, greater{false};
             for (const Array3 vertex: vertices) {

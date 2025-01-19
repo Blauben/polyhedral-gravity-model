@@ -203,7 +203,7 @@ namespace polyhedralGravity {
                 triangles.push_back(faceIndex);
             }
         };
-        thrust::for_each(thrust::host, eventList.cbegin(), eventList.cend(), insertIfAbsent);
+        thrust::for_each(thrust::device, eventList.cbegin(), eventList.cend(), insertIfAbsent);
         triangles.shrink_to_fit();
         return triangles;
     }
@@ -216,7 +216,7 @@ namespace polyhedralGravity {
                               [](const PlaneEventVector &eventList) {
                                   size_t count{0};
                                   std::unordered_set<size_t> processedFaces{};
-                                  thrust::for_each(thrust::host, eventList.cbegin(), eventList.cend(),
+                                  thrust::for_each(thrust::device, eventList.cbegin(), eventList.cend(),
                                                    [&processedFaces, &count](const auto &planeEvent) {
                                                        if (processedFaces.find(planeEvent.faceIndex) == processedFaces.
                                                            end()) {

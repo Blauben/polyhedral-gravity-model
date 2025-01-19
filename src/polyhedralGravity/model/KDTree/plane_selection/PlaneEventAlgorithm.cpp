@@ -38,7 +38,7 @@ namespace polyhedralGravity {
         const auto &boundTriangles{std::get<TriangleIndexVector>(splitParam.boundFaces)};
         //transform the faces into vertices
         auto [vertex3_begin, vertex3_end] = transformIterator(boundTriangles.cbegin(), boundTriangles.cend(), splitParam.vertices, splitParam.faces);
-        thrust::for_each(thrust::host, vertex3_begin, vertex3_end, [&splitParam, &events, &directions](const auto &indexAndTriplet) {
+        thrust::for_each(thrust::device, vertex3_begin, vertex3_end, [&splitParam, &events, &directions](const auto &indexAndTriplet) {
             const auto [index, triplet] = indexAndTriplet;
             //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
             const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3>>(splitParam.boundingBox.clipToVoxel(triplet));

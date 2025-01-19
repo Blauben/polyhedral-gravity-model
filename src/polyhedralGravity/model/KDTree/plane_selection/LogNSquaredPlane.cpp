@@ -41,7 +41,7 @@ namespace polyhedralGravity {
         facesMax->reserve(planeEvents.size() / 4);
         facesMinLookup.reserve(planeEvents.size() / 4);
         facesMaxLookup.reserve(planeEvents.size() / 4);
-        thrust::for_each(thrust::host, planeEvents.cbegin(), planeEvents.cend(), [&facesMin, &facesMax, &plane, minSide, &facesMinLookup, &facesMaxLookup](const auto &event) {
+        thrust::for_each(thrust::device, planeEvents.cbegin(), planeEvents.cend(), [&facesMin, &facesMax, &plane, minSide, &facesMinLookup, &facesMaxLookup](const auto &event) {
             //lambda function to combine lookup and insertion into one place
             auto insertIfAbsent = [&facesMin, &facesMinLookup, &facesMax, &facesMaxLookup](const size_t faceIndex, const uint8_t index) {
                 const auto &vector = index == 0 ? facesMin : facesMax;

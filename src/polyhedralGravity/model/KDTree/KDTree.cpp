@@ -35,7 +35,7 @@ namespace polyhedralGravity {
             //if node is SplitNode perform intersection checks on the children and queue them accordingly
             if (const auto split = std::dynamic_pointer_cast<SplitNode>(node)) {
                 const auto children = split->getChildrenForIntersection(origin, ray, inverseRay);
-                thrust::for_each(thrust::host, std::begin(children), std::end(children), [&queue](const auto& child) { queue.push_back(child); });
+                thrust::for_each(thrust::device, std::begin(children), std::end(children), [&queue](const auto& child) { queue.push_back(child); });
             }
             //if node is leaf then perform intersections with the triangles contained
             else if (const auto leaf = std::dynamic_pointer_cast<LeafNode>(node)) {
