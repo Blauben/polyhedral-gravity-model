@@ -1,18 +1,20 @@
 #pragma once
 
+#include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/util/UtilityContainer.h"
 #include "thrust/detail/execution_policy.h"
-#include "thrust/detail/for_each.inl"
 #include "thrust/execution_policy.h"
 #include "thrust/system/detail/sequential/for_each.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <initializer_list>
 #include <iterator>
 #include <memory>
 #include <mutex>
-#include <stddef.h>
 #include <stdexcept>
 #include <thrust/execution_policy.h>
 #include <thrust/for_each.h>
@@ -21,9 +23,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-
-#include "polyhedralGravity/model/GravityModelData.h"
-#include "polyhedralGravity/util/UtilityContainer.h"
 
 namespace polyhedralGravity {
 

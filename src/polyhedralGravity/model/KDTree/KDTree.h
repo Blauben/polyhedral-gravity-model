@@ -2,13 +2,13 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <deque>
 #include <iterator>
 #include <memory>
 #include <mutex>
 #include <ostream>
 #include <set>
-#include <stddef.h>
 #include <thrust/execution_policy.h>
 #include <thrust/for_each.h>
 #include <utility>

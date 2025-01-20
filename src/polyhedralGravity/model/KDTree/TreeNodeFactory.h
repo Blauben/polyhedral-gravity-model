@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
-#include <stddef.h>
-#include <stdint.h>
 #include <variant>
 
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"

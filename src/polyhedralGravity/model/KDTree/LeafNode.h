@@ -6,24 +6,19 @@
 #include "polyhedralGravity/model/KDTree/TreeNode.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include "polyhedralGravity/util/UtilityFloatArithmetic.h"
-#include "thrust/detail/distance.inl"
 #include "thrust/detail/execution_policy.h"
-#include "thrust/detail/for_each.inl"
 #include "thrust/execution_policy.h"
-#include "thrust/system/detail/generic/distance.inl"
 #include "thrust/system/detail/sequential/for_each.h"
-#include "thrust/system/tbb/detail/for_each.inl"
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <iosfwd>
 #include <memory>
 #include <mutex>
-#include <oneapi/tbb/parallel_for.h>
 #include <optional>
 #include <ostream>
 #include <set>
-#include <stddef.h>
 #include <variant>
 #include <vector>
 
