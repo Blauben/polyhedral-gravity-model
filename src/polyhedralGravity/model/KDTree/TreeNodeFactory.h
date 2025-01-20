@@ -1,12 +1,21 @@
 #pragma once
 
+#include <cmath>
+#include <memory>
+#include <stddef.h>
+#include <stdint.h>
+#include <variant>
+
+#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 #include "polyhedralGravity/model/KDTree/LeafNode.h"
 #include "polyhedralGravity/model/KDTree/SplitNode.h"
+#include "polyhedralGravity/model/KDTree/SplitParam.h"
 #include "polyhedralGravity/model/KDTree/TreeNode.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
 
-
-#include <memory>
+namespace polyhedralGravity {
+struct SplitParam;
+}  // namespace polyhedralGravity
 
 constexpr uint8_t MAX_RECURSION_DEPTH{64};
 

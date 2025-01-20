@@ -1,14 +1,27 @@
 #pragma once
 
-#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
-#include "polyhedralGravity/model/KDTree/TreeNode.h"
-#include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
-
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <iosfwd>
+#include <iostream>
 #include <memory>
 #include <mutex>
+#include <stddef.h>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/SplitParam.h"
+#include "polyhedralGravity/model/KDTree/TreeNode.h"
+#include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
+#include "polyhedralGravity/util/UtilityContainer.h"
 
 namespace polyhedralGravity {
+struct SplitParam;
 
     /**
      * A TreeNode contained in a KDTree that splits the spatial hierarchy into two new sub boxes. Intersection tests are delegated to the child nodes.

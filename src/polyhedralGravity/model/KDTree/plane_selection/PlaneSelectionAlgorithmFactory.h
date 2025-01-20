@@ -1,12 +1,12 @@
 #pragma once
 
+#include <memory>
+
 #include "polyhedralGravity/model/KDTree/plane_selection/LogNPlane.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/LogNSquaredPlane.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/NoTreePlane.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/SquaredPlane.h"
-
-#include <memory>
 
 
 namespace polyhedralGravity {

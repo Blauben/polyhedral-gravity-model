@@ -1,12 +1,37 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
+#include <limits>
+#include <memory>
+#include <mutex>
+#include <oneapi/tbb/parallel_for.h>
+#include <stddef.h>
+#include <stdexcept>
+#include <tuple>
+#include <unordered_set>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 #include "polyhedralGravity/model/KDTree/SplitParam.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
-
-#include <mutex>
-#include <unordered_set>
+#include "polyhedralGravity/util/UtilityContainer.h"
+#include "thrust/detail/distance.inl"
+#include "thrust/detail/execution_policy.h"
+#include "thrust/detail/for_each.inl"
+#include "thrust/execution_policy.h"
+#include "thrust/iterator/iterator_facade.h"
+#include "thrust/iterator/transform_iterator.h"
+#include "thrust/system/detail/generic/distance.inl"
+#include "thrust/system/detail/sequential/for_each.h"
+#include "thrust/system/tbb/detail/for_each.inl"
 
 namespace polyhedralGravity {
+struct SplitParam;
+
     /**
 * O(N^2) implementation to finding optimal split planes.
 */

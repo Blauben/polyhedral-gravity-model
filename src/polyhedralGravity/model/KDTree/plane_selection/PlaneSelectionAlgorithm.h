@@ -1,5 +1,12 @@
 #pragma once
 
+#include <iterator>
+#include <limits>
+#include <stddef.h>
+#include <tuple>
+#include <utility>
+#include <variant>
+
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 
 namespace polyhedralGravity {

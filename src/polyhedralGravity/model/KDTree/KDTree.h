@@ -1,19 +1,29 @@
 #pragma once
 
-#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
-#include "polyhedralGravity/model/KDTree/SplitParam.h"
-#include "polyhedralGravity/model/KDTree/TreeNode.h"
-#include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
-#include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithmFactory.h"
-
 #include <algorithm>
 #include <array>
 #include <deque>
+#include <iterator>
 #include <memory>
 #include <mutex>
+#include <ostream>
+#include <set>
+#include <stddef.h>
 #include <thrust/execution_policy.h>
 #include <thrust/for_each.h>
 #include <utility>
+#include <vector>
+
+#include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/LeafNode.h"
+#include "polyhedralGravity/model/KDTree/SplitNode.h"
+#include "polyhedralGravity/model/KDTree/SplitParam.h"
+#include "polyhedralGravity/model/KDTree/TreeNode.h"
+#include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
+#include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
+#include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithmFactory.h"
+#include "polyhedralGravity/util/UtilityContainer.h"
 
 namespace polyhedralGravity {
 

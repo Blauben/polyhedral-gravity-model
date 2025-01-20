@@ -1,8 +1,5 @@
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 
-#include <mutex>
-#include <unistd.h>
-
 namespace polyhedralGravity {
     Array3 normal(const Direction direction) {
         switch (direction) {

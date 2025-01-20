@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stddef.h>
+#include <memory>
+
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 #include "polyhedralGravity/model/KDTree/SplitParam.h"
 
