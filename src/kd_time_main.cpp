@@ -24,15 +24,14 @@ namespace polyhedralGravity {
     }
 
 
-    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronNoTree", PlaneSelectionAlgorithm::Algorithm::NOTREE)->Range(
-        0, 1);
+    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronNoTree", PlaneSelectionAlgorithm::Algorithm::NOTREE)->DenseRange(
+        0, static_cast<long>(filePaths.size() - 1), 1);
     BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronQuadratic",
-                      PlaneSelectionAlgorithm::Algorithm::QUADRATIC)->Range(0, 1);
+                      PlaneSelectionAlgorithm::Algorithm::QUADRATIC)->DenseRange(0, static_cast<long>(filePaths.size() - 1), 1);
     BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronLogSquared",
-                      PlaneSelectionAlgorithm::Algorithm::LOGSQUARED)->
-Range(0, static_cast<long>(filePaths.size() - 1));
-    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronLog", PlaneSelectionAlgorithm::Algorithm::LOG)->Range(
-        0, static_cast<long>(filePaths.size() - 1));
+                      PlaneSelectionAlgorithm::Algorithm::LOGSQUARED)->DenseRange(0, static_cast<long>(filePaths.size() - 1), 1);
+    BENCHMARK_CAPTURE(BM_Polyhedron_Tree, "BigPolyhedronLog", PlaneSelectionAlgorithm::Algorithm::LOG)->DenseRange(
+        0, static_cast<long>(filePaths.size() - 1), 1);
 } // namespace polyhedralGravity
 
 BENCHMARK_MAIN();

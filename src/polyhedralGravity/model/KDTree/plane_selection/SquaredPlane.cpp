@@ -17,32 +17,38 @@ namespace polyhedralGravity {
         std::unordered_set<double> testedPlaneCoordinates{};
         auto [vertex3_begin, vertex3_end] = transformIterator(boundFaces.cbegin(), boundFaces.cend(),
                                                               splitParam.vertices, splitParam.faces);
-        std::mutex optLock{};
+        std::mutex optMutex{}, testedPlaneMutex{};
         thrust::for_each(thrust::device, vertex3_begin, vertex3_end,
-                         [&splitParam, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates, &optLock](
+                         [&splitParam, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates, &optMutex, &testedPlaneMutex](
                      const auto &indexAndTriplet) {
                              const auto [index, triplet] = indexAndTriplet;
                              //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
-                             const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3> >(
-                                 splitParam.boundingBox.clipToVoxel(triplet));
+                             const auto clippedVertices = splitParam.boundingBox.clipToVoxel(triplet);
+                             const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3> >(clippedVertices);
                              for (const auto planeSurfacePoint: {minPoint, maxPoint}) {
                                  //constructs the plane that goes through a vertex lying on the bounding box of the face to be checked and spans in a specified direction.
                                  Plane candidatePlane{
                                      planeSurfacePoint[static_cast<int>(splitParam.splitDirection)],
                                      splitParam.splitDirection
                                  };
-                                 //continue if plane has already been tested
-                                 if (testedPlaneCoordinates.find(candidatePlane.axisCoordinate) !=
-                                     testedPlaneCoordinates.cend()) {
-                                     continue;
+                                 {
+                                     //continue if plane has already been tested
+                                     std::lock_guard lock{testedPlaneMutex};
+                                     if (testedPlaneCoordinates.find(candidatePlane.axisCoordinate) !=
+                                         testedPlaneCoordinates.cend()) {
+                                         continue;
+                                     }
+                                     testedPlaneCoordinates.emplace(candidatePlane.axisCoordinate);
                                  }
-                                 testedPlaneCoordinates.emplace(candidatePlane.axisCoordinate);
+
                                  auto triangleIndexLists = containedTriangles(splitParam, candidatePlane);
+
                                  //evaluate the candidate plane and store if it is better than the currently stored result
                                  auto [candidateCost, minSideChosen] = costForPlane(
                                      splitParam.boundingBox, candidatePlane, triangleIndexLists[0]->size(),
                                      triangleIndexLists[1]->size(), triangleIndexLists[2]->size());
-                                 optLock.lock();
+
+                                 std::lock_guard lock(optMutex);
                                  if (candidateCost < cost) {
                                      cost = candidateCost;
                                      optPlane = candidatePlane;
@@ -54,7 +60,6 @@ namespace polyhedralGravity {
                                          std::move(triangleIndexLists[0]), std::move(triangleIndexLists[1])
                                      };
                                  }
-                                 optLock.unlock();
                              }
                          });
         return std::make_tuple(optPlane, cost, std::move(optTriangleIndexLists));
