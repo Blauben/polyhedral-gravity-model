@@ -99,15 +99,19 @@ namespace polyhedralGravity {
         // Vector contains TRUE if the corresponding index VIOLATES the OUTWARDS criteria
         // Vector contains FALSE if the corresponding index FULFILLS the OUTWARDS criteria
         thrust::device_vector<bool> violatingBoolOutwards(n, false);
-        std::variant<decltype(&thrust::device), decltype(&thrust::host)> exec_policy;
+#ifdef POLYHEDRAL_GRAVITY_TBB
+        std::variant<decltype(thrust::device), decltype(thrust::host)> exec_policy;
         if (_enableParallelQuery) {
-            exec_policy = &thrust::device;
+            exec_policy = thrust::device;
         } else {
-            exec_policy = &thrust::host;
+            exec_policy = thrust::host;
         }
-        std::visit([&](const auto &policy) {
+#else
+        std::variant<thrust::detail::device_t> exec_policy = (_enableParallelQuery ? thrust::device : thrust::host);
+#endif
+        std::visit([&](const auto policy) {
             thrust::transform(
-                    *policy,
+                    policy,
                     polyBegin,
                     polyEnd,
                     violatingBoolOutwards.begin(),
