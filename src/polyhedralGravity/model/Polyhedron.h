@@ -148,6 +148,11 @@ namespace polyhedralGravity {
          */
         std::shared_ptr<KDTree> _tree;
 
+        /**
+        * Flag used to control whether to enable multithreaded KD-tree queries. If both Polyhedron and KDTree deploy multiple threads they exhaust each other. NoTree does not utilize threads.
+*/
+        bool _enableParallelQuery{false};
+
     public:
         /**
          * Generates a polyhedron from nodes and faces.

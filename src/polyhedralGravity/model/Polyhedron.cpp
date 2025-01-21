@@ -11,7 +11,7 @@ namespace polyhedralGravity {
           _faces{faces},
           _density{density},
           _orientation{orientation},
-          _tree{std::make_shared<KDTree>(vertices, faces, treeAlgorithm)} {
+          _tree{std::make_shared<KDTree>(vertices, faces, treeAlgorithm)}, _enableParallelQuery{treeAlgorithm == PlaneSelectionAlgorithm::Algorithm::NOTREE} {
         //Checks that the node with index zero is actually used
         if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](auto &face) {
                 return face[0] == 0 || face[1] == 0 || face[2] == 0;
@@ -91,6 +91,7 @@ namespace polyhedralGravity {
         return std::make_tuple(_vertices, _faces, _density, _orientation);
     }
 
+
     std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() {
         // 1. Step: Find all indices of normals which violate the constraint outwards pointing
         const auto &[polyBegin, polyEnd] = this->transformIterator();
@@ -98,17 +99,26 @@ namespace polyhedralGravity {
         // Vector contains TRUE if the corresponding index VIOLATES the OUTWARDS criteria
         // Vector contains FALSE if the corresponding index FULFILLS the OUTWARDS criteria
         thrust::device_vector<bool> violatingBoolOutwards(n, false);
-        thrust::transform(
-                thrust::host,
-                polyBegin,
-                polyEnd,
-                violatingBoolOutwards.begin(),
-                [&](const auto &face) {
-                    // If the ray intersects the polyhedron odd number of times the normal points inwards
-                    // Hence, violating the OUTWARDS constraint
-                    const size_t intersects = this->countRayPolyhedronIntersections(face);
-                    return intersects % 2 != 0;
-                });
+        std::variant<decltype(&thrust::device), decltype(&thrust::host)> exec_policy;
+        if (_enableParallelQuery) {
+            exec_policy = &thrust::device;
+        } else {
+            exec_policy = &thrust::host;
+        }
+        std::visit([&](const auto &policy) {
+            thrust::transform(
+                    *policy,
+                    polyBegin,
+                    polyEnd,
+                    violatingBoolOutwards.begin(),
+                    [&](const auto &face) {
+                        // If the ray intersects the polyhedron odd number of times the normal points inwards
+                        // Hence, violating the OUTWARDS constraint
+                        const size_t intersects = this->countRayPolyhedronIntersections(face);
+                        return intersects % 2 != 0;
+                    });
+        },
+                   exec_policy);
         const size_t numberOfOutwardsViolations = std::count(violatingBoolOutwards.cbegin(), violatingBoolOutwards.cend(), true);
         // 2. Step: Create a set with only the indices violating the constraint
         std::set<size_t> violatingIndices{};
