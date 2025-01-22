@@ -99,17 +99,7 @@ namespace polyhedralGravity {
         // Vector contains TRUE if the corresponding index VIOLATES the OUTWARDS criteria
         // Vector contains FALSE if the corresponding index FULFILLS the OUTWARDS criteria
         thrust::device_vector<bool> violatingBoolOutwards(n, false);
-#ifdef POLYHEDRAL_GRAVITY_TBB
-        std::variant<decltype(thrust::device), decltype(thrust::host)> exec_policy;
-        if (_enableParallelQuery) {
-            exec_policy = thrust::device;
-        } else {
-            exec_policy = thrust::host;
-        }
-#else
-        std::variant<thrust::detail::device_t> exec_policy = (_enableParallelQuery ? thrust::device : thrust::host);
-#endif
-        std::visit([&](const auto policy) {
+        const auto transformWithPolicy = [&violatingBoolOutwards, &polyBegin, &polyEnd, this](const auto &policy) {
             thrust::transform(
                     policy,
                     polyBegin,
@@ -121,8 +111,12 @@ namespace polyhedralGravity {
                         const size_t intersects = this->countRayPolyhedronIntersections(face);
                         return intersects % 2 != 0;
                     });
-        },
-                   exec_policy);
+        };
+        if (_enableParallelQuery) {
+            transformWithPolicy(thrust::device);
+        } else {
+            transformWithPolicy(thrust::host);
+        }
         const size_t numberOfOutwardsViolations = std::count(violatingBoolOutwards.cbegin(), violatingBoolOutwards.cend(), true);
         // 2. Step: Create a set with only the indices violating the constraint
         std::set<size_t> violatingIndices{};
