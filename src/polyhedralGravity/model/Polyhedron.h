@@ -148,11 +148,12 @@ namespace polyhedralGravity {
 */
         bool _enableParallelQuery{false};
 
-    public:
         /**
          * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
          */
         std::shared_ptr<KDTree> _tree;
+
+    public:
         /**
          * Generates a polyhedron from nodes and faces.
          * @param vertices a vector of nodes
