@@ -16,13 +16,13 @@ namespace polyhedralGravity {
         const double surfaceArea2 = box2.surfaceArea();
         //evaluate SAH: Include equalT once in each box and record option with minimum cost
         const double costLesser = traverseStepCost + triangleIntersectionCost * (surfaceArea1 / surfaceAreaBounding * static_cast<double>(trianglesMin + trianglesPlanar) + surfaceArea2 / surfaceAreaBounding * static_cast<double>(trianglesMax));
-        const double costUpper = traverseStepCost + triangleIntersectionCost * (surfaceArea1 / surfaceAreaBounding * static_cast<double>(trianglesMin) + surfaceArea2 / surfaceAreaBounding * static_cast<double>(trianglesMax + trianglesPlanar));
+        const double costGreater = traverseStepCost + triangleIntersectionCost * (surfaceArea1 / surfaceAreaBounding * static_cast<double>(trianglesMin) + surfaceArea2 / surfaceAreaBounding * static_cast<double>(trianglesMax + trianglesPlanar));
         //if empty space is cut off, reduce cost by 20%
         const double factor = trianglesMin == 0 || trianglesMax == 0 ? 0.8 : 1;
-        if (costLesser <= costUpper) {
+        if (costLesser <= costGreater) {
             return {factor * costLesser, true};
         }
         //if empty space is cut off, reduce cost by 20%
-        return {factor * costUpper, false};
+        return {factor * costGreater, false};
     }
 }// namespace polyhedralGravity

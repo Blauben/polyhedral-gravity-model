@@ -144,16 +144,15 @@ namespace polyhedralGravity {
         NormalOrientation _orientation;
 
         /**
-         * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
-         */
-        std::shared_ptr<KDTree> _tree;
-
-        /**
         * Flag used to control whether to enable multithreaded KD-tree queries. If both Polyhedron and KDTree deploy multiple threads they exhaust each other. NoTree does not utilize threads.
 */
         bool _enableParallelQuery{false};
 
     public:
+        /**
+         * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
+         */
+        std::shared_ptr<KDTree> _tree;
         /**
          * Generates a polyhedron from nodes and faces.
          * @param vertices a vector of nodes
@@ -346,6 +345,11 @@ namespace polyhedralGravity {
          *  and a set of face indices which violate the constraint
          */
         [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation();
+
+        /**
+         * Prebuilds this Polyhedron's KDTree, disabling lazy loading effectively.
+         */
+        void prebuildKDTree() const;
 
     private:
         /**

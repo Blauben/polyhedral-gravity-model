@@ -50,6 +50,11 @@ namespace polyhedralGravity {
          */
         std::once_flag _rootNodeCreated;
 
+        /**
+        * Parameters for lazily building the root node {@link SplitParam}
+        */
+        std::unique_ptr<SplitParam> _splitParam;
+
     public:
         /**
         * Call to build a KDTree to speed up intersections of rays with a polyhedron's faces.
@@ -83,14 +88,10 @@ namespace polyhedralGravity {
         size_t countIntersections(const Array3 &origin, const Array3 &ray);
 
         /**
-       * Parameters for lazily building the root node {@link SplitParam}
-       */
-        std::unique_ptr<SplitParam> _splitParam;
+         * Prebuilds the whole KDTree bypassing lazy loading entirely.
+         */
+        void prebuildTree();
 
-        void printTree(std::ostream &os) const {
-            if (_rootNode != nullptr) {
-                os << _rootNode;
-            }
-        }
+        friend std::ostream &operator<<(std::ostream &os, const KDTree& kdTree);
     };
 }// namespace polyhedralGravity

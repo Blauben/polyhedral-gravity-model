@@ -72,9 +72,11 @@ namespace polyhedralGravity {
         }
         const auto &boundFaces = std::get<TriangleIndexVector>(splitParam.boundFaces);
         //define three sets of triangles: closer to the origin, further away, in the plane
-        auto index_less = std::make_unique<TriangleIndexVector>(boundFaces.size() / 2);
-        auto index_greater = std::make_unique<TriangleIndexVector>(boundFaces.size() / 2);
+        auto index_less = std::make_unique<TriangleIndexVector>();
+        auto index_greater = std::make_unique<TriangleIndexVector>();
         auto index_equal = std::make_unique<TriangleIndexVector>();
+        index_less->reserve(boundFaces.size() / 2);
+        index_greater->reserve(boundFaces.size() / 2);
 
 
         //perform check for every triangle contained in this node's bounding box.

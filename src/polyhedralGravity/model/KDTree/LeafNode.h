@@ -19,6 +19,8 @@
 #include <optional>
 #include <ostream>
 #include <set>
+#include <string>
+#include <sstream>
 #include <variant>
 #include <vector>
 
@@ -45,12 +47,8 @@ struct SplitParam;
         */
         void getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections);
 
-        /**
-         * Prints the current leaf node's information.
-         * @param os Where to stream to.
-         * @param node The node to retrieve data from.
-         * @return The ostream after streaming has been completed.
-         */
+        [[nodiscard]] std::string toString() const override;
+
         friend std::ostream &operator<<(std::ostream &os, const LeafNode &node);
 
     private:

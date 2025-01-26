@@ -138,6 +138,9 @@ namespace polyhedralGravity {
             return std::make_pair(NormalOrientation::INWARDS, violatingIndices);
         }
     }
+    void Polyhedron::prebuildKDTree() const {
+        _tree->prebuildTree();
+    }
 
     void Polyhedron::runIntegrityMeasures(const PolyhedronIntegrity &integrity) {
         using util::operator<<;

@@ -9,6 +9,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <sstream>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -75,6 +76,8 @@ struct SplitParam;
          * @return the child nodes that intersect with the ray
          */
         [[nodiscard]] std::vector<std::shared_ptr<TreeNode>> getChildrenForIntersection(const Array3 &origin, const Array3 &ray, const Array3 &inverseRay);
+
+        [[nodiscard]] std::string toString() const override;
 
         friend std::ostream &operator<<(std::ostream &os, const SplitNode &node);
     };

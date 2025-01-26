@@ -21,6 +21,10 @@ namespace polyhedralGravity {
          */
         const size_t nodeId;
 
+        [[nodiscard]] virtual std::string toString() const = 0;
+
+        friend std::ostream& operator<<(std::ostream& os, const TreeNode& node);
+
     protected:
         /**
         * Protected constructor intended only for child classes. Please use {@link TreeNodeFactory} instead.

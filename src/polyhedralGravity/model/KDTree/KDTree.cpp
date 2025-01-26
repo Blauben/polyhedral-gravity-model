@@ -44,4 +44,31 @@ namespace polyhedralGravity {
             queue.pop_front();
         }
     }
+
+    void KDTree::prebuildTree() {
+        //queue for children of processed nodes
+        std::deque<std::shared_ptr<TreeNode>> queue{};
+        //subsequently call getter functions for the root node and all child nodes to initiate a full build of the tree
+        queue.push_back(getRootNode());
+        while (!queue.empty()) {
+            auto node = queue.front();
+            //if node is SplitNode perform intersection checks on the children and queue them accordingly
+            if (const auto split = std::dynamic_pointer_cast<SplitNode>(node)) {
+            //build child nodes and add them to the queue
+                queue.push_back(split->getChildNode(0));
+                queue.push_back(split->getChildNode(1));
+            }
+            //remove the processed node as its direct children have been built by getChildNode
+            queue.pop_front();
+        }
+    }
+
+    std::ostream& operator<<(std::ostream &os, const KDTree& kdTree) {
+            if (kdTree._rootNode != nullptr) {
+                os << *(kdTree._rootNode);
+            } else {
+                os << "KDTree rootNode is empty!";
+            }
+            return os;
+        }
 }// namespace polyhedralGravity

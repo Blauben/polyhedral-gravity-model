@@ -69,15 +69,22 @@ namespace polyhedralGravity {
         return delegates;
     }
 
+    std::string SplitNode::toString() const {
+        std::stringstream sstream{};
+        sstream << "SplitNode ID:  " << this->nodeId << " , Depth: " << recursionDepth(this->nodeId) << ", Plane Coordinate: " << std::to_string(this->_plane.axisCoordinate) << " Direction: " << std::to_string(static_cast<int>(this->_plane.orientation)) << std::endl;
+        sstream << "Children; Lesser: " << (this->_lesser != nullptr ? std::to_string(this->_lesser->nodeId) : "None") << "; Greater: " << (this->_greater != nullptr ? std::to_string(this->_greater->nodeId) : "None") << std::endl;
+        if (this->_lesser != nullptr) {
+            sstream << *(this->_lesser);
+        }
+        if (this->_greater != nullptr) {
+            sstream << *(this->_greater);
+        }
+        return sstream.str();
+    }
+
     std::ostream &operator<<(std::ostream &os, const SplitNode &node) {
-        std::cout << "SplitNode ID:  " << node.nodeId << " , Depth: " << recursionDepth(node.nodeId) << ", Plane Coordinate: " << std::to_string(node._plane.axisCoordinate) << " Direction: " << std::to_string(static_cast<int>(node._plane.orientation)) << std::endl;
-        std::cout << "Children; Lesser: " << (node._lesser != nullptr ? std::to_string(node._lesser->nodeId) : "None") << "; Greater: " << (node._greater != nullptr ? std::to_string(node._greater->nodeId) : "None") << std::endl;
-        if (node._lesser != nullptr) {
-            os << node._lesser;
-        }
-        if (node._greater != nullptr) {
-            os << node._greater;
-        }
+        std::cout << node.toString();
+
         return os;
     }
 }// namespace polyhedralGravity

@@ -72,8 +72,14 @@ namespace polyhedralGravity {
         return std::nullopt;
     }
 
+    std::string LeafNode::toString() const {
+        std::stringstream sstream{};
+        sstream << "LeafNode ID: " << this->nodeId << ", Depth: " << recursionDepth(this->nodeId) << std::endl;
+        return sstream.str();
+    }
+
     std::ostream &operator<<(std::ostream &os, const LeafNode &node) {
-        os << "LeafNode ID: " << node.nodeId << ", Depth: " << recursionDepth(node.nodeId) << std::endl;
+        os << node.toString();
         return os;
     }
 }
