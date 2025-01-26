@@ -8,24 +8,24 @@ namespace polyhedralGravity {
         "../example-config/data/Eros_upscaled-2"
     };
 
-    Polyhedron createBigPolyhedron(const PolyhedralSource &source,
+    Polyhedron createBigPolyhedron(const PolyhedralFiles &files,
                                    const PlaneSelectionAlgorithm::Algorithm &algorithm) {
-        return {source, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL, algorithm};
+        return {files, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, algorithm};
     }
 
     void BM_Polyhedron_Tree(benchmark::State &state, const PlaneSelectionAlgorithm::Algorithm &algorithm) {
-        TetgenAdapter adapter{{filePaths.at(state.range(0)) + ".node", filePaths.at(state.range(0)) + ".face"}};
-        const auto polyhedralSource = adapter.getPolyhedralSource();
+        const PolyhedralFiles polyhedralFiles{{filePaths.at(state.range(0)) + ".node", filePaths.at(state.range(0)) + ".face"}};
+        Polyhedron polyhedron = createBigPolyhedron(polyhedralFiles, algorithm);
         for (auto _: state) {
-            Polyhedron polyhedron = createBigPolyhedron(polyhedralSource, algorithm);
+            auto result = polyhedron.checkPlaneUnitNormalOrientation();
             benchmark::ClobberMemory();
         }
-        state.SetComplexityN(static_cast<benchmark::ComplexityN>(std::get<1>(polyhedralSource).size()));
+        state.SetComplexityN(static_cast<benchmark::ComplexityN>(polyhedron.countFaces()));
     }
 
     void BM_Polyhedron_Tree_Twice(benchmark::State &state) {
         const PolyhedralFiles polyhedralFiles = {filePaths.at(state.range(0)) + ".node", filePaths.at(state.range(0)) + ".face"};
-        auto initializedPolyhedron = Polyhedron(polyhedralFiles, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE, PlaneSelectionAlgorithm::Algorithm::LOG);
+        Polyhedron initializedPolyhedron = createBigPolyhedron(polyhedralFiles, PlaneSelectionAlgorithm::Algorithm::LOG);
         initializedPolyhedron.prebuildKDTree();
         for (auto _: state) {
             auto result = initializedPolyhedron.checkPlaneUnitNormalOrientation();
