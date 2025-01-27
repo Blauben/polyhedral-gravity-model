@@ -29,6 +29,11 @@ struct SplitParam;
      */
     class SplitNode final : public TreeNode {
         /**
+         * friend declaration for testing purposes.
+         */
+        friend class KDTreeTest_AlgorithmRegressionTest_Test;
+
+        /**
         * The SplitNode that contains the bounding box closer to the origin with respect to the split plane
         */
         std::shared_ptr<TreeNode> _lesser;

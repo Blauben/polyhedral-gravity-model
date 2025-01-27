@@ -53,7 +53,7 @@ namespace polyhedralGravity {
        * @return A pair of: 1. the cost for performing intersection operations on the finalized tree later, should the KDTree be built using the specified split plane and the triangle sets resulting through division by the plane.
        * 2. true if the planar triangles should be added to the min side of the bounding box.
        */
-        static std::pair<const double, bool> costForPlane(const Box &boundingBox, const Plane &plane, size_t trianglesMin, size_t trianglesMax, size_t trianglesPlanar);
+        static std::pair<const double, bool> costForPlane(Box boundingBox, Plane plane, size_t trianglesMin, size_t trianglesMax, size_t trianglesPlanar);
     };
 
 }// namespace polyhedralGravity

@@ -94,6 +94,13 @@ namespace polyhedralGravity {
         */
         bool operator==(const Plane &other) const;
 
+        /**
+        * Inequality operator used for testing purposes
+        */
+        bool operator!=(const Plane &other) const;
+
+        friend std::ostream& operator<<(std::ostream &os, const Plane &plane);
+
         Plane() = default;
         Plane(const Array3 &point, Direction direction);
         Plane(double point, Direction direction);

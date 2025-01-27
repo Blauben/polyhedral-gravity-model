@@ -71,7 +71,7 @@ namespace polyhedralGravity {
 
     std::string SplitNode::toString() const {
         std::stringstream sstream{};
-        sstream << "SplitNode ID:  " << this->nodeId << " , Depth: " << recursionDepth(this->nodeId) << ", Plane Coordinate: " << std::to_string(this->_plane.axisCoordinate) << " Direction: " << std::to_string(static_cast<int>(this->_plane.orientation)) << std::endl;
+        sstream << "SplitNode ID:  " << this->nodeId << " , Depth: " << recursionDepth(this->nodeId) << ", Plane: " << this->_plane << std::endl;
         sstream << "Children; Lesser: " << (this->_lesser != nullptr ? std::to_string(this->_lesser->nodeId) : "None") << "; Greater: " << (this->_greater != nullptr ? std::to_string(this->_greater->nodeId) : "None") << std::endl;
         if (this->_lesser != nullptr) {
             sstream << *(this->_lesser);

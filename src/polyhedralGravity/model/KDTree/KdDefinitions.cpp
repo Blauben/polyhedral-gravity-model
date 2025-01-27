@@ -22,6 +22,20 @@ namespace polyhedralGravity {
         : axisCoordinate(point), orientation(direction) {
     }
 
+    std::ostream& operator<<(std::ostream& os, const Direction& direction) {
+        switch (direction) {
+            case Direction::X: os << "X"; break;
+            case Direction::Y: os << "Y"; break;
+            case Direction::Z: os << "Z"; break;
+        }
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream &os, const Plane &plane) {
+        os << "(" << plane.axisCoordinate <<", " << plane.orientation << ")";
+        return os;
+    }
+
     Array3 Plane::normal(const bool returnFlipped) const {
         using namespace util;
         return polyhedralGravity::normal(orientation) * (returnFlipped ? -1 : 1);
@@ -45,7 +59,11 @@ namespace polyhedralGravity {
 
 
     bool Plane::operator==(const Plane &other) const {
-        return axisCoordinate == other.axisCoordinate && orientation == other.orientation;
+        return abs(axisCoordinate - other.axisCoordinate) < 1e-15 && orientation == other.orientation;
+    }
+
+    bool Plane::operator!=(const Plane &other) const {
+        return !(*this == other);
     }
 
     Box::Box(const std::pair<Array3, Array3> &pair)

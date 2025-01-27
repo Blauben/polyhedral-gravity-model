@@ -118,6 +118,11 @@ namespace polyhedralGravity {
                                                                triangleCounter.getMin(candidatePlane.orientation),
                                                                triangleCounter.getMax(candidatePlane.orientation),
                                                                triangleCounter.getPlanar(candidatePlane.orientation));
+            // this if clause exists to consistently build the same KDTree (choose plane with lower coordinate) by eliminating indeterministic behavior should the cost be equal.
+            // this is not important for functionality but for testing purposes
+            if (candidateCost == cost && optPlane.axisCoordinate < candidatePlane.axisCoordinate) {
+                continue;
+            }
             if (candidateCost < cost) {
                 cost = candidateCost;
                 optPlane = candidatePlane;

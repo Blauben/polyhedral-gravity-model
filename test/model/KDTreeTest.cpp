@@ -8,6 +8,7 @@
 #include <array>
 #include <random>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -17,16 +18,16 @@ namespace polyhedralGravity {
     using testing::ElementsAre;
     using Algorithm = PlaneSelectionAlgorithm::Algorithm;
 
-    class KDTreeTest : public ::testing::TestWithParam<std::tuple<std::vector<Array3>, std::vector<IndexArray3>,
-                std::vector<Array3>, Algorithm, bool> > {
+    class KDTreeTest : public ::testing::TestWithParam<std::tuple<std::vector<Array3>, std::vector<IndexArray3>, Algorithm,
+                std::vector<Array3>> > {
     public:
         static const std::vector<Array3> cube_vertices;
         static const std::vector<IndexArray3> cube_faces;
         static const Polyhedron _big;
 
-        static std::tuple<std::vector<Array3>, std::vector<IndexArray3>, std::vector<Array3>, Algorithm, bool>
-        generateRandomPointsOnPolyhedron(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces,
-                                         const size_t n, Algorithm algorithm, bool paralellExecution) {
+        static std::tuple<std::vector<Array3>, std::vector<IndexArray3>, Algorithm, std::vector<Array3>>
+        generateRandomPointsOnPolyhedron(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, Algorithm algorithm,
+                                         const size_t n) {
             std::vector<Array3> randomPoints;
             randomPoints.reserve(n);
             for (size_t i = 0; i < n; i++) {
@@ -38,7 +39,7 @@ namespace polyhedralGravity {
                 const auto point = randomPointOnFace(faceVertices);
                 randomPoints.push_back(point);
             }
-            return {vertices, faces, randomPoints, algorithm, paralellExecution};
+            return {vertices, faces,  algorithm, randomPoints};
         }
 
     protected:
@@ -105,7 +106,7 @@ namespace polyhedralGravity {
     TEST_P(KDTreeTest, PointsTest) {
         using namespace polyhedralGravity;
         using namespace util;
-        const auto [vertices, faces, points, algorithm, parallel_execution] = GetParam();
+        const auto [vertices, faces, algorithm, points] = GetParam();
         KDTree tree{vertices, faces, algorithm};
         constexpr Array3 origin{200, 200, 200};
         const auto pointTest = [&tree, &origin](const Array3 &point) {
@@ -116,10 +117,33 @@ namespace polyhedralGravity {
                         Contains(ElementsAre(DoubleNear(point[0], DELTA), DoubleNear(point[1], DELTA), DoubleNear(point[
                             2], DELTA))));
         };
-        if (parallel_execution) {
-            thrust::for_each(thrust::host, points.cbegin(), points.cend(), pointTest);
-        } else {
-            std::for_each(points.cbegin(), points.cend(), pointTest);
+        std::for_each(points.cbegin(), points.cend(), pointTest);
+    }
+
+    TEST_P(KDTreeTest, AlgorithmRegressionTest) {
+        using namespace polyhedralGravity;
+        using namespace util;
+        std::vector<Array3> vertices;
+        std::vector<IndexArray3> faces;
+        Algorithm algorithm;
+        std::tie(vertices, faces, algorithm, std::ignore) = GetParam();
+        KDTree tree{vertices, faces, algorithm};
+        auto squaredAlgorithm = PlaneSelectionAlgorithmFactory::create(PlaneEventAlgorithm::Algorithm::QUADRATIC);
+        std::deque<std::shared_ptr<TreeNode>> nodePtrQueue{};
+        nodePtrQueue.push_back(tree.getRootNode());
+        while (!nodePtrQueue.empty()) {
+            if (auto splitNodePtr = std::dynamic_pointer_cast<SplitNode>(nodePtrQueue.front())) {
+                auto param = *splitNodePtr->_splitParam;
+                // The squared algorithm obtains plane orientations by round robin but the plane event algorithms evaluate
+                // all orientations and the choose the best one -> squared algorithm needs to know the desired orientation
+                param.splitDirection = splitNodePtr->_plane.orientation;
+                //const auto optimalPlane = std::get<0>(squaredAlgorithm->findPlane(param));
+                const auto [optimalPlane, cost, triangles] = squaredAlgorithm->findPlane(param);
+                ASSERT_EQ(optimalPlane, splitNodePtr->_plane) << "Check failed for node with id: " << splitNodePtr->nodeId <<"; " << splitNodePtr->_plane << " != " << optimalPlane <<std::endl;
+                nodePtrQueue.push_back(splitNodePtr->getChildNode(0));
+                nodePtrQueue.push_back(splitNodePtr->getChildNode(1));
+            }
+            nodePtrQueue.pop_front();
         }
     }
 
@@ -128,47 +152,37 @@ namespace polyhedralGravity {
 
     INSTANTIATE_TEST_SUITE_P(NoTreePointsBig, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices
-                                 (), KDTreeTest::_big.getFaces(), numberOfPoints, Algorithm::NOTREE, false)));
+                                 (), KDTreeTest::_big.getFaces(), Algorithm::NOTREE, numberOfPoints)));
     INSTANTIATE_TEST_SUITE_P(QuadraticPointsBig, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices
-                                 (), KDTreeTest::_big.getFaces(), numberOfPoints, Algorithm::QUADRATIC, false)));
+                                 (), KDTreeTest::_big.getFaces(), Algorithm::QUADRATIC, numberOfPoints)));
     INSTANTIATE_TEST_SUITE_P(LogSquaredPointsBig, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices
-                                 (), KDTreeTest::_big.getFaces(), numberOfPoints, Algorithm::LOGSQUARED, false)));
+                                 (), KDTreeTest::_big.getFaces(), Algorithm::LOGSQUARED, numberOfPoints)));
     INSTANTIATE_TEST_SUITE_P(LogPointsBig, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices
-                                 (), KDTreeTest::_big.getFaces(), numberOfPoints, Algorithm::LOG,false)));
+                                 (), KDTreeTest::_big.getFaces(), Algorithm::LOG, numberOfPoints)));
 
     INSTANTIATE_TEST_SUITE_P(NoTreePointsCube, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::cube_vertices,
-                                 KDTreeTest::cube_faces, numberOfPoints, Algorithm::NOTREE, false)));
+                                 KDTreeTest::cube_faces, Algorithm::NOTREE, numberOfPoints)));
     INSTANTIATE_TEST_SUITE_P(QuadraticPointsCube, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::cube_vertices,
-                                 KDTreeTest::cube_faces, numberOfPoints, Algorithm::QUADRATIC, false)));
+                                 KDTreeTest::cube_faces, Algorithm::QUADRATIC, numberOfPoints)));
     INSTANTIATE_TEST_SUITE_P(LogSquaredPointsCube, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::cube_vertices,
-                                 KDTreeTest::cube_faces, numberOfPoints, Algorithm::LOGSQUARED, false)));
+                                 KDTreeTest::cube_faces, Algorithm::LOGSQUARED, numberOfPoints)));
     INSTANTIATE_TEST_SUITE_P(LogPointsCube, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::cube_vertices,
-                                 KDTreeTest::cube_faces, numberOfPoints, Algorithm::LOG, false)));
+                                 KDTreeTest::cube_faces, Algorithm::LOG, numberOfPoints)));
 
     INSTANTIATE_TEST_SUITE_P(NoTreeGreatNumberOfPointsBig, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices
-                                 (), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::NOTREE, false)));
+                                 (), KDTreeTest::_big.getFaces(), Algorithm::NOTREE, bigNumberOfPoints)));
     INSTANTIATE_TEST_SUITE_P(LogSquaredGreatNumberOfPointsBig, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices
-                                 (), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::LOGSQUARED, false)));
+                                 (), KDTreeTest::_big.getFaces(), Algorithm::LOGSQUARED, bigNumberOfPoints)));
     INSTANTIATE_TEST_SUITE_P(LogGreatNumberOfPointsBig, KDTreeTest,
                              ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices
-                                 (), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::LOG, false)));
-
-    INSTANTIATE_TEST_SUITE_P(NoTreeGreatNumberOfPointsBigParalell, KDTreeTest,
-                             ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices
-                                 (), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::NOTREE, true)));
-    INSTANTIATE_TEST_SUITE_P(LogSquaredGreatNumberOfPointsBigParalell, KDTreeTest,
-                             ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices
-                                 (), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::LOGSQUARED, true)));
-    INSTANTIATE_TEST_SUITE_P(LogGreatNumberOfPointsBigParalell, KDTreeTest,
-                             ::testing::Values(KDTreeTest::generateRandomPointsOnPolyhedron(KDTreeTest::_big.getVertices
-                                 (), KDTreeTest::_big.getFaces(), bigNumberOfPoints, Algorithm::LOG, true)));
+                                 (), KDTreeTest::_big.getFaces(), Algorithm::LOG, bigNumberOfPoints)));
 } // namespace polyhedralGravity

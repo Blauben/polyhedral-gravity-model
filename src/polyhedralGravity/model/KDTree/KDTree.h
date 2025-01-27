@@ -32,6 +32,11 @@ namespace polyhedralGravity {
      */
     class KDTree {
         /**
+         * friend declaration for testing purposes.
+         */
+        friend class KDTreeTest_AlgorithmRegressionTest_Test;
+
+        /**
         * The entry node of the KDTree. Only access using getter.
         */
         std::shared_ptr<TreeNode> _rootNode;

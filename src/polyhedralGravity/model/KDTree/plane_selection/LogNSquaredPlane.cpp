@@ -11,6 +11,11 @@ namespace polyhedralGravity {
         for (const auto dimension: ALL_DIRECTIONS) {
             splitParam.splitDirection = dimension;
             auto [candidatePlane, candidateCost, events, minSideChosen] = findPlaneForSingleDimension(splitParam);
+            // this if clause exists to consistently build the same KDTree (choose plane with lower coordinate) by eliminating indeterministic behavior should the cost be equal.
+            // this is not important for functionality but for testing purposes
+            if (candidateCost == cost && optPlane.axisCoordinate < candidatePlane.axisCoordinate) {
+                continue;
+            }
             if (candidateCost < cost) {
                 optPlane = candidatePlane;
                 cost = candidateCost;

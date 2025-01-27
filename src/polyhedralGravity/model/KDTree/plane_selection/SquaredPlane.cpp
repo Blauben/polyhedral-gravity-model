@@ -45,20 +45,28 @@ namespace polyhedralGravity {
 
                                  //evaluate the candidate plane and store if it is better than the currently stored result
                                  auto [candidateCost, minSideChosen] = costForPlane(
-                                     splitParam.boundingBox, candidatePlane, triangleIndexLists[0]->size(),
-                                     triangleIndexLists[1]->size(), triangleIndexLists[2]->size());
+                                         splitParam.boundingBox, candidatePlane, triangleIndexLists[0]->size(),
+                                         triangleIndexLists[1]->size(), triangleIndexLists[2]->size());
 
-                                 std::lock_guard lock(optMutex);
-                                 if (candidateCost < cost) {
-                                     cost = candidateCost;
-                                     optPlane = candidatePlane;
-                                     //planar faces have to be included in one of the two sub boxes.
-                                     const auto &includePlanarTo = triangleIndexLists[minSideChosen ? 0 : 1];
-                                     includePlanarTo->insert(includePlanarTo->cend(), triangleIndexLists[2]->cbegin(),
-                                                             triangleIndexLists[2]->cend());
-                                     optTriangleIndexLists = {
-                                         std::move(triangleIndexLists[0]), std::move(triangleIndexLists[1])
-                                     };
+                                 {
+
+                                     std::lock_guard lock(optMutex);
+                                     // this if clause exists to consistently build the same KDTree (choose plane with lower coordinate) by eliminating indeterministic behavior should the cost be equal.
+                                     // this is not important for functionality but for testing purposes
+                                     if (candidateCost == cost && optPlane.axisCoordinate < candidatePlane.axisCoordinate) {
+                                        continue;
+                                     }
+                                     if (candidateCost <= cost) {
+                                         cost = candidateCost;
+                                         optPlane = candidatePlane;
+                                         //planar faces have to be included in one of the two sub boxes.
+                                         const auto &includePlanarTo = triangleIndexLists[minSideChosen ? 0 : 1];
+                                         includePlanarTo->insert(includePlanarTo->cend(), triangleIndexLists[2]->cbegin(),
+                                                                 triangleIndexLists[2]->cend());
+                                         optTriangleIndexLists = {
+                                             std::move(triangleIndexLists[0]), std::move(triangleIndexLists[1])
+                                         };
+                                     }
                                  }
                              }
                          });
