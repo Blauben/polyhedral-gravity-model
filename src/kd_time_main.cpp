@@ -3,7 +3,7 @@
 
 namespace polyhedralGravity {
     const std::vector<std::string> erosFilePaths{
-        "../example-config/data/Eros_scaled-1000", //"../example-config/data/Eros_scaled-1732",
+        "../example-config/data/Eros_scaled-1000", "../example-config/data/Eros_scaled-1732",
         "../example-config/data/Eros_scaled-3000", "../example-config/data/Eros_scaled-5196",
         "../example-config/data/Eros_scaled-9000", "../example-config/data/Eros_scaled-15588",
         "../example-config/data/Eros_scaled-27000", "../example-config/data/Eros_scaled-46765",
