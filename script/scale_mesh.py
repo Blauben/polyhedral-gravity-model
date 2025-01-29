@@ -92,9 +92,15 @@ def scale_mesh(nodes, faces, number_of_faces):
     vertices = list(map(lambda n: n.vertex(), nodes))
     triangles = list(map(lambda n: n.triangle(), faces))
     mesh = o3d.geometry.TriangleMesh(vertices=o3d.utility.Vector3dVector(vertices), triangles=o3d.utility.Vector3iVector(triangles))
+    mesh = mesh.compute_vertex_normals()
+    mesh = mesh.remove_duplicated_vertices()
+    mesh = mesh.remove_degenerate_triangles()
     iterations = max(0, math.ceil(math.log(number_of_faces / len(triangles)) / math.log(4)))
-    mesh = mesh.subdivide_loop(number_of_iterations=iterations)
-    mesh = mesh.simplify_quadric_decimation(target_number_of_triangles=number_of_faces)
+    if iterations > 0:
+        mesh = mesh.subdivide_midpoint(number_of_iterations=iterations)
+    vertices = np.asarray(mesh.vertices).tolist()
+    triangles = np.asarray(mesh.triangles).tolist()
+    mesh.simplify_quadric_decimation(target_number_of_triangles=number_of_faces)
     vertices = np.asarray(mesh.vertices).tolist()
     triangles = np.asarray(mesh.triangles).tolist()
     nodes = []
