@@ -13,20 +13,24 @@
 #include <vector>
 
 namespace polyhedralGravity {
+    using testing::ContainerEq;
     using testing::Contains;
     using testing::DoubleNear;
     using testing::ElementsAre;
+    using testing::Pair;
     using Algorithm = PlaneSelectionAlgorithm::Algorithm;
 
-    class KDTreeTest : public ::testing::TestWithParam<std::tuple<std::vector<Array3>, std::vector<IndexArray3>, Algorithm,
-                std::vector<Array3>> > {
+    class KDTreeTest : public ::testing::TestWithParam<std::tuple<std::vector<Array3>, std::vector<IndexArray3>,
+                Algorithm,
+                std::vector<Array3> > > {
     public:
         static const std::vector<Array3> cube_vertices;
         static const std::vector<IndexArray3> cube_faces;
         static const Polyhedron _big;
 
-        static std::tuple<std::vector<Array3>, std::vector<IndexArray3>, Algorithm, std::vector<Array3>>
-        generateRandomPointsOnPolyhedron(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, Algorithm algorithm,
+        static std::tuple<std::vector<Array3>, std::vector<IndexArray3>, Algorithm, std::vector<Array3> >
+        generateRandomPointsOnPolyhedron(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces,
+                                         Algorithm algorithm,
                                          const size_t n) {
             std::vector<Array3> randomPoints;
             randomPoints.reserve(n);
@@ -39,7 +43,37 @@ namespace polyhedralGravity {
                 const auto point = randomPointOnFace(faceVertices);
                 randomPoints.push_back(point);
             }
-            return {vertices, faces,  algorithm, randomPoints};
+            return {vertices, faces, algorithm, randomPoints};
+        }
+
+        static TriangleIndexVector extractFaceIndices(
+            const std::variant<TriangleIndexVector, PlaneEventVector> &triangles) {
+            if (std::holds_alternative<TriangleIndexVector>(triangles)) {
+                auto triangleVector = std::get<TriangleIndexVector>(triangles);
+                std::sort(triangleVector.begin(), triangleVector.end());
+                return triangleVector;
+            }
+            std::set<unsigned long> boundTriangles;
+            for (const auto &planeEvent: std::get<PlaneEventVector>(triangles)) {
+                boundTriangles.insert(planeEvent.faceIndex);
+            }
+            TriangleIndexVector result{boundTriangles.cbegin(), boundTriangles.cend()};
+            std::sort(result.begin(), result.end());
+            return result;
+        }
+
+        static SplitParam &holdsFaceIndices(SplitParam &param) {
+            param.boundFaces = extractFaceIndices(param.boundFaces);
+            return param;
+        }
+
+        static std::pair<TriangleIndexVector, TriangleIndexVector> extractFaceIndicesFromVectors(const
+            std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2> > &vectors) {
+            return std::visit([](const auto &triangleVectors) {
+                auto minFaces = extractFaceIndices(*(triangleVectors[0]));
+                auto maxFaces = extractFaceIndices(*(triangleVectors[1]));
+                return std::make_pair(minFaces, maxFaces);
+            }, vectors);
         }
 
     protected:
@@ -128,18 +162,39 @@ namespace polyhedralGravity {
         Algorithm algorithm;
         std::tie(vertices, faces, algorithm, std::ignore) = GetParam();
         KDTree tree{vertices, faces, algorithm};
-        auto squaredAlgorithm = PlaneSelectionAlgorithmFactory::create(PlaneEventAlgorithm::Algorithm::QUADRATIC);
-        std::deque<std::shared_ptr<TreeNode>> nodePtrQueue{};
+        auto squaredAlgorithm = PlaneSelectionAlgorithmFactory::create(Algorithm::QUADRATIC);
+        auto variantAlgorithm = PlaneSelectionAlgorithmFactory::create(algorithm);
+        std::deque<std::shared_ptr<TreeNode> > nodePtrQueue{};
         nodePtrQueue.push_back(tree.getRootNode());
         while (!nodePtrQueue.empty()) {
             if (auto splitNodePtr = std::dynamic_pointer_cast<SplitNode>(nodePtrQueue.front())) {
-                auto param = *splitNodePtr->_splitParam;
+                SplitParam param = *splitNodePtr->_splitParam;
                 // The squared algorithm obtains plane orientations by round robin but the plane event algorithms evaluate
                 // all orientations and the choose the best one -> squared algorithm needs to know the desired orientation
                 param.splitDirection = splitNodePtr->_plane.orientation;
-                //const auto optimalPlane = std::get<0>(squaredAlgorithm->findPlane(param));
-                const auto [optimalPlane, cost, triangles] = squaredAlgorithm->findPlane(param);
-                ASSERT_EQ(optimalPlane, splitNodePtr->_plane) << "Check failed for node with id: " << splitNodePtr->nodeId <<"; " << splitNodePtr->_plane << " != " << optimalPlane <<std::endl;
+                if (splitNodePtr->nodeId == 109) {
+                    const auto [optimalPlane, optimalCost, optimalTriangles] = squaredAlgorithm->findPlane(
+                        holdsFaceIndices(param));
+                    const auto [variantPlane, variantCost, variantTriangles] = variantAlgorithm->findPlane(param);
+                    const auto optimalTriangleIndices = extractFaceIndicesFromVectors(std::move(optimalTriangles));
+                    const auto variantTriangleIndices = extractFaceIndicesFromVectors(std::move(variantTriangles));
+                    ASSERT_EQ(variantPlane, splitNodePtr->_plane) << "FATAL: test logic faulty";
+                    ASSERT_EQ(optimalPlane, variantPlane) << "Plane check failed for node with id: " << splitNodePtr->
+                    nodeId << "; " << variantPlane << " != " << optimalPlane << std::endl;
+                    EXPECT_EQ(optimalCost, variantCost) << "Plane cost check failed for node with id: " << splitNodePtr
+->
+                    nodeId << "; Algorithm: " << variantPlane << ", Optimal: " << optimalPlane << std::endl;
+                    ASSERT_THAT(optimalTriangleIndices.first,
+                                ContainerEq(variantTriangleIndices.first
+                                )) << "Triangle locality check (minFaces) failed for node with id: " << splitNodePtr->
+nodeId
+                    << std::endl << "Plane: " << optimalPlane;
+                    ASSERT_THAT(optimalTriangleIndices.second,
+                                ContainerEq(variantTriangleIndices.second
+                                )) << "Triangle locality check (maxFaces) failed for node with id: " << splitNodePtr->
+nodeId
+                    << std::endl << "Plane: " << optimalPlane;
+                }
                 nodePtrQueue.push_back(splitNodePtr->getChildNode(0));
                 nodePtrQueue.push_back(splitNodePtr->getChildNode(1));
             }

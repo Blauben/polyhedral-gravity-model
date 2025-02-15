@@ -1,10 +1,14 @@
 #include "polyhedralGravity/model/KDTree/KDTree.h"
 
 namespace polyhedralGravity {
-
     //on initialization of the tree a single bounding box which includes all the faces of the polyhedron is generated. Both the list of included faces and the parameters of the box are written to the split parameters
-    KDTree::KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, const PlaneSelectionAlgorithm::Algorithm algorithm)
-        : _vertices{vertices}, _faces{faces}, _splitParam{std::make_unique<SplitParam>(_vertices, _faces, Box::getBoundingBox(_vertices), Direction::X, PlaneSelectionAlgorithmFactory::create(algorithm))} {
+    KDTree::KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces,
+                   const PlaneSelectionAlgorithm::Algorithm algorithm)
+        : _vertices{vertices}, _faces{faces},
+          _splitParam{
+              std::make_unique<SplitParam>(_vertices, _faces, Box::getBoundingBox(_vertices), Direction::X,
+                                           PlaneSelectionAlgorithmFactory::create(algorithm))
+          } {
     }
 
     std::shared_ptr<TreeNode> KDTree::getRootNode() {
@@ -25,9 +29,9 @@ namespace polyhedralGravity {
     void KDTree::getFaceIntersections(const Array3 &origin, const Array3 &ray, std::set<Array3> &intersections) {
         //iterative approach to avoid stack and heap overflows
         //queue for children of processed nodes
-        std::deque<std::shared_ptr<TreeNode>> queue{};
+        std::deque<std::shared_ptr<TreeNode> > queue{};
         //calculate inverse ray direction
-        const Array3 inverseRay{1./ray[0], 1./ray[1], 1./ray[2]};
+        const Array3 inverseRay{1. / ray[0], 1. / ray[1], 1. / ray[2]};
         //init with tree root
         queue.push_back(getRootNode());
         while (!queue.empty()) {
@@ -35,7 +39,9 @@ namespace polyhedralGravity {
             //if node is SplitNode perform intersection checks on the children and queue them accordingly
             if (const auto split = std::dynamic_pointer_cast<SplitNode>(node)) {
                 const auto children = split->getChildrenForIntersection(origin, ray, inverseRay);
-                std::for_each(std::begin(children), std::end(children), [&queue](const auto& child) { queue.push_back(child); });
+                std::for_each(std::begin(children), std::end(children), [&queue](const auto &child) {
+                    queue.push_back(child);
+                });
             }
             //if node is leaf then perform intersections with the triangles contained
             else if (const auto leaf = std::dynamic_pointer_cast<LeafNode>(node)) {
@@ -45,30 +51,31 @@ namespace polyhedralGravity {
         }
     }
 
-    void KDTree::prebuildTree() {
+    KDTree &KDTree::prebuildTree() {
         //queue for children of processed nodes
-        std::deque<std::shared_ptr<TreeNode>> queue{};
+        std::deque<std::shared_ptr<TreeNode> > queue{};
         //subsequently call getter functions for the root node and all child nodes to initiate a full build of the tree
         queue.push_back(getRootNode());
         while (!queue.empty()) {
             auto node = queue.front();
             //if node is SplitNode perform intersection checks on the children and queue them accordingly
             if (const auto split = std::dynamic_pointer_cast<SplitNode>(node)) {
-            //build child nodes and add them to the queue
+                //build child nodes and add them to the queue
                 queue.push_back(split->getChildNode(0));
                 queue.push_back(split->getChildNode(1));
             }
             //remove the processed node as its direct children have been built by getChildNode
             queue.pop_front();
         }
+        return *this;
     }
 
-    std::ostream& operator<<(std::ostream &os, const KDTree& kdTree) {
-            if (kdTree._rootNode != nullptr) {
-                os << *(kdTree._rootNode);
-            } else {
-                os << "KDTree rootNode is empty!";
-            }
-            return os;
+    std::ostream &operator<<(std::ostream &os, const KDTree &kdTree) {
+        if (kdTree._rootNode != nullptr) {
+            os << *(kdTree._rootNode);
+        } else {
+            os << "KDTree rootNode is empty!";
         }
-}// namespace polyhedralGravity
+        return os;
+    }
+} // namespace polyhedralGravity

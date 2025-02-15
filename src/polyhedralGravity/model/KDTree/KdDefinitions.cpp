@@ -22,17 +22,20 @@ namespace polyhedralGravity {
         : axisCoordinate(point), orientation(direction) {
     }
 
-    std::ostream& operator<<(std::ostream& os, const Direction& direction) {
+    std::ostream &operator<<(std::ostream &os, const Direction &direction) {
         switch (direction) {
-            case Direction::X: os << "X"; break;
-            case Direction::Y: os << "Y"; break;
-            case Direction::Z: os << "Z"; break;
+            case Direction::X: os << "X";
+                break;
+            case Direction::Y: os << "Y";
+                break;
+            case Direction::Z: os << "Z";
+                break;
         }
         return os;
     }
 
-    std::ostream& operator<<(std::ostream &os, const Plane &plane) {
-        os << "(" << plane.axisCoordinate <<", " << plane.orientation << ")";
+    std::ostream &operator<<(std::ostream &os, const Plane &plane) {
+        os << "(" << plane.axisCoordinate << ", " << plane.orientation << ")";
         return os;
     }
 
@@ -59,7 +62,7 @@ namespace polyhedralGravity {
 
 
     bool Plane::operator==(const Plane &other) const {
-        return abs(axisCoordinate - other.axisCoordinate) < 1e-15 && orientation == other.orientation;
+        return std::fabs(axisCoordinate - other.axisCoordinate) < 1e-15 && orientation == other.orientation;
     }
 
     bool Plane::operator!=(const Plane &other) const {
@@ -221,7 +224,7 @@ namespace polyhedralGravity {
                 triangles.push_back(faceIndex);
             }
         };
-        thrust::for_each(thrust::host, eventList.cbegin(), eventList.cend(), insertIfAbsent);
+        std::for_each(eventList.cbegin(), eventList.cend(), insertIfAbsent);
         triangles.shrink_to_fit();
         return triangles;
     }
@@ -235,14 +238,14 @@ namespace polyhedralGravity {
                                   std::mutex writeLock{};
                                   size_t count{0};
                                   std::unordered_set<size_t> processedFaces{};
-                                  thrust::for_each(thrust::host, eventList.cbegin(), eventList.cend(),
-                                                   [&processedFaces, &count, &writeLock](const auto &planeEvent) {
-                                                       if (processedFaces.find(planeEvent.faceIndex) == processedFaces.
-                                                           end()) {
-                                                           processedFaces.insert(planeEvent.faceIndex);
-                                                           count++;
-                                                       }
-                                                   });
+                                  std::for_each(eventList.cbegin(), eventList.cend(),
+                                                [&processedFaces, &count, &writeLock](const auto &planeEvent) {
+                                                    if (processedFaces.find(planeEvent.faceIndex) == processedFaces.
+                                                        end()) {
+                                                        processedFaces.insert(planeEvent.faceIndex);
+                                                        count++;
+                                                    }
+                                                });
                                   return count;
                               }
                           },

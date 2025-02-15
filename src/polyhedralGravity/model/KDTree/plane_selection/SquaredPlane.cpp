@@ -19,19 +19,20 @@ namespace polyhedralGravity {
                                                               splitParam.vertices, splitParam.faces);
         std::mutex optMutex{}, testedPlaneMutex{};
         thrust::for_each(thrust::device, vertex3_begin, vertex3_end,
-                         [&splitParam, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates, &optMutex, &testedPlaneMutex](
+                         [&splitParam, &optPlane, &cost, &optTriangleIndexLists, &testedPlaneCoordinates, &optMutex, &
+                             testedPlaneMutex](
                      const auto &indexAndTriplet) {
                              const auto [index, triplet] = indexAndTriplet;
                              //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
                              const auto clippedVertices = splitParam.boundingBox.clipToVoxel(triplet);
-                             const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3> >(clippedVertices);
+                             const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3> >(
+                                 clippedVertices);
                              for (const auto planeSurfacePoint: {minPoint, maxPoint}) {
                                  //constructs the plane that goes through a vertex lying on the bounding box of the face to be checked and spans in a specified direction.
                                  Plane candidatePlane{
                                      planeSurfacePoint[static_cast<int>(splitParam.splitDirection)],
                                      splitParam.splitDirection
-                                 };
-                                 {
+                                 }; {
                                      //continue if plane has already been tested
                                      std::lock_guard lock{testedPlaneMutex};
                                      if (testedPlaneCoordinates.find(candidatePlane.axisCoordinate) !=
@@ -45,23 +46,22 @@ namespace polyhedralGravity {
 
                                  //evaluate the candidate plane and store if it is better than the currently stored result
                                  auto [candidateCost, minSideChosen] = costForPlane(
-                                         splitParam.boundingBox, candidatePlane, triangleIndexLists[0]->size(),
-                                         triangleIndexLists[1]->size(), triangleIndexLists[2]->size());
-
-                                 {
-
+                                     splitParam.boundingBox, candidatePlane, triangleIndexLists[0]->size(),
+                                     triangleIndexLists[1]->size(), triangleIndexLists[2]->size()); {
                                      std::lock_guard lock(optMutex);
                                      // this if clause exists to consistently build the same KDTree (choose plane with lower coordinate) by eliminating indeterministic behavior should the cost be equal.
                                      // this is not important for functionality but for testing purposes
-                                     if (candidateCost == cost && optPlane.axisCoordinate < candidatePlane.axisCoordinate) {
-                                        continue;
+                                     if (candidateCost == cost && optPlane.axisCoordinate < candidatePlane.
+                                         axisCoordinate) {
+                                         continue;
                                      }
                                      if (candidateCost <= cost) {
                                          cost = candidateCost;
                                          optPlane = candidatePlane;
                                          //planar faces have to be included in one of the two sub boxes.
                                          const auto &includePlanarTo = triangleIndexLists[minSideChosen ? 0 : 1];
-                                         includePlanarTo->insert(includePlanarTo->cend(), triangleIndexLists[2]->cbegin(),
+                                         includePlanarTo->insert(includePlanarTo->cend(),
+                                                                 triangleIndexLists[2]->cbegin(),
                                                                  triangleIndexLists[2]->cend());
                                          optTriangleIndexLists = {
                                              std::move(triangleIndexLists[0]), std::move(triangleIndexLists[1])
@@ -92,10 +92,12 @@ namespace polyhedralGravity {
         auto [begin, end] = transformIterator(boundFaces.cbegin(), boundFaces.cend(), splitParam.vertices,
                                               splitParam.faces);
         std::for_each(
-            begin, end, [&split, &index_greater, &index_less, &index_equal](std::pair<size_t, Array3Triplet> pair) {
+            begin, end,
+            [&splitParam, &split, &index_greater, &index_less, &index_equal](std::pair<size_t, Array3Triplet> pair) {
                 auto [faceIndex, vertices] = pair;
                 bool less{false}, greater{false};
-                for (const Array3 vertex: vertices) {
+                auto clippedVertices = splitParam.boundingBox.clipToVoxel(vertices);
+                for (const Array3 vertex: clippedVertices) {
                     //vertex is closer to the origin than the plane
                     if (vertex[static_cast<int>(split.orientation)] < split.axisCoordinate && !less) {
                         less = true;

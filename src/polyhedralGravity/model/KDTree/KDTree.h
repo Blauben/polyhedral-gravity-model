@@ -26,7 +26,6 @@
 #include "polyhedralGravity/util/UtilityContainer.h"
 
 namespace polyhedralGravity {
-
     /**
      * A KDTree for a given polyhedron to speed up ray intersections with the polyhedron. It is thread safe.
      */
@@ -68,7 +67,8 @@ namespace polyhedralGravity {
         * @param algorithm Specifies which algorithm to use for finding optimal split planes.
         * @return the lazily built KDTree.
         */
-        KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, PlaneSelectionAlgorithm::Algorithm algorithm = PlaneSelectionAlgorithm::Algorithm::LOG);
+        KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces,
+               PlaneSelectionAlgorithm::Algorithm algorithm = PlaneSelectionAlgorithm::Algorithm::LOG);
 
         /**
         * Creates the root tree node if not initialized and returns it.
@@ -95,8 +95,8 @@ namespace polyhedralGravity {
         /**
          * Prebuilds the whole KDTree bypassing lazy loading entirely.
          */
-        void prebuildTree();
+        KDTree &prebuildTree();
 
-        friend std::ostream &operator<<(std::ostream &os, const KDTree& kdTree);
+        friend std::ostream &operator<<(std::ostream &os, const KDTree &kdTree);
     };
-}// namespace polyhedralGravity
+} // namespace polyhedralGravity

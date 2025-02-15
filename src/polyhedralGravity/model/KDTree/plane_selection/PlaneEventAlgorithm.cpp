@@ -10,12 +10,12 @@ namespace polyhedralGravity {
 
     void TriangleCounter::updateMax(Direction direction, const size_t p_planar, const size_t p_end) {
         dimensionTriangleValues.at(static_cast<size_t>(direction) % dimensionTriangleValues.size()).at(1) -= p_planar +
-                                                                                                             p_end;
+                p_end;
     }
 
     void TriangleCounter::updateMin(Direction direction, const size_t p_planar, const size_t p_start) {
         dimensionTriangleValues.at(static_cast<size_t>(direction) % dimensionTriangleValues.size()).at(0) += p_planar +
-                                                                                                             p_start;
+                p_start;
     }
 
     void TriangleCounter::setPlanar(Direction direction, const size_t p_planar) {
@@ -52,27 +52,27 @@ namespace polyhedralGravity {
                          [&splitParam, &events, &directions, &eventsMutex](const auto &indexAndTriplet) {
                              const auto [index, triplet] = indexAndTriplet;
                              //first clip the triangles vertices to the current bounding box and then get the bounding box of the clipped triangle -> use the box edges as split plane candidates
-                             const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3>>(
-                                     splitParam.boundingBox.clipToVoxel(triplet));
+                             const auto [minPoint, maxPoint] = Box::getBoundingBox<std::vector<Array3> >(
+                                 splitParam.boundingBox.clipToVoxel(triplet));
                              std::lock_guard lock(eventsMutex);
                              for (const auto &direction: directions) {
                                  // if the triangle is perpendicular to the split direction, generate a planar event with the candidate plane in which the triangle lies
                                  if (minPoint[static_cast<int>(direction)] == maxPoint[static_cast<int>(direction)]) {
                                      events.emplace_back(
-                                             PlaneEventType::planar,
-                                             Plane(minPoint, direction),
-                                             index);
+                                         PlaneEventType::planar,
+                                         Plane(minPoint, direction),
+                                         index);
                                      return;
                                  }
                                  //else create a starting and ending event consisting of the planes defined by the min and max points of the face's bounding box.
                                  events.emplace_back(
-                                         PlaneEventType::starting,
-                                         Plane(minPoint, direction),
-                                         index);
+                                     PlaneEventType::starting,
+                                     Plane(minPoint, direction),
+                                     index);
                                  events.emplace_back(
-                                         PlaneEventType::ending,
-                                         Plane(maxPoint, direction),
-                                         index);
+                                     PlaneEventType::ending,
+                                     Plane(maxPoint, direction),
+                                     index);
                              }
                          });
         //reduce size
@@ -83,7 +83,7 @@ namespace polyhedralGravity {
     }
 
     std::tuple<Plane, double, bool> PlaneEventAlgorithm::traversePlaneEvents(
-            const PlaneEventVector &events, TriangleCounter &triangleCounter, const Box &boundingBox) {
+        const PlaneEventVector &events, TriangleCounter &triangleCounter, const Box &boundingBox) {
         //initialize the default plane and make it costly
         double cost{std::numeric_limits<double>::infinity()};
         Plane optPlane{};
@@ -96,17 +96,20 @@ namespace polyhedralGravity {
             //for each plane calculate the faces whose vertices lie in the plane. Differentiate between the face starting in the plane, ending in the plane or all vertices lying in the plane
             size_t p_start{0}, p_end{0}, p_planar{0};
             //count all faces that end in the plane, this works because the PlaneEvents are sorted by position and then by PlaneEventType
-            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::ending) {
+            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.
+                   axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::ending) {
                 p_end++;
                 i++;
             }
             //count all the faces that lie in the plane
-            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::planar) {
+            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.
+                   axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::planar) {
                 p_planar++;
                 i++;
             }
             //count all the faces that start in the plane
-            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::starting) {
+            while (i < events.size() && events[i].plane.orientation == candidatePlane.orientation && events[i].plane.
+                   axisCoordinate == candidatePlane.axisCoordinate && events[i].type == PlaneEventType::starting) {
                 p_start++;
                 i++;
             }
@@ -118,12 +121,10 @@ namespace polyhedralGravity {
                                                                triangleCounter.getMin(candidatePlane.orientation),
                                                                triangleCounter.getMax(candidatePlane.orientation),
                                                                triangleCounter.getPlanar(candidatePlane.orientation));
-            // this if clause exists to consistently build the same KDTree (choose plane with lower coordinate) by eliminating indeterministic behavior should the cost be equal.
+            // this condition exists to consistently build the same KDTree (choose plane with lower coordinate) by eliminating indeterministic behavior should the cost be equal.
             // this is not important for functionality but for testing purposes
-            if (candidateCost == cost && optPlane.axisCoordinate < candidatePlane.axisCoordinate) {
-                continue;
-            }
-            if (candidateCost < cost) {
+            bool skipEvaluation = candidateCost == cost && optPlane.axisCoordinate < candidatePlane.axisCoordinate;
+            if (candidateCost < cost && !skipEvaluation) {
                 cost = candidateCost;
                 optPlane = candidatePlane;
                 minSide = minSideChosen;
@@ -132,7 +133,7 @@ namespace polyhedralGravity {
             triangleCounter.updateMin(candidatePlane.orientation, p_planar, p_start);
             triangleCounter.setPlanar(candidatePlane.orientation, 0);
         }
-        //generate the triangle index lists for the child bounding boxes and return them along with the optimal plane and the plane's cost.
+        //return the optimal plane and the plane's cost along with the halfspace to which planar faces are included.
         return {optPlane, cost, minSide};
     }
-}// namespace polyhedralGravity
+} // namespace polyhedralGravity
