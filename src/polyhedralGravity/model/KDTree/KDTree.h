@@ -1,24 +1,40 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <deque>
+#include <iterator>
+#include <memory>
+#include <mutex>
+#include <ostream>
+#include <set>
+#include <thrust/execution_policy.h>
+#include <thrust/for_each.h>
+#include <utility>
+#include <vector>
+
+#include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
+#include "polyhedralGravity/model/KDTree/LeafNode.h"
+#include "polyhedralGravity/model/KDTree/SplitNode.h"
 #include "polyhedralGravity/model/KDTree/SplitParam.h"
 #include "polyhedralGravity/model/KDTree/TreeNode.h"
 #include "polyhedralGravity/model/KDTree/TreeNodeFactory.h"
+#include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithm.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneSelectionAlgorithmFactory.h"
-
-#include <algorithm>
-#include <array>
-#include <deque>
-#include <memory>
-#include <utility>
+#include "polyhedralGravity/util/UtilityContainer.h"
 
 namespace polyhedralGravity {
-
     /**
-     * A KDTree for a given polyhedron to speed up ray intersections with the polyhedron
+     * A KDTree for a given polyhedron to speed up ray intersections with the polyhedron. It is thread safe.
      */
     class KDTree {
-    private:
+        /**
+         * friend declaration for testing purposes.
+         */
+        friend class KDTreeTest_AlgorithmRegressionTest_Test;
+
         /**
         * The entry node of the KDTree. Only access using getter.
         */
@@ -33,6 +49,16 @@ namespace polyhedralGravity {
          */
         const std::vector<IndexArray3> _faces;
 
+        /**
+         * Set when the root node has been created.
+         */
+        std::once_flag _rootNodeCreated;
+
+        /**
+        * Parameters for lazily building the root node {@link SplitParam}
+        */
+        std::unique_ptr<SplitParam> _splitParam;
+
     public:
         /**
         * Call to build a KDTree to speed up intersections of rays with a polyhedron's faces.
@@ -41,7 +67,8 @@ namespace polyhedralGravity {
         * @param algorithm Specifies which algorithm to use for finding optimal split planes.
         * @return the lazily built KDTree.
         */
-        KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces, PlaneSelectionAlgorithm::Algorithm algorithm = PlaneSelectionAlgorithm::Algorithm::LOG);
+        KDTree(const std::vector<Array3> &vertices, const std::vector<IndexArray3> &faces,
+               PlaneSelectionAlgorithm::Algorithm algorithm = PlaneSelectionAlgorithm::Algorithm::LOG);
 
         /**
         * Creates the root tree node if not initialized and returns it.
@@ -66,20 +93,10 @@ namespace polyhedralGravity {
         size_t countIntersections(const Array3 &origin, const Array3 &ray);
 
         /**
-       * Parameters for lazily building the root node {@link SplitParam}
-       */
-        std::unique_ptr<SplitParam> _splitParam;
-
-        /**
-         * The factory used when TreeNodes try to create child nodes here.
-         * The KDTree as a friend of TreeNodeFactory can set the parameters used during creation.
+         * Prebuilds the whole KDTree bypassing lazy loading entirely.
          */
-        const std::shared_ptr<TreeNodeFactory> treeNodeFactory;
+        KDTree &prebuildTree();
 
-        void printTree() const {//TODO: remove
-            if (_rootNode != nullptr) {
-                _rootNode->printTree();
-            }
-        }
+        friend std::ostream &operator<<(std::ostream &os, const KDTree &kdTree);
     };
-}// namespace polyhedralGravity
+} // namespace polyhedralGravity

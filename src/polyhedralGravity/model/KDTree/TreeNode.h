@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstddef>
+#include <memory>
+
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 #include "polyhedralGravity/model/KDTree/SplitParam.h"
 
@@ -18,7 +21,9 @@ namespace polyhedralGravity {
          */
         const size_t nodeId;
 
-        virtual void printTree() = 0;//TODO: remove
+        [[nodiscard]] virtual std::string toString() const = 0;
+
+        friend std::ostream& operator<<(std::ostream& os, const TreeNode& node);
 
     protected:
         /**

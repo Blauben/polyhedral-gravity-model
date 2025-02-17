@@ -1,15 +1,31 @@
 #pragma once
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <memory>
+#include <mutex>
+#include <tuple>
+#include <unordered_set>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 #include "polyhedralGravity/model/KDTree/SplitParam.h"
 #include "polyhedralGravity/model/KDTree/plane_selection/PlaneEventAlgorithm.h"
-
-#include <cstdint>
-#include <unordered_set>
+#include "thrust/detail/execution_policy.h"
+#include "thrust/execution_policy.h"
+#include "thrust/system/detail/sequential/for_each.h"
 
 namespace polyhedralGravity {
+struct SplitParam;
+
     class LogNSquaredPlane final : public PlaneEventAlgorithm {
     public:
-        std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> findPlane(const SplitParam &splitParam) override;
+        std::tuple<Plane, double, std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2> > > findPlane(
+            const SplitParam &splitParam) override;
 
     private:
         /**
@@ -17,7 +33,8 @@ namespace polyhedralGravity {
          * @param splitParam Specifies the parameters needed to perform the splits.
          * @return the optimal plane, its cost, the events that were generated in the process, and whether to include planar triangles in the minimal bounding box.
          */
-        static std::tuple<Plane, double, PlaneEventList, bool> findPlaneForSingleDimension(const SplitParam &splitParam);
+        static std::tuple<Plane, double, PlaneEventVector, bool> findPlaneForSingleDimension(
+            const SplitParam &splitParam);
 
 
         /**
@@ -27,7 +44,7 @@ namespace polyhedralGravity {
         * @param minSide Whether to include planar faces to the bounding box closer to the origin.
         * @return The triangleIndexlists for the bounding boxes closer and further away from the origin.
         */
-        static TriangleIndexLists<2> generateTriangleSubsets(const PlaneEventList &planeEvents, const Plane &plane, bool minSide);
+        static TriangleIndexVectors<2> generateTriangleSubsets(const PlaneEventVector &planeEvents, const Plane &plane,
+                                                               bool minSide);
     };
-
-}// namespace polyhedralGravity
+} // namespace polyhedralGravity

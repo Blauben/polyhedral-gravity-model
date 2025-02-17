@@ -1,5 +1,12 @@
 #pragma once
 
+#include <cstddef>
+#include <iterator>
+#include <limits>
+#include <tuple>
+#include <utility>
+#include <variant>
+
 #include "polyhedralGravity/model/KDTree/KdDefinitions.h"
 
 namespace polyhedralGravity {
@@ -13,9 +20,9 @@ namespace polyhedralGravity {
         /**
         * Finds the optimal split plane to split a provided rectangle section optimally.
         * @param splitParam specifies the polyhedron section to be split @link SplitParam.
-        * @return Tuple of the optimal plane to split the specified bounding box, its cost as double and a list of triangle sets with respective positions to the found plane. Refer to {@link TriangleIndexLists<2>} for more information.
+        * @return Tuple of the optimal plane to split the specified bounding box, its cost as double and a list of triangle sets with respective positions to the found plane. Refer to {@link TriangleIndexVectors<2>} for more information.
         */
-        virtual std::tuple<Plane, double, std::variant<TriangleIndexLists<2>, PlaneEventLists<2>>> findPlane(const SplitParam &splitParam) = 0;
+        virtual std::tuple<Plane, double, std::variant<TriangleIndexVectors<2>, PlaneEventVectors<2>>> findPlane(const SplitParam &splitParam) = 0;
 
         enum class Algorithm {
             NOTREE,
@@ -46,7 +53,7 @@ namespace polyhedralGravity {
        * @return A pair of: 1. the cost for performing intersection operations on the finalized tree later, should the KDTree be built using the specified split plane and the triangle sets resulting through division by the plane.
        * 2. true if the planar triangles should be added to the min side of the bounding box.
        */
-        static std::pair<const double, bool> costForPlane(const Box &boundingBox, const Plane &plane, size_t trianglesMin, size_t trianglesMax, size_t trianglesPlanar);
+        static std::pair<const double, bool> costForPlane(Box boundingBox, Plane plane, size_t trianglesMin, size_t trianglesMax, size_t trianglesPlanar);
     };
 
 }// namespace polyhedralGravity

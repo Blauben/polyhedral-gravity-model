@@ -6,6 +6,8 @@ dependencies:
   - numpy
   - matplotlib
   - sympy
+  - open3d
+  - regex
   - pip
   - pip:
     - polyhedral-gravity

@@ -12,6 +12,7 @@
 #include "thrust/iterator/counting_iterator.h"
 #include "thrust/iterator/transform_iterator.h"
 #include "thrust/transform_reduce.h"
+
 #include <algorithm>
 #include <array>
 #include <exception>
@@ -141,6 +142,11 @@ namespace polyhedralGravity {
          * If the value is not set, the orientation is considered to be unspecified.
          */
         NormalOrientation _orientation;
+
+        /**
+        * Flag used to control whether to enable multithreaded KD-tree queries. If both Polyhedron and KDTree deploy multiple threads they exhaust each other. NoTree does not utilize threads.
+*/
+        bool _enableParallelQuery{false};
 
         /**
          * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
@@ -340,6 +346,11 @@ namespace polyhedralGravity {
          *  and a set of face indices which violate the constraint
          */
         [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation();
+
+        /**
+         * Prebuilds this Polyhedron's KDTree, disabling lazy loading effectively.
+         */
+        void prebuildKDTree() const;
 
     private:
         /**
