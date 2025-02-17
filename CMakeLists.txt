@@ -43,7 +43,7 @@ option(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE "Set this to on if the python i
 # Option to build tests or not
 option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (Default: ON)" ON)
 # Option to build benchmarks or not
-option(BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT "Set to on if the benchmark executable should be built (Default: ON)" ON)
+option(BUILD_POLYHEDRAL_GRAVITY_TIME_MEASUREMENT "Set to on if the benchmark executable should be built (Default: OFF)" OFF)
 # Option to enable Include-What-You-Use warnings during compilation
 option(ENABLE_IWYU "Set to on to enable Include-What-You-Use warnings (Default: OFF)" OFF)
 
