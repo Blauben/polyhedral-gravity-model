@@ -38,7 +38,6 @@ namespace polyhedralGravity {
             }
         };
 
-        //Step 2
         std::for_each(planeEvents.cbegin(), planeEvents.cend(),
                       [&faceClassification, &planeEventsMin, &planeEventsMax, &insertToBothIfAbsent
                       ](const auto &event) {
@@ -58,7 +57,7 @@ namespace polyhedralGravity {
                           }
                       });
 
-        //generate new plane events for straddling faces that were discarded previously in Step 2
+        //generate new plane events for straddling faces that were discarded previously
         auto [newMinEvents, newMaxEvents] = generatePlaneEventsForClippedFaces(splitParam, facesIndexBoth, plane);
         //merge the new events into the existing sorted lists and return
         return {
@@ -67,7 +66,6 @@ namespace polyhedralGravity {
         };
     }
 
-    //Step 1
     std::unordered_map<size_t, LogNPlane::Locale> LogNPlane::classifyTrianglesRelativeToPlane(
         const PlaneEventVector &events, const Plane &plane, const bool minSide) {
         std::unordered_map<size_t, Locale> result{};
@@ -99,7 +97,6 @@ namespace polyhedralGravity {
         return result;
     }
 
-    //Step 3
     std::array<PlaneEventVector, 2> LogNPlane::generatePlaneEventsForClippedFaces(
         const SplitParam &splitParam, const TriangleIndexVector &faceIndices, const Plane &plane) {
         auto [minBox, maxBox] = splitParam.boundingBox.splitBox(plane);
@@ -125,7 +122,7 @@ namespace polyhedralGravity {
             size_t planeIndex = 0;
             for (const auto &[point, eventType]: planeEventParam) {
                 for (const auto &direction: ALL_DIRECTIONS) {
-                    //insert directly for paralellization
+                    //insert directly for parallelization
                     *(destIt + planeIndex++) = PlaneEvent(eventType, Plane(point, direction), faceIndex);
                 }
             }
@@ -153,7 +150,6 @@ namespace polyhedralGravity {
         return {minEvents, maxEvents};
     }
 
-    //Step 4
     std::unique_ptr<PlaneEventVector> LogNPlane::mergePlaneEventLists(const PlaneEventVector &first,
                                                                       const PlaneEventVector &second) {
         auto first_it{first.cbegin()};
