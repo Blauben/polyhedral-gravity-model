@@ -69,6 +69,16 @@ namespace polyhedralGravity {
         /** Metric Unit of the Vertices Coordinates. One of METER, KILOMETER, or UNITLESS */
         const MetricUnit _metricUnit;
 
+        /**
+        * Flag used to control whether to enable multithreaded KD-tree queries. If both Polyhedron and KDTree deploy multiple threads they exhaust each other. NoTree does not utilize threads.
+*/
+        bool _enableParallelQuery{false};
+
+        /**
+         * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
+         */
+        std::shared_ptr<KDTree> _tree;
+
     public:
         /**
          * Generates a polyhedron from nodes and faces.
@@ -80,6 +90,7 @@ namespace polyhedralGravity {
          * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
+         * @param treeAlgorithm which KDTree plane selection algorithm to use for integrity checks.
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
          */
@@ -182,7 +193,7 @@ namespace polyhedralGravity {
         /**
          * Returns the indices of the vertices making up the face at the given index.
          * @param index size_t
-         * @return triplet of the vertices indices forming the face
+         * @return triplet of the vertices' indices forming the face
          */
         [[nodiscard]] const IndexArray3 &getFace(size_t index) const;
 
@@ -295,7 +306,12 @@ namespace polyhedralGravity {
          * @return a pair consisting of majority ordering (OUTWARDS or INWARDS pointing normals)
          *  and a set of face indices which violate the constraint
          */
-        [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation() const;
+        [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation();
+
+        /**
+         * Prebuilds this Polyhedron's KDTree, disabling lazy loading effectively.
+         */
+        void prebuildKDTree() const;
 
     private:
         /**
@@ -329,20 +345,6 @@ namespace polyhedralGravity {
          * @return true if the ray intersects the triangle
          */
         [[nodiscard]] size_t countRayPolyhedronIntersections(const Array3Triplet &face) const;
-
-        /**
-         * Calculates how often a vector starting at a specific origin intersects a triangular face.
-         * Uses the Möller–Trumbore intersection algorithm.
-         * @param rayOrigin the origin of the ray
-         * @param rayVector the vector describing the ray
-         * @param triangle a triangular face
-         * @return intersection point or null
-         *
-         * @see Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
-         */
-        static std::unique_ptr<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
-
-
     };
 
-}
+}// namespace polyhedralGravity
