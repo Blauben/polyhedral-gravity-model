@@ -8,7 +8,7 @@ namespace polyhedralGravity {
           _faces{faces},
           _density{density},
           _orientation{orientation},
-    _tree{std::make_shared<KDTree>(vertices, faces)},
+    _tree{std::make_shared<kdtree::KDTree>(vertices, faces)},
     _enableParallelQuery{true},
           _metricUnit{metricUnit} {
         using util::operator-;
@@ -132,7 +132,7 @@ namespace polyhedralGravity {
         return std::make_tuple(_vertices, _faces, _density, _orientation, _metricUnit);
     }
 
-    std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
+    std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() {
         // 1. Step: Find all indices of normals which vioate the constraint outwards pointing
         const auto &[polyBegin, polyEnd] = this->transformIterator();
         const size_t n = this->countFaces();

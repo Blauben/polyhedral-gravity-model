@@ -8,7 +8,7 @@ message(STATUS "Setting up tetgen")
 # Fetches the version 1.6 for tetgen
 FetchContent_Declare(tetgen
         GIT_REPOSITORY https://github.com/libigl/tetgen.git
-        GIT_TAG 4f3bfba3997f20aa1f96cfaff604313a8c2c85b6 # release 1.6
+        GIT_TAG e05aca7df74e3f531bc35733ed87d36d437266c5 # release 1.6
 )
 
 FetchContent_MakeAvailable(tetgen)

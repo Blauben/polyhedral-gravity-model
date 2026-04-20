@@ -13,6 +13,7 @@
 #include "thrust/iterator/counting_iterator.h"
 #include "thrust/iterator/transform_iterator.h"
 #include "thrust/transform_reduce.h"
+#include "KDTree/tree/KDTree.h"
 #include <algorithm>
 #include <array>
 #include <exception>
@@ -77,7 +78,7 @@ namespace polyhedralGravity {
         /**
          * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
          */
-        std::shared_ptr<KDTree> _tree;
+        std::shared_ptr<kdtree::KDTree> _tree;
 
     public:
         /**
