@@ -8,7 +8,6 @@ namespace polyhedralGravity {
           _faces{faces},
           _density{density},
           _orientation{orientation},
-    _tree{std::make_shared<kdtree::KDTree>(vertices, faces)},
     _enableParallelQuery{true},
           _metricUnit{metricUnit} {
         using util::operator-;
@@ -21,6 +20,9 @@ namespace polyhedralGravity {
             POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
             std::transform(_faces.begin(), _faces.end(), _faces.begin(), [&](const std::array<size_t, 3> &face) {return face - 1;});
         }
+        std::vector<kdtree::IndexVector> indexFaces(_faces.size());
+        std::transform(_faces.begin(), _faces.end(), indexFaces.begin(), [](const std::array<size_t, 3> &face) {return kdtree::IndexVector{face[0], face[1], face[2]};});
+        _tree = std::make_unique<kdtree::KDTree>(vertices, indexFaces);
         this->runIntegrityMeasures(integrity);
     }
 

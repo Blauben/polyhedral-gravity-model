@@ -40,7 +40,10 @@ add_library(tetgen_lib STATIC
 target_compile_definitions(tetgen_lib PRIVATE -DTETLIBRARY)
 
 # Include the tetgen source directory for the library
-target_include_directories(tetgen_lib INTERFACE "${tetgen_SOURCE_DIR}")
+target_include_directories(tetgen_lib INTERFACE
+                        $<BUILD_INTERFACE:${tetgen_SOURCE_DIR}>
+                        $<INSTALL_INTERFACE:include/tetgen>
+)
 
 # Disable warnings from the library target
 target_compile_options(tetgen_lib PRIVATE -w)
