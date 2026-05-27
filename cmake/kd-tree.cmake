@@ -1,6 +1,6 @@
 include(FetchContent)
 
-# SET(KD_TREE_VERSION 0.1.0)
+set(KD_TREE_VERSION 0.0.1)
 
 find_package(KDTree ${KD_TREE_VERSION} QUIET CONFIG)
 
@@ -15,7 +15,7 @@ else()
     FetchContent_Declare(
         KDTree
         GIT_REPOSITORY https://github.com/Blauben/kd-tree.git
-        GIT_TAG Blauben/enh/cmake-package-config
+        GIT_TAG v${KD_TREE_VERSION}
     )
 
     FetchContent_MakeAvailable(KDTree)
