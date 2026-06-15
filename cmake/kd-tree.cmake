@@ -9,6 +9,8 @@ if(KDTree_FOUND)
 else()
     message(STATUS "KD-Tree not found. Fetching from GitHub Release ${KD_TREE_VERSION}.")
 
+    # Ensure fetched KD-Tree uses the same Thrust backend as this project.
+    set(KD_TREE_PARALLELIZATION ${POLYHEDRAL_GRAVITY_PARALLELIZATION} CACHE STRING "KD-Tree parallelization backend" FORCE)
     set(BUILD_KD_TREE_EXECUTABLE OFF CACHE BOOL "Build KD-Tree Executable" FORCE)
     set(BUILD_KD_TREE_LIBRARY ON CACHE BOOL "Build KD-Tree Library" FORCE)
 
