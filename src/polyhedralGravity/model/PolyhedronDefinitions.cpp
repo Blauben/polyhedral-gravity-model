@@ -6,13 +6,13 @@ namespace polyhedralGravity {
         switch (orientation) {
             case NormalOrientation::OUTWARDS:
                 os << "OUTWARDS";
-            break;
+                break;
             case NormalOrientation::INWARDS:
                 os << "INWARDS";
-            break;
+                break;
             default:
                 os << "Unknown";
-            break;
+                break;
         }
         return os;
     }
@@ -21,13 +21,13 @@ namespace polyhedralGravity {
         switch (metricUnit) {
             case MetricUnit::METER:
                 os << "m";
-            break;
+                break;
             case MetricUnit::KILOMETER:
                 os << "km";
-            break;
+                break;
             default:
                 os << "unitless";
-            break;
+                break;
         }
         return os;
     }
@@ -43,4 +43,4 @@ namespace polyhedralGravity {
             throw std::runtime_error{"The unit of the mesh is not supported! Must be either 'm', 'km' or 'unitless'"};
         }
     }
-}
+}// namespace polyhedralGravity

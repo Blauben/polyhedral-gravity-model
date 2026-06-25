@@ -31,4 +31,4 @@ namespace polyhedralGravity::util {
      */
     constexpr double DEFAULT_CONSTANT_DENSITY = 2670.0;
 
-}
+}// namespace polyhedralGravity::util

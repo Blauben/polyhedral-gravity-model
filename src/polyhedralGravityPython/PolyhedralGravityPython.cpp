@@ -1,10 +1,10 @@
-#include <tuple>
-#include <variant>
-#include <string>
-#include <array>
-#include <vector>
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+#include <array>
+#include <string>
+#include <tuple>
+#include <variant>
+#include <vector>
 
 #include "polyhedralGravity/Info.h"
 #include "polyhedralGravity/model/GravityEvaluable.h"
@@ -115,31 +115,31 @@ PYBIND11_MODULE(polyhedral_gravity, m, py::mod_gil_not_used()) {
         If the opposite hold, the result is negated.
         The implementation can handle both cases.
         )mydelimiter")
-        .value("OUTWARDS", NormalOrientation::OUTWARDS, "Outwards pointing plane unit normals")
-        .value("INWARDS", NormalOrientation::INWARDS, "Inwards pointing plane unit normals");
+            .value("OUTWARDS", NormalOrientation::OUTWARDS, "Outwards pointing plane unit normals")
+            .value("INWARDS", NormalOrientation::INWARDS, "Inwards pointing plane unit normals");
 
     py::enum_<PolyhedronIntegrity>(m, "PolyhedronIntegrity", R"mydelimiter(
         The pointing direction of the normals of a Polyhedron.
         They can either point outwards or inwards the polyhedron.
         )mydelimiter")
-        .value("DISABLE", PolyhedronIntegrity::DISABLE,
-               "All activities regarding MeshChecking are disabled. No runtime overhead!")
-        .value("VERIFY", PolyhedronIntegrity::VERIFY,
-               "Only verification of the NormalOrientation. "
-               "A misalignment (e.g. specified OUTWARDS, but is not) leads to a runtime_error. Runtime Cost :math:`O(n^2)`")
-        .value("AUTOMATIC", PolyhedronIntegrity::AUTOMATIC,
-               "Like :code:`VERIFY`, but also informs the user about the option in any case on the runtime costs. "
-               "This is the implicit default option. Runtime Cost: :math:`O(n^2)` and output to stdout in every case!")
-        .value("HEAL", PolyhedronIntegrity::HEAL,
-               "Verification and Automatic Healing of the NormalOrientation. "
-               "A misalignment does not lead to a runtime_error, but to an internal correction of vertices ordering. Runtime Cost: :math:`O(n^2)`");
+            .value("DISABLE", PolyhedronIntegrity::DISABLE,
+                   "All activities regarding MeshChecking are disabled. No runtime overhead!")
+            .value("VERIFY", PolyhedronIntegrity::VERIFY,
+                   "Only verification of the NormalOrientation. "
+                   "A misalignment (e.g. specified OUTWARDS, but is not) leads to a runtime_error. Runtime Cost :math:`O(n^2)`")
+            .value("AUTOMATIC", PolyhedronIntegrity::AUTOMATIC,
+                   "Like :code:`VERIFY`, but also informs the user about the option in any case on the runtime costs. "
+                   "This is the implicit default option. Runtime Cost: :math:`O(n^2)` and output to stdout in every case!")
+            .value("HEAL", PolyhedronIntegrity::HEAL,
+                   "Verification and Automatic Healing of the NormalOrientation. "
+                   "A misalignment does not lead to a runtime_error, but to an internal correction of vertices ordering. Runtime Cost: :math:`O(n^2)`");
 
     py::enum_<MetricUnit>(m, "MetricUnit", R"mydelimiter(
         The metric unit of for example a polyhedral mesh source.
         )mydelimiter")
-    .value("METER", MetricUnit::METER, "Representing meter :math:`[m]`")
-    .value("KILOMETER", MetricUnit::KILOMETER, "Representing kilometer :math:`[km]`")
-    .value("UNITLESS", MetricUnit::UNITLESS, "Representing no unit :math:`[1]`");
+            .value("METER", MetricUnit::METER, "Representing meter :math:`[m]`")
+            .value("KILOMETER", MetricUnit::KILOMETER, "Representing kilometer :math:`[km]`")
+            .value("UNITLESS", MetricUnit::UNITLESS, "Representing no unit :math:`[1]`");
 
     py::class_<Polyhedron>(m, "Polyhedron", R"mydelimiter(
             A constant density Polyhedron stores the mesh data consisting of vertices and triangular faces.
@@ -187,8 +187,7 @@ PYBIND11_MODULE(polyhedral_gravity, m, py::mod_gil_not_used()) {
                  py::arg("density"),
                  py::arg("normal_orientation") = NormalOrientation::OUTWARDS,
                  py::arg("integrity_check") = PolyhedronIntegrity::AUTOMATIC,
-                 py::arg("metric_unit") = MetricUnit::METER
-                    )
+                 py::arg("metric_unit") = MetricUnit::METER)
             .def("check_normal_orientation", &Polyhedron::checkPlaneUnitNormalOrientation, R"mydelimiter(
             Returns a tuple consisting of majority plane unit normal orientation,
             i.e. the direction in which at least more than half of the plane unit normals point,
@@ -218,7 +217,8 @@ PYBIND11_MODULE(polyhedral_gravity, m, py::mod_gil_not_used()) {
 
             Raises:
                 IndexError if face index is out-of-bounds
-            )mydelimiter", py::arg("index"))
+            )mydelimiter",
+                 py::arg("index"))
             .def("__repr__", &Polyhedron::toString, R"mydelimiter(
             :py:class:`str`: A string representation of this polyhedron
             )mydelimiter")
@@ -253,33 +253,32 @@ PYBIND11_MODULE(polyhedral_gravity, m, py::mod_gil_not_used()) {
                         Polyhedron polyhedron{
                                 tuple[0].cast<std::vector<Array3>>(), tuple[1].cast<std::vector<IndexArray3>>(),
                                 tuple[2].cast<double>(), tuple[3].cast<NormalOrientation>(), PolyhedronIntegrity::DISABLE,
-                                tuple[4].cast<MetricUnit>()
-                        };
+                                tuple[4].cast<MetricUnit>()};
                         return polyhedron;
-                    }
-                    ));
+                    }));
 
     py::class_<GravityEvaluable>(m, "GravityEvaluable", R"mydelimiter(
              A class to evaluate the polyhedral gravity model for a given constant density polyhedron at a given computation point.
              It provides a :py:meth:`polyhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
              also caching the polyhedron & intermediate results over the lifetime of the object.
              )mydelimiter")
-            .def(py::init<const Polyhedron &>(),R"mydelimiter(
+            .def(py::init<const Polyhedron &>(), R"mydelimiter(
              Creates a new GravityEvaluable for a given constant density polyhedron.
              It provides a :py:meth:`polyhedral_gravity.GravityEvaluable.__call__` method to evaluate the polyhedral gravity model for computation points while
              also caching the polyhedron & intermediate results over the lifetime of the object.
 
              Args:
                  polyhedron: The polyhedron for which to evaluate the gravity model
-             )mydelimiter", py::arg("polyhedron"))
-            .def_property_readonly("output_units", &GravityEvaluable::getOutputMetricUnit,R"mydelimiter(
+             )mydelimiter",
+                 py::arg("polyhedron"))
+            .def_property_readonly("output_units", &GravityEvaluable::getOutputMetricUnit, R"mydelimiter(
             (3)-array-like of :py:class:`str`: A human-readable string representation of the output units. This depends on the polyhedron's definition (Read-Only).
             )mydelimiter")
-            .def("__repr__", &GravityEvaluable::toString,R"mydelimiter(
+            .def("__repr__", &GravityEvaluable::toString, R"mydelimiter(
             :py:class:`str`: A string representation of this GravityEvaluable.
             )mydelimiter")
             .def("__call__", &GravityEvaluable::operator(),
-             R"mydelimiter(
+                 R"mydelimiter(
              Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
 
              The results' units depend on the polyhedron's input units.
@@ -295,7 +294,8 @@ PYBIND11_MODULE(polyhedral_gravity, m, py::mod_gil_not_used()) {
                  Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
                  and second derivatives :math:`[V_{xx}, V_{yy}, V_{zz}, V_{xy},V_{xz}, V_{yz}]` at the computation points or
                  if multiple computation points are given a list of these triplets
-             )mydelimiter", py::arg("computation_points"), py::arg("parallel") = true)
+             )mydelimiter",
+                 py::arg("computation_points"), py::arg("parallel") = true)
             .def(py::pickle(
                     [](const GravityEvaluable &evaluable) {
                         const auto &[polyhedron, segmentVectors, planeUnitNormals, segmentUnitNormals] = evaluable.getState();
@@ -308,24 +308,18 @@ PYBIND11_MODULE(polyhedral_gravity, m, py::mod_gil_not_used()) {
                         }
                         GravityEvaluable evaluable{
                                 tuple[0].cast<Polyhedron>(), tuple[1].cast<std::vector<Array3Triplet>>(),
-                                tuple[2].cast<std::vector<Array3>>(), tuple[3].cast<std::vector<Array3Triplet>>()
-                        };
+                                tuple[2].cast<std::vector<Array3>>(), tuple[3].cast<std::vector<Array3Triplet>>()};
                         return evaluable;
-                    }
-                    ));
+                    }));
 
-    m.def("evaluate", [](const Polyhedron &polyhedron,
-                         const std::variant<Array3, std::vector<Array3>> &computationPoints,
-                         bool parallel) -> std::variant<GravityModelResult, std::vector<GravityModelResult>> {
-                    return std::visit(util::overloaded{
-                            [&](const Array3 &point) {
-                                return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, point, parallel));
-                            },
-                            [&](const std::vector<Array3> &points) {
-                                return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, points, parallel));
-                            }
-                        }, computationPoints);
-          }, R"mydelimiter(
+    m.def("evaluate", [](const Polyhedron &polyhedron, const std::variant<Array3, std::vector<Array3>> &computationPoints, bool parallel) -> std::variant<GravityModelResult, std::vector<GravityModelResult>> { return std::visit(util::overloaded{
+                                                                                                                                                                                                                                           [&](const Array3 &point) {
+                                                                                                                                                                                                                                               return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, point, parallel));
+                                                                                                                                                                                                                                           },
+                                                                                                                                                                                                                                           [&](const std::vector<Array3> &points) {
+                                                                                                                                                                                                                                               return std::variant<GravityModelResult, std::vector<GravityModelResult>>(GravityModel::evaluate(polyhedron, points, parallel));
+                                                                                                                                                                                                                                           }},
+                                                                                                                                                                                                                                   computationPoints); }, R"mydelimiter(
              Evaluates the polyhedral gravity model for a given constant density polyhedron at a given computation point.
 
              The results' units depend on the polyhedron's input units.
@@ -342,6 +336,6 @@ PYBIND11_MODULE(polyhedral_gravity, m, py::mod_gil_not_used()) {
                  Either a triplet of potential :math:`V`, acceleration :math:`[V_x, V_y, V_z]`
                  and second derivatives :math:`[V_{xx}, V_{yy}, V_{zz}, V_{xy},V_{xz}, V_{yz}]` at the computation points or
                  if multiple computation points are given a list of these triplets
-             )mydelimiter", py::arg("polyhedron"), py::arg("computation_points"), py::arg("parallel") = true);
-
+             )mydelimiter",
+          py::arg("polyhedron"), py::arg("computation_points"), py::arg("parallel") = true);
 }

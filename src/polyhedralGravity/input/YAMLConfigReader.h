@@ -39,14 +39,13 @@ namespace polyhedralGravity {
         const YAML::Node _file;
 
     public:
-
         /**
          * Creates a new YAML Config Reader.
          * @param filename a reference to a string
          * @throws an exception if the file is malformed or cannot be loaded or if the ROOT node is not found
          */
         explicit YAMLConfigReader(const std::string &filename)
-                : _file{YAML::LoadFile(filename)} {
+            : _file{YAML::LoadFile(filename)} {
             if (!_file[ROOT]) {
                 throw std::runtime_error{"The YAML file does not contain a specification for the \"gravityModel\"!"};
             }
@@ -58,7 +57,7 @@ namespace polyhedralGravity {
          * @throws an exception if the file is malformed or cannot be loaded or if the ROOT node is not found
          */
         explicit YAMLConfigReader(std::string &&filename)
-                : _file{YAML::LoadFile(filename)} {
+            : _file{YAML::LoadFile(filename)} {
             if (!_file[ROOT]) {
                 throw std::runtime_error{"The YAML file does not contain a specification for the \"gravityModel\"!"};
             }
@@ -102,8 +101,6 @@ namespace polyhedralGravity {
          * @return the metric unit of the mesh as an instance of MetricUnit (if not present defaults to meter)
          */
         MetricUnit getMeshUnit() override;
-
-
     };
 
-}
+}// namespace polyhedralGravity

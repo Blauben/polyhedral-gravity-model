@@ -66,4 +66,4 @@ namespace polyhedralGravity {
         file.close();
         return {vertices, faces};
     }
-}
+}// namespace polyhedralGravity

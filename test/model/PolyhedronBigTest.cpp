@@ -1,16 +1,16 @@
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
-#include <set>
-#include <chrono>
-#include <vector>
-#include <utility>
-#include <array>
-#include <algorithm>
-#include <random>
-#include <thrust/generate.h>
-#include <iostream>
 #include "polyhedralGravity/model/Polyhedron.h"
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <iostream>
+#include <random>
+#include <set>
+#include <thrust/generate.h>
+#include <utility>
+#include <vector>
 
 /**
  * Cheks that the detection of wrong faces works as intended.
@@ -18,13 +18,11 @@
 class PolyhedronBigTest : public ::testing::TestWithParam<std::set<size_t>> {
 
 protected:
-
     const static inline polyhedralGravity::PolyhedralFiles FILENAMES{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"};
 
     const static inline polyhedralGravity::Polyhedron CORRECT_POLYHEDRON{
-        FILENAMES, 1.0,
-        polyhedralGravity::NormalOrientation::OUTWARDS, polyhedralGravity::PolyhedronIntegrity::DISABLE
-    };
+            FILENAMES, 1.0,
+            polyhedralGravity::NormalOrientation::OUTWARDS, polyhedralGravity::PolyhedronIntegrity::DISABLE};
 
     static constexpr size_t FACES_COUNT = 14744;
     static constexpr size_t SET_SIZE = 100;
@@ -43,13 +41,11 @@ protected:
             std::swap(violatingFaces[index][0], violatingFaces[index][1]);
         }
         return {
-            CORRECT_POLYHEDRON.getVertices(), violatingFaces,
-            1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE
-        };
+                CORRECT_POLYHEDRON.getVertices(), violatingFaces,
+                1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE};
     }
 
 public:
-
     // Function to generate a half sized set
     static std::vector<std::set<size_t>> generateIndices() {
         std::vector<std::set<size_t>> indexSets{};
@@ -60,15 +56,14 @@ public:
 
         for (size_t i = 0; i < SET_NUMBER; ++i) {
             std::set<size_t> generatedSet;
-            thrust::generate_n(std::inserter(generatedSet, generatedSet.end()), SET_SIZE, [&dist, &engine]() {return dist(engine);});
-            while(generatedSet.size() < SET_SIZE) {
+            thrust::generate_n(std::inserter(generatedSet, generatedSet.end()), SET_SIZE, [&dist, &engine]() { return dist(engine); });
+            while (generatedSet.size() < SET_SIZE) {
                 generatedSet.insert(dist(engine));
             }
             indexSets.push_back(generatedSet);
         }
         return indexSets;
     }
-
 };
 
 
@@ -83,7 +78,7 @@ TEST_P(PolyhedronBigTest, BigPolyhedronFindWrongVertices) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    const auto&[actualOrientation, actualViolatingIndices] = invalidPolyhedron.checkPlaneUnitNormalOrientation();
+    const auto &[actualOrientation, actualViolatingIndices] = invalidPolyhedron.checkPlaneUnitNormalOrientation();
 
     auto end = std::chrono::high_resolution_clock::now();
     auto dur = end - start;
@@ -97,5 +92,3 @@ TEST_P(PolyhedronBigTest, BigPolyhedronFindWrongVertices) {
 }
 
 INSTANTIATE_TEST_SUITE_P(NormalOrientationViolationTest, PolyhedronBigTest, ::testing::ValuesIn(PolyhedronBigTest::generateIndices()));
-
-

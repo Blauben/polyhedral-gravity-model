@@ -1,5 +1,5 @@
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 #include <algorithm>
 #include <cmath>
@@ -40,8 +40,6 @@ TEST(UtilityFloatArithmeticTest, TestAlmostEqualUlps) {
     const double fiveHops = std::nextafter(fourHops, INF);
     ASSERT_TRUE(polyhedralGravity::util::almostEqualUlps(3.0, fourHops));
     ASSERT_FALSE(polyhedralGravity::util::almostEqualUlps(3.0, fiveHops));
-
-
 }
 
 TEST(UtilityFloatArithmeticTest, TestAlmostEqualRelative) {

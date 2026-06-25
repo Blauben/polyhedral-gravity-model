@@ -1,5 +1,6 @@
 #pragma once
 
+#include "KDTree/tree/KDTree.h"
 #include "polyhedralGravity/input/MeshReader.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
@@ -13,7 +14,6 @@
 #include "thrust/iterator/counting_iterator.h"
 #include "thrust/iterator/transform_iterator.h"
 #include "thrust/transform_reduce.h"
-#include "KDTree/tree/KDTree.h"
 #include <algorithm>
 #include <array>
 #include <exception>
@@ -101,8 +101,7 @@ namespace polyhedralGravity {
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                 const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                const MetricUnit &metricUnit = MetricUnit::METER
-                );
+                const MetricUnit &metricUnit = MetricUnit::METER);
 
         /**
          * Generates a polyhedron from nodes and faces.
@@ -121,8 +120,7 @@ namespace polyhedralGravity {
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                 const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                const MetricUnit &metricUnit = MetricUnit::METER
-                );
+                const MetricUnit &metricUnit = MetricUnit::METER);
 
         /**
          * Generates a polyhedron from nodes and faces.
@@ -139,8 +137,7 @@ namespace polyhedralGravity {
         Polyhedron(const PolyhedralFiles &polyhedralFiles, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                    const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                   const MetricUnit &metricUnit = MetricUnit::METER
-                                   );
+                   const MetricUnit &metricUnit = MetricUnit::METER);
 
         /**
          * Generates a polyhedron from nodes and faces.
@@ -158,8 +155,7 @@ namespace polyhedralGravity {
         Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                    const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                   const MetricUnit &metricUnit = MetricUnit::METER
-                   );
+                   const MetricUnit &metricUnit = MetricUnit::METER);
 
         /**
          * Default destructor
@@ -308,11 +304,6 @@ namespace polyhedralGravity {
          *  and a set of face indices which violate the constraint
          */
         [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation();
-
-        /**
-         * Prebuilds this Polyhedron's KDTree, disabling lazy loading effectively.
-         */
-        void prebuildKDTree() const;
 
     private:
         /**

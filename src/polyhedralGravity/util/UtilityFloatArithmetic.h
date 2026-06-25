@@ -70,4 +70,4 @@ namespace polyhedralGravity::util {
     bool almostEqualRelative(FloatType lhs, FloatType rhs, double epsilon = EPSILON_ALMOST_EQUAL);
 
 
-}
+}// namespace polyhedralGravity::util

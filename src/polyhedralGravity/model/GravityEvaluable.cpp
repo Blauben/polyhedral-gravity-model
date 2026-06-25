@@ -34,7 +34,7 @@ namespace polyhedralGravity {
         using namespace GravityModel::detail;
         using namespace util;
         POLYHEDRAL_GRAVITY_LOG_DEBUG("Evaluation for computation point P = [{}, {}, {}] started, given density = {} kg/m^3",
-                computationPoint[0], computationPoint[1], computationPoint[2], _polyhedron.getDensity());
+                                     computationPoint[0], computationPoint[1], computationPoint[2], _polyhedron.getDensity());
         /*
          * Calculate V and Vx, Vy, Vz and Vxx, Vyy, Vzz, Vxy, Vxz, Vyz
          */
@@ -230,7 +230,7 @@ namespace polyhedralGravity {
 
     std::string GravityEvaluable::toString() const {
         std::stringstream sstream;
-        const auto[unitPotential, unitAcceleration, unitGradiometricTensor] = getOutputMetricUnit();
+        const auto [unitPotential, unitAcceleration, unitGradiometricTensor] = getOutputMetricUnit();
         sstream << "<polyhedral_gravity.GravityEvaluable, polyhedron = " << _polyhedron.toString()
                 << ", output_units = " << unitPotential << ", " << unitAcceleration << ", " << unitGradiometricTensor << ">";
         return sstream.str();

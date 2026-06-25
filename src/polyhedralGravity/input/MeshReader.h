@@ -1,17 +1,17 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <array>
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
 #include <exception>
-#include <stdexcept>
 #include <filesystem>
+#include <stdexcept>
 
 namespace polyhedralGravity {
 
@@ -49,6 +49,6 @@ namespace polyhedralGravity {
          * @return Polyhedral Source consisting of vertices and faces
          */
         PolyhedralSource readTetgenFormat(const std::vector<std::string> &fileNames);
-    };
+    };// namespace MeshReader
 
-}
+}// namespace polyhedralGravity

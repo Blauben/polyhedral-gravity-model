@@ -1,21 +1,21 @@
 #pragma once
 
-#include <utility>
-#include <array>
-#include <vector>
-#include <algorithm>
-#include "polyhedralGravity/model/Polyhedron.h"
+#include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/GravityModelData.h"
+#include "polyhedralGravity/model/Polyhedron.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
 #include "polyhedralGravity/util/UtilityContainer.h"
-#include "thrust/iterator/zip_iterator.h"
-#include "thrust/iterator/transform_iterator.h"
+#include "polyhedralGravity/util/UtilityThrust.h"
+#include "thrust/execution_policy.h"
 #include "thrust/iterator/counting_iterator.h"
+#include "thrust/iterator/transform_iterator.h"
+#include "thrust/iterator/zip_iterator.h"
 #include "thrust/transform.h"
 #include "thrust/transform_reduce.h"
-#include "thrust/execution_policy.h"
-#include "polyhedralGravity/util/UtilityThrust.h"
-#include "polyhedralGravity/model/GravityModel.h"
+#include <algorithm>
+#include <array>
+#include <utility>
+#include <vector>
 
 /**
  * Contains additional utility for working with the values of the polyhedrale Gravity Model.
@@ -207,4 +207,4 @@ namespace polyhedralGravity::GravityModel {
                               const std::vector<double> &planeNormalOrientations,
                               const std::vector<Array3> &planeUnitNormals);
 
-}
+}// namespace polyhedralGravity::GravityModel

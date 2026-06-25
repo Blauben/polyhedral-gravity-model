@@ -3,13 +3,18 @@
 namespace polyhedralGravity {
 
     Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
-                           const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+                           const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit &metricUnit)
         : _vertices{vertices},
           _faces{faces},
           _density{density},
           _orientation{orientation},
-    _enableParallelQuery{true},
-          _metricUnit{metricUnit} {
+          _enableParallelQuery{true},
+          _metricUnit{metricUnit},
+          _tree{[]() {
+              std::vector<kdtree::IndexVector> indexFaces(_faces.size());
+              std::transform(_faces.begin(), _faces.end(), indexFaces.begin(), [](const std::array<size_t, 3> &face) { return kdtree::IndexVector{face[0], face[1], face[2]}; });
+              return std::make_unique<kdtree::KDTree>();
+          }} {
         using util::operator-;
         // Checks that the node with index zero is actually used
         // In case it is not used, the indexing presumably starts mathematically at one
@@ -18,23 +23,20 @@ namespace polyhedralGravity {
                 return face[0] == 0 || face[1] == 0 || face[2] == 0;
             })) {
             POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
-            std::transform(_faces.begin(), _faces.end(), _faces.begin(), [&](const std::array<size_t, 3> &face) {return face - 1;});
+            std::transform(_faces.begin(), _faces.end(), _faces.begin(), [&](const std::array<size_t, 3> &face) { return face - 1; });
         }
-        std::vector<kdtree::IndexVector> indexFaces(_faces.size());
-        std::transform(_faces.begin(), _faces.end(), indexFaces.begin(), [](const std::array<size_t, 3> &face) {return kdtree::IndexVector{face[0], face[1], face[2]};});
-        _tree = std::make_unique<kdtree::KDTree>(vertices, indexFaces);
         this->runIntegrityMeasures(integrity);
     }
 
-    Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+    Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit &metricUnit)
         : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity, metricUnit} {
     }
 
-    Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+    Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit &metricUnit)
         : Polyhedron{MeshReader::getPolyhedralSource(polyhedralFiles), density, orientation, integrity, metricUnit} {
     }
 
-    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit &metricUnit)
         : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : MeshReader::getPolyhedralSource(std::get<PolyhedralFiles>(polyhedralSource)),
                      density, orientation, integrity, metricUnit} {
     }

@@ -1,11 +1,11 @@
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
-#include <string>
-#include <vector>
-#include <utility>
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/Polyhedron.h"
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "GravityModelVectorUtility.h"
 
@@ -23,35 +23,32 @@ protected:
 
     //New polyhedron with given vertices and faces
     //this is the base example from Tsoulis
-    polyhedralGravity::Polyhedron _polyhedron {
-        std::vector<polyhedralGravity::Array3>{
-                        {-20, 0, 25},
-                        {0, 0, 25},
-                        {0, 10, 25},
-                        {-20, 10, 25},
-                        {-20, 0, 15},
-                        {0, 0, 15},
-                        {0, 10, 15},
-                        {-20, 10, 15}
-                },
-                std::vector<polyhedralGravity::IndexArray3>{
-                        {0, 1, 3},
-                        {1, 2, 3},
-                        {0, 4, 5},
-                        {0, 5, 1},
-                        {0, 7, 4},
-                        {0, 3, 7},
-                        {1, 5, 6},
-                        {1, 6, 2},
-                        {3, 6, 7},
-                        {2, 6, 3},
-                        {4, 6, 5},
-                        {4, 7, 6}
-                },
-                1.0,
-                polyhedralGravity::NormalOrientation::OUTWARDS,
-                polyhedralGravity::PolyhedronIntegrity::DISABLE
-    };
+    polyhedralGravity::Polyhedron _polyhedron{
+            std::vector<polyhedralGravity::Array3>{
+                    {-20, 0, 25},
+                    {0, 0, 25},
+                    {0, 10, 25},
+                    {-20, 10, 25},
+                    {-20, 0, 15},
+                    {0, 0, 15},
+                    {0, 10, 15},
+                    {-20, 10, 15}},
+            std::vector<polyhedralGravity::IndexArray3>{
+                    {0, 1, 3},
+                    {1, 2, 3},
+                    {0, 4, 5},
+                    {0, 5, 1},
+                    {0, 7, 4},
+                    {0, 3, 7},
+                    {1, 5, 6},
+                    {1, 6, 2},
+                    {3, 6, 7},
+                    {2, 6, 3},
+                    {4, 6, 5},
+                    {4, 7, 6}},
+            1.0,
+            polyhedralGravity::NormalOrientation::OUTWARDS,
+            polyhedralGravity::PolyhedronIntegrity::DISABLE};
 
     std::array<double, 3> _computationPoint{0.0, 0.0, 0.0};
 
@@ -67,8 +64,7 @@ protected:
             std::array<std::array<double, 3>, 3>{{{20.0, 0.0, -10.0}, {-20.0, 0.0, 0.0}, {0.0, 0.0, 10.0}}},
             std::array<std::array<double, 3>, 3>{{{0.0, 0.0, -10.0}, {-20.0, 0.0, 10.0}, {20.0, 0.0, 0.0}}},
             std::array<std::array<double, 3>, 3>{{{20.0, 10.0, 0.0}, {0.0, -10.0, 0.0}, {-20.0, 0.0, 0.0}}},
-            std::array<std::array<double, 3>, 3>{{{0.0, 10.0, 0.0}, {20.0, 0.0, 0.0}, {-20.0, -10.0, 0.0}}}
-    };
+            std::array<std::array<double, 3>, 3>{{{0.0, 10.0, 0.0}, {20.0, 0.0, 0.0}, {-20.0, -10.0, 0.0}}}};
 
     std::vector<std::array<double, 3>> expectedPlaneUnitNormals{
             {0.0, -0.0, 1.0},
@@ -82,8 +78,7 @@ protected:
             {0.0, 1.0, 0.0},
             {0.0, 1.0, 0.0},
             {0.0, 0.0, -1.0},
-            {0.0, 0.0, -1.0}
-    };
+            {0.0, 0.0, -1.0}};
 
     std::vector<std::array<std::array<double, 3>, 3>> expectedSegmentUnitNormals{
             std::array<std::array<double, 3>, 3>{
@@ -109,8 +104,7 @@ protected:
             std::array<std::array<double, 3>, 3>{
                     {{-0.4472135954999579, 0.8944271909999159, 0.0}, {1.0, 0.0, 0.0}, {-0.0, -1.0, -0.0}}},
             std::array<std::array<double, 3>, 3>{
-                    {{-1.0, 0.0, 0.0}, {-0.0, 1.0, 0.0}, {0.4472135954999579, -0.8944271909999159, 0.0}}}
-    };
+                    {{-1.0, 0.0, 0.0}, {-0.0, 1.0, 0.0}, {0.4472135954999579, -0.8944271909999159, 0.0}}}};
 
     std::vector<double> expectedPlaneNormalOrientations{1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, -1.0, -1.0};
 
@@ -126,8 +120,7 @@ protected:
             {0.0, 200.0, 0.0, -2000.0},
             {0.0, 200.0, 0.0, -2000.0},
             {0.0, 0.0, -200.0, 3000.0},
-            {0.0, 0.0, -200.0, 3000.0}
-    };
+            {0.0, 0.0, -200.0, 3000.0}};
 
     std::vector<double> expectedPlaneDistances{25.0,
                                                25.0,
@@ -154,8 +147,7 @@ protected:
             {0.0, 10.0, 0.0},
             {0.0, 10.0, 0.0},
             {0.0, 0.0, 15.0},
-            {0.0, 0.0, 15.0}
-    };
+            {0.0, 0.0, 15.0}};
 
     std::vector<std::array<double, 3>> expectedSegmentNormalOrientations{
             {0.0, 0.0, 1.0},
@@ -169,8 +161,7 @@ protected:
             {1.0, -1.0, 1.0},
             {0.0, -1.0, 1.0},
             {1.0, 0.0, 0.0},
-            {1.0, 1.0, -1.0}
-    };
+            {1.0, 1.0, -1.0}};
 
     std::vector<std::array<std::array<double, 3>, 3>> expectedOrthogonalProjectionPointsOnSegment{
             std::array<std::array<double, 3>, 3>{{{0.0, 0.0, 25.0}, {0.0, 0.0, 25.0}, {-20.0, -0.0, 25.0}}},
@@ -184,8 +175,7 @@ protected:
             std::array<std::array<double, 3>, 3>{{{6.0, 10.0, 12.0}, {-0.0, 10.0, 15.0}, {-20.0, 10.0, -0.0}}},
             std::array<std::array<double, 3>, 3>{{{0.0, 10.0, 0.0}, {6.0, 10.0, 12.0}, {-0.0, 10.0, 25.0}}},
             std::array<std::array<double, 3>, 3>{{{-4.0, 8.0, 15.0}, {0.0, 0.0, 15.0}, {0.0, 0.0, 15.0}}},
-            std::array<std::array<double, 3>, 3>{{{-20.0, -0.0, 15.0}, {-0.0, 10.0, 15.0}, {-4.0, 8.0, 15.0}}}
-    };
+            std::array<std::array<double, 3>, 3>{{{-20.0, -0.0, 15.0}, {-0.0, 10.0, 15.0}, {-4.0, 8.0, 15.0}}}};
 
     std::vector<std::array<double, 3>> expectedSegmentDistances{
             {0.0, 0.0, 20.0},
@@ -199,8 +189,7 @@ protected:
             {13.416407864998739, 15.0, 20.0},
             {0.0, 13.416407864998739, 25.0},
             {8.94427190999916, 0.0, 0.0},
-            {20.0, 10.0, 8.94427190999916}
-    };
+            {20.0, 10.0, 8.94427190999916}};
 
     std::vector<std::array<std::array<double, 2>, 3>> expected3DDistancesPerSegmentEndpoint{
             std::array<std::array<double, 2>, 3>{
@@ -212,23 +201,19 @@ protected:
             std::array<std::array<double, 2>, 3>{
                     {{32.01562118716424, 26.92582403567252}, {26.92582403567252, 25.0}, {25.0, 32.01562118716424}}},
             std::array<std::array<double, 2>, 3>{
-                    {{32.01562118716424, 33.54101966249684}, {33.54101966249684, 26.92582403567252},
-                     {26.92582403567252, 32.01562118716424}}},
+                    {{32.01562118716424, 33.54101966249684}, {33.54101966249684, 26.92582403567252}, {26.92582403567252, 32.01562118716424}}},
             std::array<std::array<double, 2>, 3>{
                     {{-25.0, -15.0}, {15.0, 18.027756377319946}, {18.027756377319946, 25.0}}},
             std::array<std::array<double, 2>, 3>{
                     {{25.0, 18.027756377319946}, {18.027756377319946, 26.92582403567252}, {26.92582403567252, 25.0}}},
             std::array<std::array<double, 2>, 3>{
-                    {{33.54101966249684, 18.027756377319946}, {18.027756377319946, 26.92582403567252},
-                     {26.92582403567252, 33.54101966249684}}},
+                    {{33.54101966249684, 18.027756377319946}, {18.027756377319946, 26.92582403567252}, {26.92582403567252, 33.54101966249684}}},
             std::array<std::array<double, 2>, 3>{
-                    {{26.92582403567252, 18.027756377319946}, {18.027756377319946, 33.54101966249684},
-                     {33.54101966249684, 26.92582403567252}}},
+                    {{26.92582403567252, 18.027756377319946}, {18.027756377319946, 33.54101966249684}, {33.54101966249684, 26.92582403567252}}},
             std::array<std::array<double, 2>, 3>{
                     {{25.0, 18.027756377319946}, {18.027756377319946, 15.0}, {15.0, 25.0}}},
             std::array<std::array<double, 2>, 3>{
-                    {{25.0, 26.92582403567252}, {26.92582403567252, 18.027756377319946}, {18.027756377319946, 25.0}}}
-    };
+                    {{25.0, 26.92582403567252}, {26.92582403567252, 18.027756377319946}, {18.027756377319946, 25.0}}}};
 
     std::vector<std::array<std::array<double, 2>, 3>> expected1DDistancesPerSegmentEndpoint{
             std::array<std::array<double, 2>, 3>{{{-20.0, -0.0}, {0.0, 22.360679774997898}, {-10.0, -0.0}}},
@@ -250,8 +235,7 @@ protected:
             std::array<std::array<double, 2>, 3>{
                     {{-25.0, -15.0}, {6.708203932499369, 29.068883707497267}, {-20.0, -0.0}}},
             std::array<std::array<double, 2>, 3>{{{-17.88854381999832, 4.47213595499958}, {-10.0, -0.0}, {0.0, 20.0}}},
-            std::array<std::array<double, 2>, 3>{{{0.0, 10.0}, {-20.0, -0.0}, {-4.47213595499958, 17.88854381999832}}}
-    };
+            std::array<std::array<double, 2>, 3>{{{0.0, 10.0}, {-20.0, -0.0}, {-4.47213595499958, 17.88854381999832}}}};
 
     std::vector<std::array<polyhedralGravity::Distance, 3>> expectedDistancesPerSegmentEndpoint;
 
@@ -267,8 +251,7 @@ protected:
             {0.9286653985398196, 0.9566555518497877, 0.33382573681901667},
             {0.4524679290839866, 0.928665398539819, 0.6873622553564511},
             {1.1518034938098078, 0.0, 0.0},
-            {0.3900353197707153, 0.9566555518497877, 1.1518034938098078}
-    };
+            {0.3900353197707153, 0.9566555518497877, 1.1518034938098078}};
 
     std::vector<std::array<double, 3>> expectedTranscendentalAN{
             {0.0, 0.0, 0.3567333885140938},
@@ -282,8 +265,7 @@ protected:
             {0.3029908626228055, 0.45979025757734426, 0.08507626483651975},
             {0.0, 0.3029908626228055, 0.23413936163132537},
             {1.2703024256629791, 0.0, 0.0},
-            {0.27165712367757405, 0.8393489455399783, 1.2703024256629791}
-    };
+            {0.27165712367757405, 0.8393489455399783, 1.2703024256629791}};
 
     std::vector<std::array<polyhedralGravity::TranscendentalExpression, 3>> expectedTranscendentalExpressions;
 
@@ -303,8 +285,7 @@ protected:
             std::make_pair(0.0, std::array<double, 3>{-0.0, -0.0, -0.0}),
             std::make_pair(-23.5619455575943,
                            std::array<double, 3>{-0.0, -0.0, -1.5707963705062866}),
-            std::make_pair(0.0, std::array<double, 3>{-0.0, -0.0, 0.0})
-    };
+            std::make_pair(0.0, std::array<double, 3>{-0.0, -0.0, 0.0})};
 
     std::vector<double> expectedAlphaSingularityTerms{-11.591190225020153, -27.67871794485226, 0.0, 0.0, 0.0, 0.0, 0.0,
                                                       0.0, 0.0, 0.0, -23.5619455575943, 0.0};
@@ -321,8 +302,7 @@ protected:
             {-0.0, -0.0, -0.0},
             {-0.0, -0.0, -0.0},
             {-0.0, -0.0, -1.5707963705062866},
-            {-0.0, -0.0, 0.0}
-    };
+            {-0.0, -0.0, 0.0}};
 
 public:
     GravityModelTest() : ::testing::Test() {
@@ -334,8 +314,7 @@ public:
                         expected3DDistancesPerSegmentEndpoint[i][j][0],
                         expected3DDistancesPerSegmentEndpoint[i][j][1],
                         expected1DDistancesPerSegmentEndpoint[i][j][0],
-                        expected1DDistancesPerSegmentEndpoint[i][j][1]
-                };
+                        expected1DDistancesPerSegmentEndpoint[i][j][1]};
                 expectedTranscendentalExpressions[i][j] = polyhedralGravity::TranscendentalExpression{
                         expectedTranscendentalLN[i][j],
                         expectedTranscendentalAN[i][j],
@@ -343,7 +322,6 @@ public:
             }
         }
     }
-
 };
 
 TEST_F(GravityModelTest, GijVectors) {
@@ -485,12 +463,12 @@ TEST_F(GravityModelTest, TranscendentalExpressions) {
         for (size_t j = 0; j < actualTranscendentalExpressions[i].size(); ++j) {
             ASSERT_NEAR(actualTranscendentalExpressions[i][j].ln,
                         expectedTranscendentalExpressions[i][j].ln, LOCAL_TEST_EPSILON)
-                                        << "The LN value differed for transcendental term (i,j) = (" << i << ',' << j
-                                        << ')';
+                    << "The LN value differed for transcendental term (i,j) = (" << i << ',' << j
+                    << ')';
             ASSERT_NEAR(actualTranscendentalExpressions[i][j].an,
                         expectedTranscendentalExpressions[i][j].an, LOCAL_TEST_EPSILON)
-                                        << "The AN value differed for transcendental term (i,j) = (" << i << ',' << j
-                                        << ')';
+                    << "The AN value differed for transcendental term (i,j) = (" << i << ',' << j
+                    << ')';
         }
     }
 }
@@ -512,9 +490,9 @@ TEST_F(GravityModelTest, SingularityTerms) {
     for (size_t i = 0; i < actualSingularityTerms.size(); ++i) {
         EXPECT_NEAR(actualSingularityTerms[i].first,
                     expectedSingularityTerms[i].first, LOCAL_TEST_EPSILON)
-                            << "The sing A value differed for singularity term (i) = (" << i << ')';
+                << "The sing A value differed for singularity term (i) = (" << i << ')';
         EXPECT_THAT(actualSingularityTerms[i].second,
                     Pointwise(DoubleNear(LOCAL_TEST_EPSILON), expectedSingularityTerms[i].second))
-                            << "The sing B value differed for singularity term (i) = (" << i << ')';
+                << "The sing B value differed for singularity term (i) = (" << i << ')';
     }
 }

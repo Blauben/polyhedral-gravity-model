@@ -265,4 +265,4 @@ namespace polyhedralGravity {
         return singularities;
     }
 
-}
+}// namespace polyhedralGravity

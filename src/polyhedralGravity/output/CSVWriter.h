@@ -1,18 +1,18 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <exception>
-#include <utility>
-#include <memory>
 #include "polyhedralGravity/model/GravityModelData.h"
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/fmt/ostr.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/spdlog.h"
+#include <exception>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace polyhedralGravity {
 
-/**
+    /**
  * By using spdlog, this class provides methods to print the result the polyhedral gravity model into an CSV file.
  * @note The used Logger level is "info", so this should be activated at least if output is wished!
  */
@@ -25,12 +25,12 @@ namespace polyhedralGravity {
 
 
     public:
-
         /**
          * Creates a new CSVWriter.
          * Results are written to "polyhedralGravityModel.csv".
          */
-        CSVWriter() : CSVWriter("polyhedralGravityModel.csv") {}
+        CSVWriter() : CSVWriter("polyhedralGravityModel.csv") {
+        }
 
         /**
          * Creates a new CSVWriter.
@@ -38,8 +38,8 @@ namespace polyhedralGravity {
          * @param filename a string
          */
         explicit CSVWriter(const std::string &filename)
-                : _logger{
-                spdlog::basic_logger_mt<spdlog::synchronous_factory>("CSVWriter_" + filename, filename, true)} {
+            : _logger{
+                      spdlog::basic_logger_mt<spdlog::synchronous_factory>("CSVWriter_" + filename, filename, true)} {
             _logger->set_pattern("%v");
         }
 
@@ -57,7 +57,6 @@ namespace polyhedralGravity {
          */
         void printResult(const std::vector<std::array<double, 3>> &computationPoints,
                          const std::vector<GravityModelResult> &gravityResults) const;
-
     };
 
-}
+}// namespace polyhedralGravity

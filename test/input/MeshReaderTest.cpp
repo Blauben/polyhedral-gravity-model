@@ -1,24 +1,22 @@
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
+#include "polyhedralGravity/input/MeshReader.h"
 #include <string>
 #include <vector>
-#include "polyhedralGravity/input/MeshReader.h"
 
 class MeshReaderTest : public ::testing::Test {
 
 protected:
-
     std::vector<std::array<double, 3>> _expectedVertices = {
-            {-20, 0,  25},
-            {0,   0,  25},
-            {0,   10, 25},
+            {-20, 0, 25},
+            {0, 0, 25},
+            {0, 10, 25},
             {-20, 10, 25},
-            {-20, 0,  15},
-            {0,   0,  15},
-            {0,   10, 15},
-            {-20, 10, 15}
-    };
+            {-20, 0, 15},
+            {0, 0, 15},
+            {0, 10, 15},
+            {-20, 10, 15}};
 
     std::vector<std::array<size_t, 3>> _expectedFaces = {
             {0, 1, 3},
@@ -32,9 +30,7 @@ protected:
             {3, 6, 7},
             {2, 6, 3},
             {4, 6, 5},
-            {4, 7, 6}
-    };
-
+            {4, 7, 6}};
 };
 
 TEST_F(MeshReaderTest, readSimpleNode) {
@@ -45,7 +41,7 @@ TEST_F(MeshReaderTest, readSimpleNode) {
             "resources/MeshReaderTestReadSimple.node",
             "resources/MeshReaderTestReadSimple.face",
     };
-    const auto&[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
+    const auto &[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
 
     ASSERT_THAT(actualVertices, ContainerEq(_expectedVertices));
 }
@@ -57,9 +53,8 @@ TEST_F(MeshReaderTest, readSimpleFace) {
 
     const std::vector<std::string> simpleFiles{
             "resources/MeshReaderTestReadSimple.node",
-            "resources/MeshReaderTestReadSimple.face"
-    };
-    const auto&[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
+            "resources/MeshReaderTestReadSimple.face"};
+    const auto &[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
 
     ASSERT_THAT(actualFaces, ContainerEq(_expectedFaces));
 }
@@ -69,7 +64,7 @@ TEST_F(MeshReaderTest, readSimpleMesh) {
     using namespace ::polyhedralGravity;
 
     const std::vector<std::string> simpleFiles{"resources/MeshReaderTestReadSimple.mesh"};
-    const auto&[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
+    const auto &[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
 
     for (const auto &actualVertice: actualVertices) {
         ASSERT_THAT(_expectedVertices, Contains(actualVertice));
@@ -82,7 +77,7 @@ TEST_F(MeshReaderTest, readSimpleOff) {
     using namespace ::polyhedralGravity;
 
     const std::vector<std::string> simpleFiles{"resources/MeshReaderTestReadSimple.off"};
-    const auto&[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
+    const auto &[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
 
     for (const auto &actualVertice: actualVertices) {
         ASSERT_THAT(_expectedVertices, Contains(actualVertice));
@@ -95,7 +90,7 @@ TEST_F(MeshReaderTest, readSimplePly) {
     using namespace ::polyhedralGravity;
 
     const std::vector<std::string> simpleFiles{"resources/MeshReaderTestReadSimple.ply"};
-    const auto&[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
+    const auto &[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
 
     for (const auto &actualVertice: actualVertices) {
         ASSERT_THAT(_expectedVertices, Contains(actualVertice));
@@ -108,7 +103,7 @@ TEST_F(MeshReaderTest, readSimpleStl) {
     using namespace ::polyhedralGravity;
 
     const std::vector<std::string> simpleFiles{"resources/MeshReaderTestReadSimple.stl"};
-    const auto&[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
+    const auto &[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
 
     for (const auto &actualVertice: actualVertices) {
         ASSERT_THAT(_expectedVertices, Contains(actualVertice));
@@ -121,7 +116,7 @@ TEST_F(MeshReaderTest, readSimpleObj) {
     using namespace ::polyhedralGravity;
 
     const std::vector<std::string> simpleFiles{"resources/MeshReaderTestReadSimple.obj"};
-    const auto&[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
+    const auto &[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
 
     for (const auto &actualVertice: actualVertices) {
         ASSERT_THAT(_expectedVertices, Contains(actualVertice));
@@ -134,7 +129,7 @@ TEST_F(MeshReaderTest, readSimpleTab) {
     using namespace ::polyhedralGravity;
 
     const std::vector<std::string> simpleFiles{"resources/MeshReaderTestReadSimple.tab"};
-    const auto&[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
+    const auto &[actualVertices, actualFaces] = MeshReader::getPolyhedralSource(simpleFiles);
 
     for (const auto &actualVertice: actualVertices) {
         ASSERT_THAT(_expectedVertices, Contains(actualVertice));
