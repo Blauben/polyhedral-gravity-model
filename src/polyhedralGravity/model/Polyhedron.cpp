@@ -10,11 +10,11 @@ namespace polyhedralGravity {
           _orientation{orientation},
           _enableParallelQuery{true},
           _metricUnit{metricUnit},
-          _tree{[]() {
+          _tree{[this]() {
               std::vector<kdtree::IndexVector> indexFaces(_faces.size());
               std::transform(_faces.begin(), _faces.end(), indexFaces.begin(), [](const std::array<size_t, 3> &face) { return kdtree::IndexVector{face[0], face[1], face[2]}; });
-              return std::make_unique<kdtree::KDTree>();
-          }} {
+              return std::make_shared<kdtree::KDTree>(_vertices, indexFaces);
+          }()} {
         using util::operator-;
         // Checks that the node with index zero is actually used
         // In case it is not used, the indexing presumably starts mathematically at one
