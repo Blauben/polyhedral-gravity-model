@@ -3,7 +3,7 @@ include(FetchContent)
 message(STATUS "Setting up Google Test")
 set(GOOGLE_TEST_VERSION 1.15.2)
 
-find_package(GTest ${GOOGLE_TEST_VERSION} QUIET)
+# find_package(GTest ${GOOGLE_TEST_VERSION} QUIET)
 
 
 if(${GTest_FOUND})

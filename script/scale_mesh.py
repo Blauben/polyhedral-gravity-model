@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 
@@ -24,8 +25,6 @@ class Node:
         floats = list(map(float, floats))
         return Node(index, *floats)
 
-    def __add__(self, other):
-        return Node(-1, self.x + other.x, self.y + other.y, self.z + other.z)
     
     def vertex(self):
         return [self.x,self.y,self.z]
@@ -43,17 +42,6 @@ class Face:
         self.v_idx2 = v_idx2
         self.v_idx3 = v_idx3
 
-    def mid_point(self, nodes):
-        node = nodes[self.v_idx1] + nodes[self.v_idx2] + nodes[self.v_idx3]
-        node.idx = len(nodes)
-        return node
-
-    def generate_split_faces(self, node_idx, next_face_idx):
-        return [
-            Face(next_face_idx, self.v_idx1, self.v_idx2, node_idx),
-            Face(next_face_idx + 1, self.v_idx2, self.v_idx3, node_idx),
-            Face(next_face_idx + 2, self.v_idx3, self.v_idx1, node_idx),
-        ]
 
     @staticmethod
     def from_line(line):
@@ -136,10 +124,10 @@ def main():
     if len(sys.argv) != 3:
         print("Usage: python scale_mesh.py <node_file> <face_file>")
         return -1
-    nodes, faces = fetch_data(sys.argv[1], sys.argv[2])
-    filename = sys.argv[1].split(".")[0]
+    filename = os.path.splitext(sys.argv[1])[0]
     face_amounts = [round(1000* math.sqrt(3)**k) for k in range(10)]
     for amount in face_amounts:
+        nodes, faces = fetch_data(sys.argv[1], sys.argv[2])
         nodes, faces = scale_mesh(nodes, faces, amount)
         write_to_file(nodes, faces, f"{filename}_scaled-{amount}")
 

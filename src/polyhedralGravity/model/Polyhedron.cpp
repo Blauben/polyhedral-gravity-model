@@ -135,7 +135,7 @@ namespace polyhedralGravity {
         return std::make_tuple(_vertices, _faces, _density, _orientation, _metricUnit);
     }
 
-    std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() {
+    std::pair<NormalOrientation, std::set<size_t>> Polyhedron::checkPlaneUnitNormalOrientation() const {
         // 1. Step: Find all indices of normals which vioate the constraint outwards pointing
         const auto &[polyBegin, polyEnd] = this->transformIterator();
         const size_t n = this->countFaces();
