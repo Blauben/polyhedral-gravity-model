@@ -8,7 +8,6 @@ namespace polyhedralGravity {
           _faces{faces},
           _density{density},
           _orientation{orientation},
-          _enableParallelQuery{true},
           _metricUnit{metricUnit},
           _tree{[this]() {
               std::vector<kdtree::IndexVector> indexFaces(_faces.size());

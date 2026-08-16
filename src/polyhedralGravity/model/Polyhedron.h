@@ -73,7 +73,6 @@ namespace polyhedralGravity {
         /**
         * Flag used to control whether to enable multithreaded KD-tree queries. If both Polyhedron and KDTree deploy multiple threads they exhaust each other. NoTree does not utilize threads.
 */
-        bool _enableParallelQuery{false};
 
         /**
          * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
@@ -91,7 +90,6 @@ namespace polyhedralGravity {
          * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
-         * @param treeAlgorithm which KDTree plane selection algorithm to use for integrity checks.
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
          */

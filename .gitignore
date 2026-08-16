@@ -1,6 +1,7 @@
 .idea
 cmake-build-*
 build
+.venv
 polyhedral_gravity.egg-info
 dist
 docs/Doxyfile
