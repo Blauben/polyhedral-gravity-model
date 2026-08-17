@@ -5,25 +5,31 @@ namespace polyhedralGravity {
     Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
                            const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit &metricUnit)
         : _vertices{vertices},
-          _faces{faces},
+          _faces{[&faces]() {
+              using util::operator-;
+              // Checks that the node with index zero is actually used
+              // In case it is not used, the indexing presumably starts mathematically at one
+              // In this case, we shift it by -1, so that the indexing start with zero
+              if (faces.end() == std::find_if(faces.begin(), faces.end(), [](const auto &face) {
+                      return face[0] == 0 || face[1] == 0 || face[2] == 0;
+                  })) {
+                  POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
+                  std::vector<IndexArray3> shiftedFaces{faces};
+                  std::transform(shiftedFaces.begin(), shiftedFaces.end(), shiftedFaces.begin(), [](const std::array<size_t, 3> &face) { return face - 1; });
+                  return shiftedFaces;
+              }
+              return faces;
+          }()},
           _density{density},
           _orientation{orientation},
           _metricUnit{metricUnit},
           _tree{[this]() {
+              // Relies on _faces already holding zero-indexed data, which requires _faces to be
+              // initialized before _tree (i.e., declared earlier in Polyhedron.h).
               std::vector<kdtree::IndexVector> indexFaces(_faces.size());
               std::transform(_faces.begin(), _faces.end(), indexFaces.begin(), [](const std::array<size_t, 3> &face) { return kdtree::IndexVector{face[0], face[1], face[2]}; });
               return std::make_shared<kdtree::KDTree>(_vertices, indexFaces);
           }()} {
-        using util::operator-;
-        // Checks that the node with index zero is actually used
-        // In case it is not used, the indexing presumably starts mathematically at one
-        // In this case, we shift it by -1, so that the indexing start with zero
-        if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](const auto &face) {
-                return face[0] == 0 || face[1] == 0 || face[2] == 0;
-            })) {
-            POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
-            std::transform(_faces.begin(), _faces.end(), _faces.begin(), [&](const std::array<size_t, 3> &face) { return face - 1; });
-        }
         this->runIntegrityMeasures(integrity);
     }
 

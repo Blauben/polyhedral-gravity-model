@@ -324,6 +324,19 @@ TEST_F(PolyhedronTest, CorrectBigPolyhedron) {
             1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY));
 }
 
+TEST_F(PolyhedronTest, FileBasedFaceCorrection) {
+    using namespace testing;
+    using namespace polyhedralGravity;
+    // Regression test for a 1-indexed .node/.face pair (as opposed to the in-memory FaceCorrection test above):
+    // the KD-tree is built internally from the faces, so if it were built before the 1-based -> 0-based shift,
+    // the tree would be constructed from out-of-bounds vertex indices and the VERIFY integrity check below
+    // (which queries the tree) would either crash or wrongly determine the normal orientation.
+    const auto polyhedron = Polyhedron(
+            std::vector<std::string>({"resources/cube_1indexed.node", "resources/cube_1indexed.face"}),
+            1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY);
+    ASSERT_THAT(polyhedron.getFaces(), ContainerEq(_facesOutwards));
+}
+
 TEST_F(PolyhedronTest, FileDoesNotExistPolyhedron) {
     using namespace testing;
     using namespace polyhedralGravity;

@@ -1,9 +1,15 @@
-.idea
+# CMake
 cmake-build-*
 build
+CMakeUserPresets.json
+
+# Python
 .venv
-polyhedral_gravity.egg-info
+.python-version
+**/__pycache__
 dist
+
+.idea
+polyhedral_gravity.egg-info
 docs/Doxyfile
 src/polyhedralGravity/Info.h
-**/__pycache__
