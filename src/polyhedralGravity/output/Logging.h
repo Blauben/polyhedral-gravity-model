@@ -1,9 +1,9 @@
 #pragma once
 
-#include <memory>
-#include "spdlog/spdlog.h"
 #include "spdlog/async.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
+#include <memory>
 
 
 namespace polyhedralGravity {
@@ -17,14 +17,12 @@ namespace polyhedralGravity {
     class PolyhedralGravityLogger {
 
     public:
-
         /**
          * The default logger which is used in the whole implementation for every logging.
          */
         const static PolyhedralGravityLogger DEFAULT_LOGGER;
 
     private:
-
         /**
          * The actual spdlog::logger
          */
@@ -36,7 +34,7 @@ namespace polyhedralGravity {
          * the name POLYHEDRAL_GRAVITY_LOGGER.
          */
         PolyhedralGravityLogger()
-                : _logger(spdlog::stdout_color_mt<spdlog::synchronous_factory>("POLYHEDRAL_GRAVITY_LOGGER")) {
+            : _logger(spdlog::stdout_color_mt<spdlog::synchronous_factory>("POLYHEDRAL_GRAVITY_LOGGER")) {
             _logger->set_level(spdlog::level::trace);
         }
 
@@ -47,8 +45,6 @@ namespace polyhedralGravity {
         [[nodiscard]] inline std::shared_ptr<spdlog::logger> getLogger() const {
             return _logger;
         }
-
-
     };
 
 #define POLYHEDRAL_GRAVITY_LOG_TRACE(msg, ...) SPDLOG_LOGGER_TRACE(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
@@ -58,4 +54,4 @@ namespace polyhedralGravity {
 #define POLYHEDRAL_GRAVITY_LOG_ERROR(msg, ...) SPDLOG_LOGGER_ERROR(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
 #define POLYHEDRAL_GRAVITY_LOG_CRITICAL(msg, ...) SPDLOG_LOGGER_CRITICAL(PolyhedralGravityLogger::DEFAULT_LOGGER.getLogger(), msg, ##__VA_ARGS__)
 
-}
+}// namespace polyhedralGravity

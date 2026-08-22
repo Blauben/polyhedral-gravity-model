@@ -61,4 +61,4 @@ namespace polyhedralGravity {
     }
 
 
-}
+}// namespace polyhedralGravity

@@ -21,6 +21,7 @@ if (BUILD_POLYHEDRAL_GRAVITY_LIBRARY)
             tetgen_lib
             xsimd
             Thrust
+            KDTree::KDTree
             )
 endif ()
 #####################################
@@ -63,5 +64,6 @@ if(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
             tetgen_lib
             xsimd
             Thrust
-            )
+            KDTree::KDTree
+    )
 endif()

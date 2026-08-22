@@ -1,10 +1,10 @@
 #pragma once
 
 #include <array>
-#include <vector>
+#include <ostream>
 #include <string>
 #include <tuple>
-#include <ostream>
+#include <vector>
 
 namespace polyhedralGravity {
 
@@ -58,7 +58,7 @@ namespace polyhedralGravity {
      * normals to point outwards of the polyhedron. If the opposite hold, the result is
      * negated.
      */
-    enum class NormalOrientation: char {
+    enum class NormalOrientation : char {
         /** Outwards pointing plane unit normals */
         OUTWARDS,
         /** Inwards pointing plane unit normals */
@@ -81,7 +81,7 @@ namespace polyhedralGravity {
      * This enum is exclusively utilized in the constructor of a {@link Polyhedron} and its private method
      * {@link runIntegrityMeasures}
      */
-    enum class PolyhedronIntegrity: char {
+    enum class PolyhedronIntegrity : char {
         /**
          * All activities regarding MeshChecking are disabled.
          * No runtime overhead!
@@ -137,4 +137,4 @@ namespace polyhedralGravity {
      */
     MetricUnit readMetricUnit(const std::string &unit);
 
-}
+}// namespace polyhedralGravity

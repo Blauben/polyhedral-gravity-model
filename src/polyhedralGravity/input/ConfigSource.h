@@ -1,21 +1,20 @@
 #pragma once
 
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
+#include <array>
 #include <string>
 #include <tuple>
 #include <vector>
-#include <array>
-#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 
 namespace polyhedralGravity {
 
-/**
+    /**
  * Interface defining methods giving the calculation some input.
  * This includes the points of interest as well as the source of the data.
  */
     class ConfigSource {
 
     public:
-
         /** Default Virtual Destructor */
         virtual ~ConfigSource() = default;
 
@@ -59,7 +58,6 @@ namespace polyhedralGravity {
          * @return the unit of the polyhedral mesh as a MetricUnit enum
          */
         virtual MetricUnit getMeshUnit() = 0;
-
     };
 
-}
+}// namespace polyhedralGravity

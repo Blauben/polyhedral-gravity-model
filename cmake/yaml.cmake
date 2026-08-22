@@ -1,7 +1,9 @@
 include(FetchContent)
 
 message(STATUS "Setting up yaml-cpp")
-set(YAML_CPP_VERSION 0.8.0)
+set(YAML_CPP_VERSION 0.9.0)
+# required for finding the correct release tag, which may not be the same as the version number
+set(YAML_CPP_TAG yaml-cpp-${YAML_CPP_VERSION})
 
 find_package(yaml-cpp ${YAML_CPP_VERSION} QUIET)
 
@@ -11,7 +13,7 @@ else()
     message(STATUS "Using yaml-cpp from GitHub Release ${YAML_CPP_VERSION}")
     FetchContent_Declare(yaml-cpp
             GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-            GIT_TAG ${YAML_CPP_VERSION}
+            GIT_TAG ${YAML_CPP_TAG}
             )
     # Disable everything we don't need
     set(YAML_CPP_BUILD_TESTS OFF CACHE INTERNAL "")

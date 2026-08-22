@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 
-#include <utility>
-#include <array>
 #include "polyhedralGravity/util/UtilityContainer.h"
+#include <array>
+#include <utility>
 
 
 TEST(UtilityContainer, VectorContainerPlus) {
@@ -83,7 +83,7 @@ TEST(UtilityContainer, TrianlgeSurface_2) {
 
 TEST(UtilityContainer, TrianlgeSurface_3) {
     using namespace ::polyhedralGravity::util;
-    Matrix<double, 3, 3> triangle{{ {0.0, 10.0, 5.0}, {1.0, 1.0, 2.0}, {-1.0, -1.0, 0.0}}};
+    Matrix<double, 3, 3> triangle{{{0.0, 10.0, 5.0}, {1.0, 1.0, 2.0}, {-1.0, -1.0, 0.0}}};
 
     double expectedSurface = 12.3288;
     double actualSurface = surfaceArea(triangle);

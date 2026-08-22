@@ -2,8 +2,8 @@
 #include "polyhedralGravity/input/ConfigSource.h"
 #include "polyhedralGravity/input/YAMLConfigReader.h"
 #include "polyhedralGravity/model/GravityModel.h"
-#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/model/Polyhedron.h"
+#include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/output/CSVWriter.h"
 #include "polyhedralGravity/output/Logging.h"
 #include <chrono>
@@ -60,7 +60,7 @@ int main(const int argc, char *argv[]) {
         const auto durationCalc = endCalc - startCalc;
         const auto msCalc = std::chrono::duration_cast<std::chrono::microseconds>(durationCalc).count();
         POLYHEDRAL_GRAVITY_LOG_INFO("The calculation of the Gravity Model has finished. It took {} microseconds or on average {} microseconds/point",
-            msCalc, static_cast<double>(msCalc) / static_cast<double>(computationPoints.size()));
+                                    msCalc, static_cast<double>(msCalc) / static_cast<double>(computationPoints.size()));
         POLYHEDRAL_GRAVITY_LOG_INFO("####################################################################################");
 
         //The results

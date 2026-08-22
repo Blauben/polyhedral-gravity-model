@@ -1,5 +1,6 @@
 #pragma once
 
+#include "KDTree/tree/KDTree.h"
 #include "polyhedralGravity/input/MeshReader.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
@@ -69,6 +70,15 @@ namespace polyhedralGravity {
         /** Metric Unit of the Vertices Coordinates. One of METER, KILOMETER, or UNITLESS */
         const MetricUnit _metricUnit;
 
+        /**
+        * Flag used to control whether to enable multithreaded KD-tree queries. If both Polyhedron and KDTree deploy multiple threads they exhaust each other. NoTree does not utilize threads.
+*/
+
+        /**
+         * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
+         */
+        mutable std::shared_ptr<kdtree::KDTree> _tree;
+
     public:
         /**
          * Generates a polyhedron from nodes and faces.
@@ -89,8 +99,7 @@ namespace polyhedralGravity {
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                 const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                const MetricUnit &metricUnit = MetricUnit::METER
-                );
+                const MetricUnit &metricUnit = MetricUnit::METER);
 
         /**
          * Generates a polyhedron from nodes and faces.
@@ -109,8 +118,7 @@ namespace polyhedralGravity {
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                 const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                const MetricUnit &metricUnit = MetricUnit::METER
-                );
+                const MetricUnit &metricUnit = MetricUnit::METER);
 
         /**
          * Generates a polyhedron from nodes and faces.
@@ -127,8 +135,7 @@ namespace polyhedralGravity {
         Polyhedron(const PolyhedralFiles &polyhedralFiles, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                    const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                   const MetricUnit &metricUnit = MetricUnit::METER
-                                   );
+                   const MetricUnit &metricUnit = MetricUnit::METER);
 
         /**
          * Generates a polyhedron from nodes and faces.
@@ -146,8 +153,7 @@ namespace polyhedralGravity {
         Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                    const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                   const MetricUnit &metricUnit = MetricUnit::METER
-                   );
+                   const MetricUnit &metricUnit = MetricUnit::METER);
 
         /**
          * Default destructor
@@ -182,7 +188,7 @@ namespace polyhedralGravity {
         /**
          * Returns the indices of the vertices making up the face at the given index.
          * @param index size_t
-         * @return triplet of the vertices indices forming the face
+         * @return triplet of the vertices' indices forming the face
          */
         [[nodiscard]] const IndexArray3 &getFace(size_t index) const;
 
@@ -329,20 +335,6 @@ namespace polyhedralGravity {
          * @return true if the ray intersects the triangle
          */
         [[nodiscard]] size_t countRayPolyhedronIntersections(const Array3Triplet &face) const;
-
-        /**
-         * Calculates how often a vector starting at a specific origin intersects a triangular face.
-         * Uses the Möller–Trumbore intersection algorithm.
-         * @param rayOrigin the origin of the ray
-         * @param rayVector the vector describing the ray
-         * @param triangle a triangular face
-         * @return intersection point or null
-         *
-         * @see Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
-         */
-        static std::unique_ptr<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
-
-
     };
 
-}
+}// namespace polyhedralGravity

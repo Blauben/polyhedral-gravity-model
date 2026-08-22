@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <algorithm>
+#include <string>
 
 namespace polyhedralGravity::util {
 
@@ -12,8 +12,8 @@ namespace polyhedralGravity::util {
      * @param suffixes more suffixes arguments.
      * @return true if the string ends with suffix, otherwise false
      */
-    template <typename... Args>
-    inline bool ends_with(const std::string& str, const std::string& suffix, const Args&... suffixes) {
+    template<typename... Args>
+    inline bool ends_with(const std::string &str, const std::string &suffix, const Args &...suffixes) {
         if (suffix.size() <= str.size() && std::equal(suffix.rbegin(), suffix.rend(), str.rbegin())) {
             return true;
         }
@@ -22,4 +22,4 @@ namespace polyhedralGravity::util {
         }
         return false;
     }
-}
+}// namespace polyhedralGravity::util

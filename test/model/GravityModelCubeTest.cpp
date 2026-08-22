@@ -1,22 +1,21 @@
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
-#include <string>
-#include <vector>
-#include <array>
-#include <utility>
-#include <tuple>
-#include <fstream>
-#include <sstream>
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/Polyhedron.h"
+#include <array>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 
 /**
  * Contains Tests how the calculation handles a cubic polyhedron
  */
-class GravityModelCubeTest :
-        public ::testing::TestWithParam<std::tuple<std::array<double, 3>, double, double, std::array<double, 3>>> {
+class GravityModelCubeTest : public ::testing::TestWithParam<std::tuple<std::array<double, 3>, double, double, std::array<double, 3>>> {
 
 protected:
     /**
@@ -47,8 +46,7 @@ protected:
                                                 {4, 6, 7}},
                                         1.0,
                                         polyhedralGravity::NormalOrientation::OUTWARDS,
-                                        polyhedralGravity::PolyhedronIntegrity::DISABLE
-    };
+                                        polyhedralGravity::PolyhedronIntegrity::DISABLE};
 
 public:
     [[nodiscard]] static std::vector<std::tuple<std::array<double, 3>, double, double, std::array<double, 3>>>
@@ -74,8 +72,6 @@ public:
         }
         return result;
     }
-
-
 };
 
 TEST_P(GravityModelCubeTest, CubePoints) {
@@ -97,8 +93,8 @@ TEST_P(GravityModelCubeTest, CubePoints) {
 
 INSTANTIATE_TEST_SUITE_P(CubeGravityModelTest01, GravityModelCubeTest,
                          ::testing::ValuesIn(
-                             GravityModelCubeTest::readCubePoints("resources/analytic_cube_solution_density1.txt")));
+                                 GravityModelCubeTest::readCubePoints("resources/analytic_cube_solution_density1.txt")));
 
 INSTANTIATE_TEST_SUITE_P(CubeGravityModelTest42, GravityModelCubeTest,
                          ::testing::ValuesIn(
-                             GravityModelCubeTest::readCubePoints("resources/analytic_cube_solution_density42.txt")));
+                                 GravityModelCubeTest::readCubePoints("resources/analytic_cube_solution_density42.txt")));

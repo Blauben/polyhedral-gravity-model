@@ -2,8 +2,8 @@
 
 namespace polyhedralGravity {
     TetgenAdapter::TetgenAdapter(const std::vector<std::string> &fileNames)
-        : _tetgenio{}, _fileNames{fileNames}, _vertices{}, _faces{}
-    {}
+        : _tetgenio{}, _fileNames{fileNames}, _vertices{}, _faces{} {
+    }
 
     PolyhedralSource TetgenAdapter::getPolyhedralSource() {
         //1. Step: Read in from files

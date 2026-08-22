@@ -51,7 +51,7 @@ jobs:
         env:
           CIBW_BEFORE_BUILD: pipx install ninja cmake
           CIBW_ENABLE: cpython-freethreading pypy
-          CIBW_ENVIRONMENT: 'MACOSX_DEPLOYMENT_TARGET="10.15"'
+          CIBW_ENVIRONMENT: 'MACOSX_DEPLOYMENT_TARGET="11.0"'
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_TEST_COMMAND: 'python -c "import polyhedral_gravity"'
         with:

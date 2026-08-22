@@ -1,8 +1,8 @@
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
-#include <array>
 #include "polyhedralGravity/model/Polyhedron.h"
+#include <array>
 
 
 /**
@@ -21,24 +21,22 @@ protected:
             {-1.0, -1.0, 1.0},
             {1.0, -1.0, 1.0},
             {1.0, 1.0, 1.0},
-            {-1.0, 1.0, 1.0}
-    };
+            {-1.0, 1.0, 1.0}};
 
     // The indexing starts at 1 rather than at zero
     const std::vector<polyhedralGravity::IndexArray3> _facesCorrection{
-                {2, 4, 3},
-                {1, 4, 2},
-                {1, 2, 6},
-                {1, 6, 5},
-                {1, 8, 4},
-                {1, 5, 8},
-                {2, 3, 7},
-                {2, 7, 6},
-                {3, 4, 7},
-                {4, 8, 7},
-                {5, 6, 7},
-                {5, 7, 8}
-    };
+            {2, 4, 3},
+            {1, 4, 2},
+            {1, 2, 6},
+            {1, 6, 5},
+            {1, 8, 4},
+            {1, 5, 8},
+            {2, 3, 7},
+            {2, 7, 6},
+            {3, 4, 7},
+            {4, 8, 7},
+            {5, 6, 7},
+            {5, 7, 8}};
 
     const std::vector<polyhedralGravity::IndexArray3> _facesOutwards{
             {1, 3, 2},
@@ -52,8 +50,7 @@ protected:
             {2, 3, 6},
             {3, 7, 6},
             {4, 5, 6},
-            {4, 6, 7}
-    };
+            {4, 6, 7}};
 
 
     const std::vector<polyhedralGravity::IndexArray3> _facesInwards{
@@ -68,8 +65,7 @@ protected:
             {3, 2, 6},
             {7, 3, 6},
             {5, 4, 6},
-            {6, 4, 7}
-    };
+            {6, 4, 7}};
 
     const std::vector<polyhedralGravity::IndexArray3> _facesOutwardsMajority{
             {3, 1, 2},
@@ -83,8 +79,7 @@ protected:
             {2, 3, 6},
             {3, 7, 6},
             {4, 5, 6},
-            {4, 6, 7}
-    };
+            {4, 6, 7}};
 
     const std::vector<polyhedralGravity::IndexArray3> _facesInwardsMajority{
             {3, 1, 2},
@@ -98,8 +93,7 @@ protected:
             {3, 2, 6},
             {3, 7, 6},
             {4, 5, 6},
-            {4, 6, 7}
-    };
+            {4, 6, 7}};
 
     const std::vector<polyhedralGravity::IndexArray3> _degeneratedFaces{
             {1, 3, 2},
@@ -113,8 +107,7 @@ protected:
             {2, 3, 6},
             {3, 7, 6},
             {4, 5, 6},
-            {4, 6, 7}
-    };
+            {4, 6, 7}};
 
 
     const std::vector<polyhedralGravity::Array3> _prismVertices{
@@ -125,8 +118,7 @@ protected:
             {-20.0, 0.0, 15.0},
             {0.0, 0.0, 15.0},
             {0.0, 10.0, 15.0},
-            {-20.0, 10.0, 15.0}
-    };
+            {-20.0, 10.0, 15.0}};
 
     const std::vector<polyhedralGravity::IndexArray3> _prismOutwards{
             {0, 4, 5},
@@ -140,8 +132,7 @@ protected:
             {4, 7, 5},
             {5, 7, 6},
             {2, 7, 3},
-            {2, 6, 7}
-    };
+            {2, 6, 7}};
 
     const std::vector<polyhedralGravity::IndexArray3> _prismInwards{
 
@@ -156,8 +147,7 @@ protected:
             {7, 4, 5},
             {7, 5, 6},
             {7, 2, 3},
-            {6, 2, 7}
-    };
+            {6, 2, 7}};
 };
 
 TEST_F(PolyhedronTest, FaceCorrection) {
@@ -176,7 +166,7 @@ TEST_F(PolyhedronTest, CubeOutwardNormals) {
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE));
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::AUTOMATIC));
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY));
-    EXPECT_NO_THROW(Polyhedron (_cubeVertices, _facesOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
@@ -197,7 +187,7 @@ TEST_F(PolyhedronTest, CubeInwardsNormals) {
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::AUTOMATIC));
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::VERIFY));
-    EXPECT_NO_THROW(Polyhedron (_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE));
@@ -224,7 +214,7 @@ TEST_F(PolyhedronTest, CubeOutwardNormalsMajor) {
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE));
     EXPECT_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
     EXPECT_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY), std::invalid_argument);
-    EXPECT_NO_THROW(Polyhedron (_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesOutwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
@@ -251,7 +241,7 @@ TEST_F(PolyhedronTest, CubeOutwardInwardsMajor) {
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
     EXPECT_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::AUTOMATIC), std::invalid_argument);
     EXPECT_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::VERIFY), std::invalid_argument);
-    EXPECT_NO_THROW(Polyhedron (_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
     EXPECT_NO_THROW(Polyhedron(_cubeVertices, _facesInwardsMajority, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE));
@@ -290,7 +280,7 @@ TEST_F(PolyhedronTest, PrsimOutwards) {
     EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE));
     EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::AUTOMATIC));
     EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY));
-    EXPECT_NO_THROW(Polyhedron (_prismVertices, _prismOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
     EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismOutwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
@@ -311,7 +301,7 @@ TEST_F(PolyhedronTest, PrsimInwards) {
     EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::DISABLE));
     EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::AUTOMATIC));
     EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::VERIFY));
-    EXPECT_NO_THROW(Polyhedron (_prismVertices, _prismInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
+    EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::INWARDS, PolyhedronIntegrity::HEAL));
 
     // Wrong Set-Up, Throws in case of AUTOMATIC and VERIFY, DISABLE and HEAL do not throw but respectivley ignore or repair
     EXPECT_NO_THROW(Polyhedron(_prismVertices, _prismInwards, 1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::DISABLE));
@@ -330,9 +320,21 @@ TEST_F(PolyhedronTest, CorrectBigPolyhedron) {
     using namespace polyhedralGravity;
     // All normals are pointing outwards, extensive Eros example
     ASSERT_NO_THROW(Polyhedron(
-                std::vector<std::string>({"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}),
-                1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY)
-            );
+            std::vector<std::string>({"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"}),
+            1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY));
+}
+
+TEST_F(PolyhedronTest, FileBasedFaceCorrection) {
+    using namespace testing;
+    using namespace polyhedralGravity;
+    // Regression test for a 1-indexed .node/.face pair (as opposed to the in-memory FaceCorrection test above):
+    // the KD-tree is built internally from the faces, so if it were built before the 1-based -> 0-based shift,
+    // the tree would be constructed from out-of-bounds vertex indices and the VERIFY integrity check below
+    // (which queries the tree) would either crash or wrongly determine the normal orientation.
+    const auto polyhedron = Polyhedron(
+            std::vector<std::string>({"resources/cube_1indexed.node", "resources/cube_1indexed.face"}),
+            1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY);
+    ASSERT_THAT(polyhedron.getFaces(), ContainerEq(_facesOutwards));
 }
 
 TEST_F(PolyhedronTest, FileDoesNotExistPolyhedron) {
@@ -340,8 +342,7 @@ TEST_F(PolyhedronTest, FileDoesNotExistPolyhedron) {
     using namespace polyhedralGravity;
     // All normals are pointing outwards, extensive Eros example
     ASSERT_THROW(Polyhedron(
-                std::vector<std::string>({"resources/FileDoesNotExist.node", "resources/FileDoesNotExist.face"}),
-                1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY), std::runtime_error
-            );
+                         std::vector<std::string>({"resources/FileDoesNotExist.node", "resources/FileDoesNotExist.face"}),
+                         1.0, NormalOrientation::OUTWARDS, PolyhedronIntegrity::VERIFY),
+                 std::runtime_error);
 }
-

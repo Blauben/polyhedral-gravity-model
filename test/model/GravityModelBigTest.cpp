@@ -1,16 +1,16 @@
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
-#include <string>
-#include <vector>
-#include <utility>
-#include <fstream>
-#include <sstream>
 #include "polyhedralGravity/model/GravityModel.h"
 #include "polyhedralGravity/model/Polyhedron.h"
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "GravityModelVectorUtility.h"
 #include "GoogleTestMatcher.h"
+#include "GravityModelVectorUtility.h"
 
 
 /**
@@ -28,7 +28,6 @@
 class GravityModelBigTest : public ::testing::Test {
 
 protected:
-
     /**
      * Relative big epsilon due to deviations between FORTRAN implementation and C++ implementation
      */
@@ -38,11 +37,10 @@ protected:
     static constexpr size_t LOCAL_TEST_COUNT_NODES_PER_FACE = 3;
 
     polyhedralGravity::Polyhedron _polyhedron{
-        std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"},
-        1.0,
-        polyhedralGravity::NormalOrientation::OUTWARDS,
-        polyhedralGravity::PolyhedronIntegrity::DISABLE
-    };
+            std::vector<std::string>{"resources/GravityModelBigTest.node", "resources/GravityModelBigTest.face"},
+            1.0,
+            polyhedralGravity::NormalOrientation::OUTWARDS,
+            polyhedralGravity::PolyhedronIntegrity::DISABLE};
 
     std::array<double, 3> _computationPoint{0.0, 0.0, 0.0};
 
@@ -74,7 +72,6 @@ protected:
     std::vector<std::pair<double, std::array<double, 3>>> expectedSingularityTerms;
 
 public:
-
     [[nodiscard]] std::vector<std::array<std::array<double, 3>, 3>>
     readTwoDimensionalCartesian(const std::string &filename) const {
         std::vector<std::array<std::array<double, 3>, 3>> result{LOCAL_TEST_COUNT_FACES};
@@ -88,7 +85,8 @@ public:
                 break;
             }
             result[i / 3][i % 3] = std::array<double, 3>{x, y, z};
-            i += 1;;
+            i += 1;
+            ;
         }
         return result;
     }
@@ -105,7 +103,8 @@ public:
                 break;
             }
             result[i] = std::array<double, 3>{x, y, z};
-            i += 1;;
+            i += 1;
+            ;
         }
         return result;
     }
@@ -122,7 +121,8 @@ public:
                 break;
             }
             result[i / 3][i % 3] = x;
-            i += 1;;
+            i += 1;
+            ;
         }
         return result;
     }
@@ -139,7 +139,8 @@ public:
                 break;
             }
             result[i] = x;
-            i += 1;;
+            i += 1;
+            ;
         }
         return result;
     }
@@ -157,7 +158,8 @@ public:
                 break;
             }
             result[i] = polyhedralGravity::HessianPlane{a, b, c, d};
-            i += 1;;
+            i += 1;
+            ;
         }
         return result;
     }
@@ -175,7 +177,8 @@ public:
                 break;
             }
             result[i / 3][i % 3] = polyhedralGravity::Distance{l1, l2, s1, s2};
-            i += 1;;
+            i += 1;
+            ;
         }
         return result;
     }
@@ -193,7 +196,8 @@ public:
                 break;
             }
             result[i / 3][i % 3] = polyhedralGravity::TranscendentalExpression{ln, an};
-            i += 1;;
+            i += 1;
+            ;
         }
         return result;
     }
@@ -253,7 +257,6 @@ public:
                     std::make_pair(expectedAlphaSingularityTerms[i], expectedBetaSingularityTerms[i]);
         }
     }
-
 };
 
 TEST_F(GravityModelBigTest, GijVectors) {
@@ -317,7 +320,7 @@ TEST_F(GravityModelBigTest, OrthogonalProjectionPointsOnPlane) {
             EXPECT_DOUBLE_EQ(
                     actualOrthogonalProjectionPointsOnPlane[i][j],
                     expectedOrthogonalProjectionPointsOnPlane[i][j])
-                                << "Difference for P' of plane=" << i << " and coordinate-Nr.=" << j;
+                    << "Difference for P' of plane=" << i << " and coordinate-Nr.=" << j;
         }
     }
 }
@@ -348,8 +351,8 @@ TEST_F(GravityModelBigTest, OrthogonalProjectionPointsOnSegment) {
                 EXPECT_NEAR(
                         actualOrthogonalProjectionPointsOnSegment[i][j][k],
                         expectedOrthogonalProjectionPointsOnSegment[i][j][k], 1e16)
-                                    << "Difference for P'' of segment=(" << i << ", " << j << ") and coordinate-Nr."
-                                    << k;
+                        << "Difference for P'' of segment=(" << i << ", " << j << ") and coordinate-Nr."
+                        << k;
             }
         }
     }
@@ -394,12 +397,12 @@ TEST_F(GravityModelBigTest, TranscendentalExpressions) {
         for (size_t j = 0; j < actualTranscendentalExpressions[i].size(); ++j) {
             ASSERT_NEAR(actualTranscendentalExpressions[i][j].ln,
                         expectedTranscendentalExpressions[i][j].ln, LOCAL_TEST_EPSILON)
-                                        << "The LN value differed for transcendental term (i,j) = (" << i << ',' << j
-                                        << ')';
+                    << "The LN value differed for transcendental term (i,j) = (" << i << ',' << j
+                    << ')';
             ASSERT_NEAR(actualTranscendentalExpressions[i][j].an,
                         expectedTranscendentalExpressions[i][j].an, LOCAL_TEST_EPSILON)
-                                        << "The AN value differed for transcendental term (i,j) = (" << i << ',' << j
-                                        << ')';
+                    << "The AN value differed for transcendental term (i,j) = (" << i << ',' << j
+                    << ')';
         }
     }
 }
@@ -421,9 +424,9 @@ TEST_F(GravityModelBigTest, SingularityTerms) {
     for (size_t i = 0; i < actualSingularityTerms.size(); ++i) {
         EXPECT_NEAR(actualSingularityTerms[i].first,
                     expectedSingularityTerms[i].first, LOCAL_TEST_EPSILON)
-                            << "The sing A value differed for singularity term (i) = (" << i << ')';
+                << "The sing A value differed for singularity term (i) = (" << i << ')';
         EXPECT_THAT(actualSingularityTerms[i].second,
                     Pointwise(DoubleNear(LOCAL_TEST_EPSILON), expectedSingularityTerms[i].second))
-                            << "The sing B value differed for singularity term (i) = (" << i << ')';
+                << "The sing B value differed for singularity term (i) = (" << i << ')';
     }
 }

@@ -3,34 +3,45 @@
 namespace polyhedralGravity {
 
     Polyhedron::Polyhedron(const std::vector<Array3> &vertices,
-                           const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+                           const std::vector<IndexArray3> &faces, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit &metricUnit)
         : _vertices{vertices},
-          _faces{faces},
+          _faces{[&faces]() {
+              using util::operator-;
+              // Checks that the node with index zero is actually used
+              // In case it is not used, the indexing presumably starts mathematically at one
+              // In this case, we shift it by -1, so that the indexing start with zero
+              if (faces.end() == std::find_if(faces.begin(), faces.end(), [](const auto &face) {
+                      return face[0] == 0 || face[1] == 0 || face[2] == 0;
+                  })) {
+                  POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
+                  std::vector<IndexArray3> shiftedFaces{faces};
+                  std::transform(shiftedFaces.begin(), shiftedFaces.end(), shiftedFaces.begin(), [](const std::array<size_t, 3> &face) { return face - 1; });
+                  return shiftedFaces;
+              }
+              return faces;
+          }()},
           _density{density},
           _orientation{orientation},
-          _metricUnit{metricUnit} {
-        using util::operator-;
-        // Checks that the node with index zero is actually used
-        // In case it is not used, the indexing presumably starts mathematically at one
-        // In this case, we shift it by -1, so that the indexing start with zero
-        if (_faces.end() == std::find_if(_faces.begin(), _faces.end(), [&](const auto &face) {
-                return face[0] == 0 || face[1] == 0 || face[2] == 0;
-            })) {
-            POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
-            std::transform(_faces.begin(), _faces.end(), _faces.begin(), [&](const std::array<size_t, 3> &face) {return face - 1;});
-        }
+          _metricUnit{metricUnit},
+          _tree{[this]() {
+              // Relies on _faces already holding zero-indexed data, which requires _faces to be
+              // initialized before _tree (i.e., declared earlier in Polyhedron.h).
+              std::vector<kdtree::IndexVector> indexFaces(_faces.size());
+              std::transform(_faces.begin(), _faces.end(), indexFaces.begin(), [](const std::array<size_t, 3> &face) { return kdtree::IndexVector{face[0], face[1], face[2]}; });
+              return std::make_shared<kdtree::KDTree>(_vertices, indexFaces);
+          }()} {
         this->runIntegrityMeasures(integrity);
     }
 
-    Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+    Polyhedron::Polyhedron(const PolyhedralSource &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit &metricUnit)
         : Polyhedron{std::get<std::vector<Array3>>(polyhedralSource), std::get<std::vector<IndexArray3>>(polyhedralSource), density, orientation, integrity, metricUnit} {
     }
 
-    Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+    Polyhedron::Polyhedron(const PolyhedralFiles &polyhedralFiles, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit &metricUnit)
         : Polyhedron{MeshReader::getPolyhedralSource(polyhedralFiles), density, orientation, integrity, metricUnit} {
     }
 
-    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit& metricUnit)
+    Polyhedron::Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, const double density, const NormalOrientation &orientation, const PolyhedronIntegrity &integrity, const MetricUnit &metricUnit)
         : Polyhedron{std::holds_alternative<PolyhedralSource>(polyhedralSource) ? std::get<PolyhedralSource>(polyhedralSource) : MeshReader::getPolyhedralSource(std::get<PolyhedralFiles>(polyhedralSource)),
                      density, orientation, integrity, metricUnit} {
     }
@@ -196,7 +207,7 @@ namespace polyhedralGravity {
                         sstream << "Instead all plane unit normals are pointing "
                                 << actualOrientation
                                 << ". You can either reconstruct the polyhedron with the orientation set to " << actualOrientation
-                                << ". Alternativly, you can reconstruct with the inetgrity_check set to HEAL";
+                                << ". Alternatively, you can reconstruct with the integrity_check set to HEAL";
                     } else {
                         sstream << "The actual majority orientation of the polyhedron's normals is " << actualOrientation
                                 << ". You can either:\n 1) Fix the ordering of the following faces:\n"
@@ -227,7 +238,7 @@ namespace polyhedralGravity {
     void Polyhedron::healPlaneUnitNormalOrientation(const NormalOrientation &actualOrientation, const std::set<size_t> &violatingIndices) {
         // Assign the majority plane unit normal orientation
         _orientation = actualOrientation;
-        // Fix the vioalting faces by exchaning the vertex ordering (exchaning index 0 with index 1 in the face)
+        // Fix the violating faces by exchanging the vertex ordering (exchanging index 0 with index 1 in the face)
         std::for_each(violatingIndices.cbegin(), violatingIndices.cend(), [this](size_t i) {
             std::swap(this->_faces[i][0], this->_faces[i][1]);
         });
@@ -248,48 +259,6 @@ namespace polyhedralGravity {
         const Array3 rayOrigin = centroid + (rayVector * EPSILON_ZERO_OFFSET);
 
         // Count every triangular face which is intersected by the ray
-        const auto &[begin, end] = this->transformIterator();
-        std::set<Array3> intersections{};
-        std::for_each(begin, end, [&rayOrigin, &rayVector, &intersections](const Array3Triplet &otherFace) {
-            const std::unique_ptr<Array3> intersection = rayIntersectsTriangle(rayOrigin, rayVector, otherFace);
-            if (intersection != nullptr) {
-                intersections.insert(*intersection);
-            }
-        });
-        return intersections.size();
+        return this->_tree->countIntersections(rayOrigin, rayVector);
     }
-
-    std::unique_ptr<Array3> Polyhedron::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle) {
-        // Adapted Möller–Trumbore intersection algorithm
-        // see https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
-        using namespace util;
-        const Array3 edge1 = triangle[1] - triangle[0];
-        const Array3 edge2 = triangle[2] - triangle[0];
-        const Array3 h = cross(rayVector, edge2);
-        const double a = dot(edge1, h);
-        if (a > -EPSILON_ZERO_OFFSET && a < EPSILON_ZERO_OFFSET) {
-            return nullptr;
-        }
-
-        const double f = 1.0 / a;
-        const Array3 s = rayOrigin - triangle[0];
-        const double u = f * dot(s, h);
-        if (u < 0.0 || u > 1.0) {
-            return nullptr;
-        }
-
-        const Array3 q = cross(s, edge1);
-        const double v = f * dot(rayVector, q);
-        if (v < 0.0 || u + v > 1.0) {
-            return nullptr;
-        }
-
-        const double t = f * dot(edge2, q);
-        if (t > EPSILON_ZERO_OFFSET) {
-            return std::make_unique<Array3>(rayOrigin + rayVector * t);
-        } else {
-            return nullptr;
-        }
-    }
-
-}// namespace polyhedralGravity
+};// namespace polyhedralGravity
