@@ -12,7 +12,7 @@ if (BUILD_POLYHEDRAL_GRAVITY_LIBRARY)
     # Adds the include Path PROJECT_SOURCE_DIR/src to the target polyhedralGravity
     target_include_directories(${PROJECT_NAME}_lib PUBLIC
             "${CMAKE_CURRENT_SOURCE_DIR}"
-            )
+    )
 
     # Link libraries needed in all targets
     target_link_libraries(${PROJECT_NAME}_lib
@@ -21,7 +21,8 @@ if (BUILD_POLYHEDRAL_GRAVITY_LIBRARY)
             tetgen_lib
             xsimd
             Thrust
-            )
+            KDTree::KDTree
+    )
 endif ()
 #####################################
 # Building the Polyhedral Executable
@@ -40,13 +41,13 @@ if (BUILD_POLYHEDRAL_GRAVITY_EXECUTABLE)
             ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
-            )
-endif()
+    )
+endif ()
 
 ##########################################
 # Building the Polyhedral Python Interface
 ##########################################
-if(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
+if (BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
     message(STATUS "Building the Polyhedral Gravity Python Interface")
 
     # Include pybind11
@@ -54,14 +55,16 @@ if(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE)
 
     add_subdirectory(polyhedralGravityPython)
 
-    target_include_directories(polyhedral_gravity PUBLIC
+    target_include_directories(_core PUBLIC
             "${CMAKE_CURRENT_SOURCE_DIR}"
-            )
+    )
 
-    target_link_libraries(polyhedral_gravity PUBLIC
+    target_link_libraries(_core PUBLIC
             spdlog::spdlog
             tetgen_lib
             xsimd
             Thrust
-            )
-endif()
+            KDTree::KDTree
+    )
+endif ()
+

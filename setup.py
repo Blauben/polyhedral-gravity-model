@@ -111,12 +111,12 @@ class CMakeBuild(build_ext):
         if not extdir.endswith(os.path.sep):
             extdir += os.path.sep
 
-        # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
-        # EXAMPLE_VERSION_INFO shows you how to pass a value into the C++ code
-        # from Python.
+        # We use PYBIND11_FINDPYTHON, i.e. CMake's FindPython, which only respects Python_EXECUTABLE.
+        # Without it, FindPython searches on its own and does not find free-threaded interpreters
+        # (e.g. python3.14t), picking up any other Python on the system instead (wrong ABI/extension suffix).
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
-            f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DPython_EXECUTABLE={sys.executable}",
         ]
         build_args = []
 
@@ -157,7 +157,9 @@ class CMakeBuild(build_ext):
         # MSVC special cases
         if self.compiler.compiler_type == "msvc":
             # Single config generators are handled "normally"
-            single_config = any(x in cmake_generator for x in {"NMake", "Ninja"})
+            single_config = cmake_generator is not None and any(
+                x in cmake_generator for x in {"NMake", "Ninja"}
+            )
             # Multi-config generators have a different way to specify configs
             if not single_config:
                 cmake_args += [
@@ -217,7 +219,9 @@ setup(
                 "according to the geodetic convention",
     long_description=open("README.md").read().replace(picture_in_readme, ''),
     long_description_content_type="text/markdown",
-    ext_modules=[CMakeExtension("polyhedral_gravity")],
+    ext_modules=[CMakeExtension("polyhedral_gravity._core")],
+    packages=["polyhedral_gravity"],
+    package_dir={"polyhedral_gravity": "python/polyhedral_gravity"},
     cmdclass={"build_ext": CMakeBuild},
     license="GPLv3",
     license_file="LICENSE",

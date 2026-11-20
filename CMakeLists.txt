@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
+cmake_policy(SET CMP0079 NEW)
 project(polyhedralGravity)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Appends the the module path to contain additional CMake modules for this project
@@ -42,6 +43,8 @@ cmake_dependent_option(BUILD_POLYHEDRAL_GRAVITY_LIBRARY "Builds the library (Def
 option(BUILD_POLYHEDRAL_GRAVITY_PYTHON_INTERFACE "Set this to on if the python interface should be built (Default: ON)" ON)
 # Option to build tests or not
 option(BUILD_POLYHEDRAL_GRAVITY_TESTS "Set to on if the tests should be built (Default: ON)" ON)
+# Option to enable Include-What-You-Use warnings during compilation
+option(ENABLE_IWYU "Set to on to enable Include-What-You-Use warnings (Default: OFF)" OFF)
 
 if (_LIBCPP_DISABLE_AVAILABILITY)
     message(STATUS "Disabling availability macros for libc++")
@@ -84,6 +87,11 @@ include(tetgen)
 include(xsimd)
 include(clang_format)
 include(cmake_format)
+include(kd-tree)
+
+if (${ENABLE_IWYU})
+    include(include-what-you-use)
+endif ()
 
 ###############################
 # Thrust Parallelization Set-Up

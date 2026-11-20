@@ -1,5 +1,6 @@
 #pragma once
 
+#include "KDTree/tree/KDTree.h"
 #include "polyhedralGravity/input/MeshReader.h"
 #include "polyhedralGravity/model/GravityModelData.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
@@ -68,6 +69,11 @@ namespace polyhedralGravity {
 
         /** Metric Unit of the Vertices Coordinates. One of METER, KILOMETER, or UNITLESS */
         const MetricUnit _metricUnit;
+
+        /**
+         * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
+         */
+        mutable std::shared_ptr<kdtree::KDTree> _tree;
 
     public:
         /**
@@ -299,6 +305,15 @@ namespace polyhedralGravity {
 
     private:
         /**
+         * Checks that every face references only existing vertices, i.e. that every vertex index is
+         * smaller than the number of vertices. This check is mandatory and always executed at construction time
+         * since resolving an out-of-range index would otherwise cause an out-of-bounds read.
+         *
+         * @throws std::invalid_argument if a face references a non-existing vertex
+         */
+        void checkVertexIndicesInRange() const;
+
+        /**
          * Checks the integrity of the polyhedron depending on the integrity flag.
          *
          * @param integrity the behavior depends on the value, see {@link PolyhedronIntegrity}
@@ -330,17 +345,6 @@ namespace polyhedralGravity {
          */
         [[nodiscard]] size_t countRayPolyhedronIntersections(const Array3Triplet &face) const;
 
-        /**
-         * Calculates how often a vector starting at a specific origin intersects a triangular face.
-         * Uses the Möller–Trumbore intersection algorithm.
-         * @param rayOrigin the origin of the ray
-         * @param rayVector the vector describing the ray
-         * @param triangle a triangular face
-         * @return intersection point or null
-         *
-         * @see Adapted from https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
-         */
-        static std::unique_ptr<Array3> rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle);
 
 
     };

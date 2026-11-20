@@ -19,6 +19,12 @@ namespace polyhedralGravity {
             POLYHEDRAL_GRAVITY_LOG_DEBUG("The indexing of the polyhedron's vertices seems to start at 1 instead of 0. The faces array is modfied accordingly!");
             std::transform(_faces.begin(), _faces.end(), _faces.begin(), [&](const std::array<size_t, 3> &face) {return face - 1;});
         }
+        // Must happen before any face index is resolved to a vertex (including the integrity measures below)
+        this->checkVertexIndicesInRange();
+        // tree wants the shifted + validated faces, so build it only now
+        std::vector<kdtree::IndexVector> indexFaces(_faces.size());
+        std::transform(_faces.begin(), _faces.end(), indexFaces.begin(), [](const IndexArray3 &face) { return kdtree::IndexVector{face[0], face[1], face[2]}; });
+        _tree = std::make_shared<kdtree::KDTree>(_vertices, indexFaces);
         this->runIntegrityMeasures(integrity);
     }
 
@@ -170,6 +176,21 @@ namespace polyhedralGravity {
         }
     }
 
+    void Polyhedron::checkVertexIndicesInRange() const {
+        const size_t numberOfVertices = _vertices.size();
+        for (size_t faceIndex = 0; faceIndex < _faces.size(); ++faceIndex) {
+            for (const size_t vertexIndex: _faces[faceIndex]) {
+                if (vertexIndex >= numberOfVertices) {
+                    std::stringstream sstream{};
+                    sstream << "The face with index " << faceIndex << " references the vertex index " << vertexIndex
+                            << ", but the mesh only contains " << numberOfVertices << " vertices. "
+                            << "The mesh is malformed and cannot be used to construct a polyhedron!";
+                    throw std::invalid_argument(sstream.str());
+                }
+            }
+        }
+    }
+
     void Polyhedron::runIntegrityMeasures(const PolyhedronIntegrity &integrity) {
         using util::operator<<;
         switch (integrity) {
@@ -248,48 +269,8 @@ namespace polyhedralGravity {
         const Array3 rayOrigin = centroid + (rayVector * EPSILON_ZERO_OFFSET);
 
         // Count every triangular face which is intersected by the ray
-        const auto &[begin, end] = this->transformIterator();
-        std::set<Array3> intersections{};
-        std::for_each(begin, end, [&rayOrigin, &rayVector, &intersections](const Array3Triplet &otherFace) {
-            const std::unique_ptr<Array3> intersection = rayIntersectsTriangle(rayOrigin, rayVector, otherFace);
-            if (intersection != nullptr) {
-                intersections.insert(*intersection);
-            }
-        });
-        return intersections.size();
+        return this->_tree->countIntersections(rayOrigin, rayVector);
     }
 
-    std::unique_ptr<Array3> Polyhedron::rayIntersectsTriangle(const Array3 &rayOrigin, const Array3 &rayVector, const Array3Triplet &triangle) {
-        // Adapted Möller–Trumbore intersection algorithm
-        // see https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
-        using namespace util;
-        const Array3 edge1 = triangle[1] - triangle[0];
-        const Array3 edge2 = triangle[2] - triangle[0];
-        const Array3 h = cross(rayVector, edge2);
-        const double a = dot(edge1, h);
-        if (a > -EPSILON_ZERO_OFFSET && a < EPSILON_ZERO_OFFSET) {
-            return nullptr;
-        }
-
-        const double f = 1.0 / a;
-        const Array3 s = rayOrigin - triangle[0];
-        const double u = f * dot(s, h);
-        if (u < 0.0 || u > 1.0) {
-            return nullptr;
-        }
-
-        const Array3 q = cross(s, edge1);
-        const double v = f * dot(rayVector, q);
-        if (v < 0.0 || u + v > 1.0) {
-            return nullptr;
-        }
-
-        const double t = f * dot(edge2, q);
-        if (t > EPSILON_ZERO_OFFSET) {
-            return std::make_unique<Array3>(rayOrigin + rayVector * t);
-        } else {
-            return nullptr;
-        }
-    }
 
 }// namespace polyhedralGravity
