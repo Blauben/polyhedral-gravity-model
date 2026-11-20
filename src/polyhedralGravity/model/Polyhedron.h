@@ -1,8 +1,8 @@
 #pragma once
 
+#include "KDTree/tree/KDTree.h"
 #include "polyhedralGravity/input/MeshReader.h"
 #include "polyhedralGravity/model/GravityModelData.h"
-#include "polyhedralGravity/model/KDTree/KDTree.h"
 #include "polyhedralGravity/model/PolyhedronDefinitions.h"
 #include "polyhedralGravity/output/Logging.h"
 #include "polyhedralGravity/util/UtilityConstants.h"
@@ -18,7 +18,6 @@
 #include <array>
 #include <exception>
 #include <memory>
-#include <optional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -72,14 +71,9 @@ namespace polyhedralGravity {
         const MetricUnit _metricUnit;
 
         /**
-         * Flag used to control whether to enable multithreaded KD-tree queries. If both Polyhedron and KDTree deploy multiple threads they exhaust each other. NoTree does not utilize threads.
-         */
-        bool _enableParallelQuery{false};
-
-        /**
          * A KDTree built for this polyhedron. It is used to compute ray intersections with faces.
          */
-        std::shared_ptr<KDTree> _tree;
+        mutable std::shared_ptr<kdtree::KDTree> _tree;
 
     public:
         /**
@@ -92,7 +86,6 @@ namespace polyhedralGravity {
          * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
-         * @param treeAlgorithm which KDTree plane selection algorithm to use for integrity checks.
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
          */
@@ -102,8 +95,7 @@ namespace polyhedralGravity {
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                 const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                const MetricUnit &metricUnit = MetricUnit::METER,
-                const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm = PlaneSelectionAlgorithm::Algorithm::LOG
+                const MetricUnit &metricUnit = MetricUnit::METER
                 );
 
         /**
@@ -115,7 +107,6 @@ namespace polyhedralGravity {
          * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
-         * @param treeAlgorithm which KDTree plane selection algorithm to use for integrity checks.
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
          */
@@ -124,8 +115,7 @@ namespace polyhedralGravity {
                 double density,
                 const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                 const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                const MetricUnit &metricUnit = MetricUnit::METER,
-                const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm = PlaneSelectionAlgorithm::Algorithm::LOG
+                const MetricUnit &metricUnit = MetricUnit::METER
                 );
 
         /**
@@ -137,15 +127,13 @@ namespace polyhedralGravity {
          * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
-         * @param treeAlgorithm which KDTree plane selection algorithm to use for integrity checks.
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
          */
         Polyhedron(const PolyhedralFiles &polyhedralFiles, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                    const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                   const MetricUnit &metricUnit = MetricUnit::METER,
-                   const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm = PlaneSelectionAlgorithm::Algorithm::LOG
+                   const MetricUnit &metricUnit = MetricUnit::METER
                                    );
 
         /**
@@ -158,15 +146,13 @@ namespace polyhedralGravity {
          * @param orientation specify if the plane unit normals point outwards or inwards (default: OUTWARDS)
          * @param integrity specify if the mesh input is checked/ healed to fulfill the constraints of Tsoulis' algorithm (see {@link PolyhedronIntegrity})
          * @param metricUnit specify the mesh's coordinate scale's unit. Can be kilometer, meter, or unitless (defaults to meter)
-         * @param treeAlgorithm which KDTree plane selection algorithm to use for integrity checks.
          *
          * @throws std::invalid_argument depending on the {@link integrity} flag
          */
         Polyhedron(const std::variant<PolyhedralSource, PolyhedralFiles> &polyhedralSource, double density,
                    const NormalOrientation &orientation = NormalOrientation::OUTWARDS,
                    const PolyhedronIntegrity &integrity = PolyhedronIntegrity::AUTOMATIC,
-                   const MetricUnit &metricUnit = MetricUnit::METER,
-                   const PlaneSelectionAlgorithm::Algorithm &treeAlgorithm = PlaneSelectionAlgorithm::Algorithm::LOG
+                   const MetricUnit &metricUnit = MetricUnit::METER
                    );
 
         /**
@@ -315,12 +301,7 @@ namespace polyhedralGravity {
          * @return a pair consisting of majority ordering (OUTWARDS or INWARDS pointing normals)
          *  and a set of face indices which violate the constraint
          */
-        [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation();
-
-        /**
-         * Prebuilds this Polyhedron's KDTree, disabling lazy loading effectively.
-         */
-        void prebuildKDTree() const;
+        [[nodiscard]] std::pair<NormalOrientation, std::set<size_t>> checkPlaneUnitNormalOrientation() const;
 
     private:
         /**

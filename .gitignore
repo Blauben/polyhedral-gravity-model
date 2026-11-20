@@ -7,3 +7,4 @@ docs/Doxyfile
 src/polyhedralGravity/Info.h
 **/__pycache__
 .venv/
+.vscode/
